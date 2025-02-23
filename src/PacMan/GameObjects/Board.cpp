@@ -5,6 +5,5 @@
 #include "Board.h"
 
 namespace PacMan {
-namespace GameObjects {
-} // GameObjects
-} // PacMan
+namespace GameObjects {} // namespace GameObjects
+} // namespace PacMan

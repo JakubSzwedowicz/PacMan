@@ -2,18 +2,10 @@
 // Created by Jakub Szwedowicz on 2/23/25.
 //
 
-#ifndef BOARD_H
-#define BOARD_H
+#include "Entity.h"
 
 namespace PacMan {
 namespace GameObjects {
-
-class Board {
-public:
-private:
-};
-
+namespace Entities {} // namespace Entities
 } // namespace GameObjects
 } // namespace PacMan
-
-#endif // BOARD_H
