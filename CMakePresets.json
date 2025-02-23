@@ -1,0 +1,104 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "toolchain",
+      "hidden": true,
+      "environment": {
+        "VCPKG_ROOT": "${sourceDir}/lib/vcpkg"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Default debug configuration preset",
+      "generator": "Ninja",
+      "binaryDir": "build/debug",
+      "inherits": "toolchain",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -g -O2"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Default release configuration preset",
+      "generator": "Ninja",
+      "binaryDir": "build/release",
+      "inherits": "toolchain",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -O3"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "app-debug",
+      "displayName": "App Debug Build",
+      "configurePreset": "debug",
+      "configuration": "Debug",
+      "jobs": 8
+    },
+    {
+      "name": "app-release",
+      "displayName": "App Release Build",
+      "configurePreset": "release",
+      "configuration": "Release",
+      "jobs": 8,
+      "targets": [
+        "App"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-all-debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "test-all-release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "configure-build-test-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "debug"
+        },
+        {
+          "type": "build",
+          "name": "app-debug"
+        },
+        {
+          "type": "test",
+          "name": "test-all-debug"
+        }
+      ]
+    }
+  ]
+}
