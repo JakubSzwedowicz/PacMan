@@ -14,7 +14,7 @@ ALL_FILES="$MODIFIED_FILES $STAGED_FILES $UNTRACKED_FILES"
 # Filter the list to include only .cpp and .hpp files
 files=()
 for file in $ALL_FILES; do
-  if [[ $file == *.cpp || $file == *.hpp ]]; then
+  if [[ $file == *.cpp || $file == *.hpp || $file == *.h ]]; then
     files+=("$file")
   fi
 done
