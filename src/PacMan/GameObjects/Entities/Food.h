@@ -19,8 +19,8 @@ public:
 private:
 };
 
-} // Entities
-} // GameObjects
-} // PacMan
+} // namespace Entities
+} // namespace GameObjects
+} // namespace PacMan
 
-#endif //FOOD_H
+#endif // FOOD_H

@@ -11,12 +11,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Ghost : public Entity<EntityType::GHOST> {
+class Ghost : public Entity<EntityType::GHOST> {};
 
-};
+} // namespace Entities
+} // namespace GameObjects
+} // namespace PacMan
 
-} // Entities
-} // GameObjects
-} // PacMan
-
-#endif //GHOST_H
+#endif // GHOST_H

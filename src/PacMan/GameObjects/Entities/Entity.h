@@ -12,8 +12,7 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-template <EntityType ENTITY_TYPE>
-class Entity : public IEntity {
+template <EntityType ENTITY_TYPE> class Entity : public IEntity {
 public:
   Entity() = default;
   virtual ~Entity() = default;
@@ -25,4 +24,4 @@ private:
 } // namespace Entities
 } // namespace GameObjects
 } // namespace PacMan
-#endif //ENTITY_H
+#endif // ENTITY_H

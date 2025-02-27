@@ -6,7 +6,6 @@
 
 namespace PacMan {
 namespace GameObjects {
-namespace Entities {
-} // Entities
-} // GameObjects
-} // PacMan
+namespace Entities {} // namespace Entities
+} // namespace GameObjects
+} // namespace PacMan

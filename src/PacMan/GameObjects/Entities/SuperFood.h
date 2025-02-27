@@ -10,12 +10,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class SuperFood : public Entity<EntityType::SUPER_FOOD> {
+class SuperFood : public Entity<EntityType::SUPER_FOOD> {};
 
-};
+} // namespace Entities
+} // namespace GameObjects
+} // namespace PacMan
 
-} // Entities
-} // GameObjects
-} // PacMan
-
-#endif //SUPERFOOD_H
+#endif // SUPERFOOD_H
