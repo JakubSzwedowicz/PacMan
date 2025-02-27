@@ -4,13 +4,14 @@
 
 #ifndef GHOST_H
 #define GHOST_H
-#include "Entity.h"
+
+#include <Entity.h>
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Ghost : public Entity<EntityType::GHOST>{
+class Ghost : public Entity<EntityType::GHOST> {
 
 };
 

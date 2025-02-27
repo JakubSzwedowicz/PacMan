@@ -6,13 +6,18 @@
 #define FOOD_H
 
 #include "EntityType.h"
-#include "Entity.h"
+#include "IEntity.h"
+
+#include <Entity.h>
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Food : public Entity <EntityType::FOOD> {};
+class Food : public Entity<EntityType::FOOD> {
+public:
+private:
+};
 
 } // Entities
 } // GameObjects
