@@ -13,7 +13,8 @@
         "VCPKG_ROOT": "${sourceDir}/lib/vcpkg"
       },
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -g -O2 -frecord-gcc-switches"
       }
     },
     {
@@ -24,8 +25,7 @@
       "binaryDir": "build/debug",
       "inherits": "toolchain",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -g -O2"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -36,8 +36,7 @@
       "binaryDir": "build/release",
       "inherits": "toolchain",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -O3"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
