@@ -39,3 +39,6 @@
 build
 cmake-build-debug
 CMakeCache.txt
+
+# Project dependencies that are fetched by vcpkg
+lib/vcpkg
