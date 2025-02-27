@@ -15,7 +15,7 @@ public:
   Entity();
   virtual ~Entity() = default;
 
-  EntityType getUID() const { return m_entityType; }
+  EntityType getEntityType() const { return m_entityType; }
 
 private:
   const EntityType m_entityType = ENTITY_TYPE;
