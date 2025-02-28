@@ -13,6 +13,7 @@ namespace GameObjects {
 
 class ILevelBuilder {
 public:
+  virtual ~ILevelBuilder() = default;
   bool release(std::unique_ptr<Level> &level) {
     if (level == nullptr) {
       return false;

@@ -4,6 +4,8 @@
 
 #include "LevelBuilderFromFile.h"
 #include <fstream>
+#include <memory>
+#include <type_traits>
 
 #include "Food.h"
 #include "Ghost.h"
@@ -18,7 +20,7 @@ LevelBuilderFromFile::LevelBuilderFromFile(const std::string &boardPath)
     : m_boardPath(boardPath) {
   auto board = createBoard();
   if (board) {
-    setBoard(std::move(board));
+    ILevelBuilder::setBoard(std::move(board));
   }
 }
 

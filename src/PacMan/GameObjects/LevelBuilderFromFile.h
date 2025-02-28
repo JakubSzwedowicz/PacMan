@@ -13,7 +13,7 @@ namespace GameObjects {
 
 class LevelBuilderFromFile : public ILevelBuilder {
 public:
-  LevelBuilderFromFile(const std::string &boardPath);
+  explicit LevelBuilderFromFile(const std::string &boardPath);
 
 private:
   std::unique_ptr<Level::Board_t> createBoard() const;
