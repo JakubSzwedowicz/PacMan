@@ -1,5 +1,6 @@
-SET(GAME_OBJECTS_SOURCES
-        Board.cpp
+set(GAME_OBJECTS_SOURCES
+        Level.cpp
+        LevelBuilderFromFile.cpp
 )
 
 add_library(GameObjects
