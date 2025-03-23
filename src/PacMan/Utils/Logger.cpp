@@ -28,7 +28,7 @@ void Logger::shutdown() {
 
 void Logger::initLogger() {
   static auto fileSink =
-      std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs.txt", true);
+      std::make_shared<spdlog::sinks::basic_file_sink_mt>(s_logFileName, true);
   static std::atomic_bool isInitialized = false;
   if (!isInitialized) {
     fileSink->set_pattern("[%Y-%m-%d %H:%M:%S] [T:%t] [%l] [%n]: %v");

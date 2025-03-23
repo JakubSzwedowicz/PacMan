@@ -21,5 +21,9 @@ void ILogger::shutdownAll() {
   }
 }
 
+void ILogger::setLogFileName(const std::string &logFileName) {
+  s_logFileName = logFileName;
+}
+
 } // namespace Utils
 } // namespace PacMan

@@ -30,8 +30,10 @@ public:
   }
 
   static void shutdownAll();
+  static void setLogFileName(const std::string &logFileName);
 
 protected:
+  static std::string s_logFileName;
   const std::string m_scopeName;
   const LogLevel m_logLevel;
 

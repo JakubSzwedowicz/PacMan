@@ -11,22 +11,12 @@
 
 #include "Utils/ILogger.h"
 #include "Utils/Logger.h"
+#include "Utils/Signals.h"
 
-void shutdownLoggers(int signal) {
-  auto logger = std::make_unique<PacMan::Utils::Logger>(
-      "signalHandler", PacMan::Utils::LogLevel::DEBUG);
-  logger->logCritical("Signal " + std::to_string(signal) +
-                      " received, shutting down loggers");
-
-  PacMan::Utils::ILogger::shutdownAll();
-
-  // Continue shutting down a program
-  std::signal(signal, SIG_DFL);
-  std::raise(signal);
-}
 
 int main() {
-  std::signal(SIGSEGV, shutdownLoggers);
+  PacMan::Utils::ILogger::setLogFileName("MainLogs.txt");
+  std::signal(SIGSEGV, PacMan::Utils::shutdownLoggers);
 
   auto logger = std::make_unique<PacMan::Utils::Logger>(
       "main", PacMan::Utils::LogLevel::INFO);
