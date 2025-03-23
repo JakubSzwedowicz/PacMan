@@ -8,7 +8,7 @@
 #include "EntityType.h"
 #include "IEntity.h"
 
-#include <Entity.h>
+#include "Entities/Entity.h"
 
 namespace PacMan {
 namespace GameObjects {

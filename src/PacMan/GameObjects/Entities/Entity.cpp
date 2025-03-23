@@ -2,7 +2,7 @@
 // Created by Jakub Szwedowicz on 2/23/25.
 //
 
-#include "Entity.h"
+#include "Entities/Entity.h"
 
 namespace PacMan {
 namespace GameObjects {

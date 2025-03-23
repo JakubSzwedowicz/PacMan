@@ -1,15 +1,16 @@
-#include <ILevelBuilder.h>
-#include <Level.h>
-#include <LevelBuilderFromFile.h>
+#include <csignal>
 #include <execinfo.h> // For backtrace()
 #include <iostream>
 #include <map>
+
+#include "GameObjects/ILevelBuilder.h"
+#include "GameObjects/Level.h"
+#include "GameObjects/LevelBuilderFromFile.h"
 
 #include "Entities/IEntity.h"
 
 #include "Utils/ILogger.h"
 #include "Utils/Logger.h"
-#include <csignal>
 
 void shutdownLoggers(int signal) {
   auto logger = std::make_unique<PacMan::Utils::Logger>(

@@ -2,16 +2,16 @@
 // Created by jakubszwedowicz on 2/28/25.
 //
 
-#include "LevelBuilderFromFile.h"
+#include "GameObjects/LevelBuilderFromFile.h"
 #include <fstream>
 #include <memory>
 
-#include "Empty.h"
-#include "Food.h"
-#include "Ghost.h"
-#include "PacMan.h"
-#include "SuperFood.h"
-#include "Wall.h"
+#include "Entities/Empty.h"
+#include "Entities/Food.h"
+#include "Entities/Ghost.h"
+#include "Entities/PacMan.h"
+#include "Entities/SuperFood.h"
+#include "Entities/Wall.h"
 
 namespace PacMan {
 namespace GameObjects {

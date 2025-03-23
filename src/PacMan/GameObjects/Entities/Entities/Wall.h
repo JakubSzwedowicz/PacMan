@@ -4,7 +4,8 @@
 
 #ifndef WALL_H
 #define WALL_H
-#include "Entity.h"
+
+#include "Entities/Entity.h"
 
 namespace PacMan {
 namespace GameObjects {

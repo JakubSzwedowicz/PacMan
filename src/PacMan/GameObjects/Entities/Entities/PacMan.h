@@ -4,7 +4,8 @@
 
 #ifndef PACMAN_H
 #define PACMAN_H
-#include "Entity.h"
+
+#include "Entities/Entity.h"
 
 namespace PacMan {
 namespace GameObjects {

@@ -2,18 +2,19 @@
 // Created by Jakub Szwedowicz on 2/24/25.
 //
 
-#ifndef SUPERFOOD_H
-#define SUPERFOOD_H
-#include "Entity.h"
+#ifndef GHOST_H
+#define GHOST_H
+
+#include "Entities/Entity.h"
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class SuperFood : public Entity<EntityType::SUPER_FOOD> {};
+class Ghost : public Entity<EntityType::GHOST> {};
 
 } // namespace Entities
 } // namespace GameObjects
 } // namespace PacMan
 
-#endif // SUPERFOOD_H
+#endif // GHOST_H
