@@ -12,7 +12,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Empty : public Entity<EntityType::EMPTY> {};
+class Empty : public Entity<EntityType::EMPTY> {
+public:
+  Empty(uint32_t entityId) : Entity(entityId) {}
+};
 
 } // namespace Entities
 } // namespace GameObjects

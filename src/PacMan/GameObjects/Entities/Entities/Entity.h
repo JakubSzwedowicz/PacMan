@@ -14,11 +14,11 @@ namespace Entities {
 
 template <EntityType ENTITY_TYPE> class Entity : public IEntity {
 public:
-  Entity() = default;
+  Entity(uint32_t entityId) : IEntity(entityId) {}
   virtual ~Entity() = default;
   EntityType getEntityType() const override { return m_entityType; }
 
-private:
+protected:
   const EntityType m_entityType = ENTITY_TYPE;
 };
 } // namespace Entities

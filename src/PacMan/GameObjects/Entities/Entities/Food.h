@@ -16,6 +16,7 @@ namespace Entities {
 
 class Food : public Entity<EntityType::FOOD> {
 public:
+  Food(uint32_t entityId) : Entity(entityId) {}
 private:
 };
 

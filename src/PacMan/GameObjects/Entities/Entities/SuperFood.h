@@ -11,7 +11,9 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class SuperFood : public Entity<EntityType::SUPER_FOOD> {};
+class SuperFood : public Entity<EntityType::SUPER_FOOD> {
+  SuperFood(uint32_t entityId) : Entity(entityId) {}
+};
 
 } // namespace Entities
 } // namespace GameObjects

@@ -11,7 +11,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Wall : public Entity<EntityType::WALL> {};
+class Wall : public Entity<EntityType::WALL> {
+public:
+  Wall(uint32_t entityId) : Entity(entityId) {}
+};
 
 } // namespace Entities
 } // namespace GameObjects

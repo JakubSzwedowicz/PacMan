@@ -11,7 +11,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Ghost : public Entity<EntityType::GHOST> {};
+class Ghost : public Entity<EntityType::GHOST> {
+public:
+  Ghost(uint32_t entityId) : Entity(entityId) {}
+};
 
 } // namespace Entities
 } // namespace GameObjects
