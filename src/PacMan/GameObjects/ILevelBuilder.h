@@ -13,14 +13,9 @@ namespace GameObjects {
 
 class ILevelBuilder {
 public:
+  ILevelBuilder() { reset(); }
   virtual ~ILevelBuilder() = default;
-  bool release(std::unique_ptr<Level> &level) {
-    if (level == nullptr) {
-      return false;
-    }
-    m_level = std::move(level);
-    return (level == nullptr);
-  }
+  std::unique_ptr<Level> release() { return std::move(m_level); }
 
 protected:
   void reset() { m_level = std::make_unique<Level>(); }

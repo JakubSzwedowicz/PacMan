@@ -1,9 +1,48 @@
-#include "Calc/Calc.hpp"
-#include <fmt/core.h>
+#include <ILevelBuilder.h>
+#include <Level.h>
+#include <LevelBuilderFromFile.h>
+#include <execinfo.h> // For backtrace()
 #include <iostream>
+#include <map>
+
+#include "Entities/IEntity.h"
+
+#include "Utils/ILogger.h"
+#include "Utils/Logger.h"
+#include <csignal>
+
+void shutdownLoggers(int signal) {
+  auto logger = std::make_unique<PacMan::Utils::Logger>(
+      "signalHandler", PacMan::Utils::LogLevel::DEBUG);
+  logger->logCritical("Signal " + std::to_string(signal) +
+                      " received, shutting down loggers");
+
+  PacMan::Utils::ILogger::shutdownAll();
+
+  // Continue shutting down a program
+  std::signal(signal, SIG_DFL);
+  std::raise(signal);
+}
 
 int main() {
-  fmt::print("Hello World!\n");
-  std::cout << Calc::Calc::templateAdd(10.0f, 5.5f) << std::endl;
+  std::signal(SIGSEGV, shutdownLoggers);
+
+  auto logger = std::make_unique<PacMan::Utils::Logger>(
+      "main", PacMan::Utils::LogLevel::INFO);
+  logger->logInfo("Starting app");
+
+  PacMan::GameObjects::ILevelBuilder *builder =
+      new PacMan::GameObjects::LevelBuilderFromFile("Resources/Board1.txt");
+  auto level = builder->release();
+
+  for (const auto &row : level->getBoard()) {
+    for (const auto &cell : row) {
+      std::cout << *cell << " ";
+    }
+    std::cout << std::endl;
+  }
+
+  delete builder;
+
   return 0;
 }

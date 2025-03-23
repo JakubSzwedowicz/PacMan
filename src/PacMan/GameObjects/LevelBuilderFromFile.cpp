@@ -5,8 +5,8 @@
 #include "LevelBuilderFromFile.h"
 #include <fstream>
 #include <memory>
-#include <type_traits>
 
+#include "Empty.h"
 #include "Food.h"
 #include "Ghost.h"
 #include "PacMan.h"
@@ -17,18 +17,22 @@ namespace PacMan {
 namespace GameObjects {
 
 LevelBuilderFromFile::LevelBuilderFromFile(const std::string &boardPath)
-    : m_boardPath(boardPath) {
+    : m_logger("LevelBuilderFromFile", Utils::LogLevel::INFO),
+      m_boardPath(boardPath) {
   auto board = createBoard();
-  if (board) {
-    ILevelBuilder::setBoard(std::move(board));
+  if (!board) {
+    m_logger.logError("Failed to create board");
   }
+  setBoard(std::move(board));
 }
 
 std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
   std::ifstream file(m_boardPath);
   if (!file.is_open()) {
+    m_logger.logError("Failed to open file: " + m_boardPath);
     return nullptr;
   }
+  m_logger.logDebug("Opened file: " + m_boardPath);
 
   std::unique_ptr<Level::Board_t> board = std::make_unique<Level::Board_t>();
   for (std::string line; std::getline(file, line);) {
@@ -38,14 +42,13 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
       switch (line[i]) {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::EMPTY):
-        entity = nullptr;
+        entity = std::make_unique<Entities::Empty>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::BRIDGE):
-        //            entity = std::make_unique<Entities::Bridge>();
-        entity = nullptr;
-        // TODO: Log error
+        entity = std::make_unique<Entities::Empty>();
+        m_logger.logError("Bridge entity is not implemented yet");
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
@@ -72,12 +75,20 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
           Entities::EntityType::WALL):
         entity = std::make_unique<Entities::Wall>();
         break;
+      default:;
+        m_logger.logError("Unknown entity of char '" + std::string({line[i]}) +
+                          "'" + " at position (col=" + std::to_string(i) +
+                          ", row=" + std::to_string(board->size()) + ")");
+        break;
       }
       row.push_back(std::move(entity));
     }
     board->push_back(std::move(row));
   }
 
+  m_logger.logInfo("Created a board from file: " + m_boardPath +
+                   ", of size: " + std::to_string(board->size()) + "x" +
+                   std::to_string(board->front().size()));
   return board;
 }
 

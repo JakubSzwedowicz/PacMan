@@ -1,4 +1,5 @@
 set(ENTITIES_SOURCES
+        Empty.cpp
         Entity.cpp
         Food.cpp
         Ghost.cpp

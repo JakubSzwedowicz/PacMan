@@ -25,28 +25,10 @@ public:
   bool isReady() const { return m_levelState == LevelState::READY; }
 
   bool setBoard(std::unique_ptr<Board_t> board);
-  // bool setPacMans(std::vector<std::unique_ptr<Entities::PacMan>> &&pacMans);
-  // bool setGhosts(std::vector<std::unique_ptr<Entities::Ghost>> &&ghosts);
+
+  const Board_t &getBoard() const { return m_board; }
 
 private:
-  // enum class InitializationState : uint8_t {
-  //   BOARD_SET = 1 << 1,
-  //   PACMANS_SET = 1 << 2,
-  //   GHOSTS_SET = 1 << 3
-  // };
-  //
-  // void updateState(const InitializationState state);
-  //
-  // static constexpr uint8_t s_initializationStateReadyMask =
-  //     static_cast<std::underlying_type_t<InitializationState>>(
-  //         InitializationState::BOARD_SET) |
-  //     static_cast<std::underlying_type_t<InitializationState>>(
-  //         InitializationState::PACMANS_SET) |
-  //     static_cast<std::underlying_type_t<InitializationState>>(
-  //         InitializationState::GHOSTS_SET);
-
-  // uint8_t m_initializationStateMask = 0;
-
   LevelState m_levelState = LevelState::NOT_READY;
   Board_t m_board;
   std::vector<Entities::Ghost *> m_ghosts;

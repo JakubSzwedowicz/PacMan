@@ -7,6 +7,8 @@
 
 #include "EntityType.h"
 
+#include <string>
+
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
@@ -15,6 +17,9 @@ class IEntity {
 public:
   virtual ~IEntity() = default;
   virtual EntityType getEntityType() const = 0;
+  friend std::ostream &operator<<(std::ostream &os, const IEntity &entity) {
+    return (os << entity.getEntityType());
+  }
 };
 
 } // namespace Entities

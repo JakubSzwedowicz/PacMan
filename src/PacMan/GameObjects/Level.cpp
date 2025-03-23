@@ -12,6 +12,10 @@ bool Level::setBoard(std::unique_ptr<Board_t> board) {
   m_board = std::move(*board);
   for (const auto &row : m_board) {
     for (const auto &cell : row) {
+      if (!cell) {
+        continue;
+      }
+
       if (cell->getEntityType() == Entities::EntityType::PAC_MAN) {
         auto *pacMan = dynamic_cast<Entities::PacMan *>(cell.get());
         if (pacMan == nullptr) {

@@ -6,6 +6,8 @@
 #define LEVELBUILDERFROMFILE_H
 
 #include "ILevelBuilder.h"
+#include "Utils/Logger.h"
+
 #include <memory>
 
 namespace PacMan {
@@ -16,6 +18,7 @@ public:
   explicit LevelBuilderFromFile(const std::string &boardPath);
 
 private:
+  mutable Utils::Logger m_logger;
   std::unique_ptr<Level::Board_t> createBoard() const;
   const std::string &m_boardPath;
 };
