@@ -5,6 +5,8 @@
 #ifndef FOOD_H
 #define FOOD_H
 
+#include <cstdint>
+
 #include "EntityType.h"
 #include "IEntity.h"
 
@@ -17,6 +19,7 @@ namespace Entities {
 class Food : public Entity<EntityType::FOOD> {
 public:
   Food(uint32_t entityId) : Entity(entityId) {}
+
 private:
 };
 

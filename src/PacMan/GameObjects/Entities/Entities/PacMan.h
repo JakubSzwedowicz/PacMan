@@ -5,6 +5,8 @@
 #ifndef PACMAN_H
 #define PACMAN_H
 
+#include <cstdint>
+
 #include "Entities/Entity.h"
 
 namespace PacMan {

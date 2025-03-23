@@ -6,6 +6,7 @@
 #define IENTITY_H
 
 #include "EntityType.h"
+#include <cstdint>
 
 namespace PacMan {
 namespace GameObjects {
@@ -21,6 +22,7 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const IEntity &entity) {
     return (os << entity.getEntityType());
   }
+
 protected:
   uint32_t m_entityId;
 };

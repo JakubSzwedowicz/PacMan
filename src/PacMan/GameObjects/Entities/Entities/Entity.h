@@ -5,6 +5,8 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include <cstdint>
+
 #include "EntityType.h"
 #include "IEntity.h"
 

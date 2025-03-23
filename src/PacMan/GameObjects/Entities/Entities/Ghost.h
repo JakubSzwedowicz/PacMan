@@ -5,6 +5,8 @@
 #ifndef GHOST_H
 #define GHOST_H
 
+#include <cstdint>
+
 #include "Entities/Entity.h"
 
 namespace PacMan {

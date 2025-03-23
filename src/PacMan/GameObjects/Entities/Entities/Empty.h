@@ -5,6 +5,8 @@
 #ifndef EMPTY_H
 #define EMPTY_H
 
+#include <cstdint>
+
 #include "Entity.h"
 #include "EntityType.h"
 

@@ -4,6 +4,7 @@
 
 #ifndef ENTITYUID_H
 #define ENTITYUID_H
+
 #include <ostream>
 
 namespace PacMan {

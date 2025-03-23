@@ -5,6 +5,8 @@
 #ifndef WALL_H
 #define WALL_H
 
+#include <cstdint>
+
 #include "Entities/Entity.h"
 
 namespace PacMan {
