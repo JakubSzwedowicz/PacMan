@@ -5,6 +5,9 @@
 #ifndef GAMEHANDLER_H
 #define GAMEHANDLER_H
 
+#include <string>
+#include <vector>
+
 namespace PacMan {
 namespace GameLogic {
 
@@ -14,7 +17,7 @@ public:
 
 private:
   // TOOD: Add ResoruceManager to handle this type of stuff
-  const std::vector<std::string> m_possibleBoards = {"Board1.txt"}
+  const std::vector<std::string> m_possibleBoards = {"Board1.txt"};
 };
 
 } // namespace GameLogic

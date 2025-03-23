@@ -27,7 +27,6 @@ public:
 
 private:
   void initLogger();
-  void shutdownOnSignal(int signal);
   std::shared_ptr<spdlog::logger> m_logger;
 };
 

@@ -46,7 +46,12 @@
       "displayName": "App Debug Build",
       "configurePreset": "debug",
       "configuration": "Debug",
-      "jobs": 8
+      "jobs": 8,
+      "targets": [
+        "Server",
+        "App",
+        "Client"
+      ]
     },
     {
       "name": "app-release",

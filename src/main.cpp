@@ -1,5 +1,4 @@
 #include <csignal>
-#include <execinfo.h> // For backtrace()
 #include <iostream>
 #include <map>
 
@@ -12,7 +11,6 @@
 #include "Utils/ILogger.h"
 #include "Utils/Logger.h"
 #include "Utils/Signals.h"
-
 
 int main() {
   PacMan::Utils::ILogger::setLogFileName("MainLogs.txt");

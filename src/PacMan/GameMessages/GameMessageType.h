@@ -5,13 +5,13 @@
 #ifndef GAMEEVENT_H
 #define GAMEEVENT_H
 
-#include <iostream>
+#include <cstdint>
 
 namespace PacMan {
 namespace GameLogic {
-namespace GameEvents {
+namespace GameMessages {
 
-enum class GameEvent : uint8_t {
+enum class GameMessageType : uint8_t {
   GAME_CREATED,
   GAME_START,
   GAME_OVER,

@@ -6,7 +6,7 @@
 #define SIGNALS_H
 
 namespace PacMan::Utils {
-void shutdownLoggers(int signal) {
+inline void shutdownLoggers(int signal) {
   auto logger = std::make_unique<PacMan::Utils::Logger>(
       "signalHandler", PacMan::Utils::LogLevel::DEBUG);
   logger->logCritical("Signal " + std::to_string(signal) +

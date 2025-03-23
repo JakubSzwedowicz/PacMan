@@ -8,6 +8,7 @@ namespace PacMan {
 namespace Utils {
 
 std::unordered_set<ILogger *> ILogger::s_loggers;
+std::string ILogger::s_logFileName = "log.txt";
 
 ILogger::ILogger(const std::string &scopeName, LogLevel logLevel)
     : m_scopeName(scopeName), m_logLevel(logLevel) {
