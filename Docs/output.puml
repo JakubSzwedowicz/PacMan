@@ -10,11 +10,6 @@ class Client {
 }
 
 
-class Server {
-	+startGame() : void
-}
-
-
 namespace PacMan {
 	namespace Utils {
 		abstract class ILogger {
@@ -23,12 +18,14 @@ namespace PacMan {
 			+operator==(const ILogger& other) : bool {query}
 			#m_logLevel : const LogLevel
 			#m_scopeName : const std::string
+			#{static} s_logFileName : static std::string
 			-{static} s_loggers : static std::unordered_set<ILogger*>
 			+{abstract} logCritical(const std::string& message) : void
 			+{abstract} logDebug(const std::string& message) : void
 			+{abstract} logError(const std::string& message) : void
 			+{abstract} logInfo(const std::string& message) : void
 			+{abstract} logWarning(const std::string& message) : void
+			+{static} setLogFileName(const std::string& logFileName) : void
 			+{abstract} shutdown() : void
 			+{static} shutdownAll() : void
 		}
@@ -44,7 +41,6 @@ namespace PacMan {
 			+logInfo(const std::string& message) : void
 			+logWarning(const std::string& message) : void
 			+shutdown() : void
-			-shutdownOnSignal(int signal) : void
 		}
 
 		enum LogLevel {
@@ -52,6 +48,37 @@ namespace PacMan {
 			ERROR
 			INFO
 			WARNING
+		}
+	}
+
+	namespace Server {
+		class Server {
+			-m_reqRespHandler : GameMessagesHandlers::ReqRespHandler
+			-m_gameHandler : PacMan::GameLogic::GameHandler
+			-m_logger : Utils::Logger
+			-m_clientServerReqReplSocketAddr : const std::string
+			-m_hostIp : const std::string
+			- : friend GameMessagesHandlers::ReqRespHandler
+			+main() : int
+			-m_listenToPlayers : std::atomic_bool
+			-m_serverWorking : std::atomic_bool
+			-m_startGameCondition : std::condition_variable
+			-m_startGameMutex : std::mutex
+			-m_gameRunner : std::unique_ptr<PacMan::GameLogic::GameRunner>
+			+listenForPlayers() : void
+			+loadGame(const std::string& boardName) : void
+			+shutdown() : void
+			+startGame() : void
+		}
+
+		namespace GameMessagesHandlers {
+			class ReqRespHandler {
+				+ReqRespHandler(Server* server)
+				-m_server : Server*
+				-m_logger : Utils::Logger
+				+handleClientReqRespGetGames(const GameLogic::GameMessages::ClientReqGetGames* clientReq) : zmq::message_t
+				+handleReqRepl(const GameLogic::GameMessages::ConnectionMessageHeader* connHeader) : zmq::message_t
+			}
 		}
 	}
 
@@ -144,19 +171,31 @@ namespace PacMan {
 	namespace GameLogic {
 		class GameHandler {
 			+GameHandler()
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_possibleBoards : const std::vector<std::string>
+			-m_nextGameId : int
+			+loadGame(const std::string& boardName) : std::unique_ptr<GameRunner>
 		}
 
 		class GameRunner {
-			+GameRunner(std::unique_ptr<GameObjects::Level> level)
+			+GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level)
 			+startGame() : bool
+			-m_gameId : const int
+			+getGameId() : int {query}
 			-m_level : std::unique_ptr<GameObjects::Level>
 		}
 
-		namespace GameEvents {
-			enum ConnectionEvents {
+		namespace GameMessages {
+			enum ConnectionMessageType {
+				CONNECT_TO_GAME
+				GET_GAMES
 			}
 
-			enum GameEvent {
+			enum GameMessageType {
 				ENTITY_COLLISION
 				ENTITY_DEATH
 				ENTITY_DIRECTION_CHANGE
@@ -173,32 +212,79 @@ namespace PacMan {
 				SERVER
 			}
 
+			enum MessageType {
+				CONNECTION_MESSAGE
+				GAME_MESSAGE
+			}
+
+			class ClientReqGetGames {
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+			}
+
+			class ClientReqGetGames::ClientReplGetGames {
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+header : ConnectionMessageHeader
+				+gameId : int
+			}
+
+			class ConnectionMessageHeader {
+				+event : ConnectionMessageType
+				+header : MessageHeader
+			}
+
+			class GameMessageHeader {
+				+event : GameMessageType
+				+source : MessageHeader
+			}
+
 			class MessageHeader {
-				+event : GameEvent
 				+source : MessageSource
+				+event : MessageType
+			}
+
+			class Payload {
+				+data : std::vector<uint8_t>
 			}
 
 			class ServerMessageGameCreated {
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
 				+level : GameObjects::Level
-				+header : MessageHeader
-				+header : MessageHeader
-				+header : MessageHeader
 			}
 
 			class ServerMessageGameCreated::ServerMessageGameStarted {
-				+header : MessageHeader
-				+header : MessageHeader
-				+header : MessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
 			}
 
 			class ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath {
-				+header : MessageHeader
-				+header : MessageHeader
-				+header : MessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
 			}
 
 			class ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath::PlayerMessage {
-				+header : MessageHeader
+				+header : GameMessageHeader
 			}
 		}
 	}
@@ -242,7 +328,25 @@ PacMan.Utils.ILogger <|-- PacMan.Utils.Logger
 
 /' Aggregation relationships '/
 
+PacMan.GameLogic.GameMessages.ClientReqGetGames "6" *-- PacMan.GameLogic.GameMessages.ConnectionMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ClientReqGetGames::ClientReplGetGames "6" *-- PacMan.GameLogic.GameMessages.ConnectionMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ConnectionMessageHeader *-- PacMan.GameLogic.GameMessages.ConnectionMessageType
+
+
+PacMan.GameLogic.GameMessages.ConnectionMessageHeader *-- PacMan.GameLogic.GameMessages.MessageHeader
+
+
 PacMan.GameObjects.Entities.Entity *-- PacMan.GameObjects.Entities.EntityType
+
+
+PacMan.GameLogic.GameMessages.GameMessageHeader *-- PacMan.GameLogic.GameMessages.GameMessageType
+
+
+PacMan.GameLogic.GameMessages.GameMessageHeader *-- PacMan.GameLogic.GameMessages.MessageHeader
 
 
 PacMan.GameObjects.ILevelBuilder o-- PacMan.GameObjects.Level
@@ -257,22 +361,28 @@ PacMan.Utils.ILogger *-- PacMan.Utils.LogLevel
 PacMan.GameObjects.Level *-- PacMan.GameObjects.LevelState
 
 
-PacMan.GameLogic.GameEvents.MessageHeader *-- PacMan.GameLogic.GameEvents.GameEvent
+PacMan.GameLogic.GameMessages.MessageHeader *-- PacMan.GameLogic.GameMessages.MessageSource
 
 
-PacMan.GameLogic.GameEvents.MessageHeader *-- PacMan.GameLogic.GameEvents.MessageSource
+PacMan.GameLogic.GameMessages.MessageHeader *-- PacMan.GameLogic.GameMessages.MessageType
 
 
-PacMan.GameLogic.GameEvents.ServerMessageGameCreated "3" *-- PacMan.GameLogic.GameEvents.MessageHeader
+PacMan.Server.GameMessagesHandlers.ReqRespHandler o-- PacMan.Server.Server
 
 
-PacMan.GameLogic.GameEvents.ServerMessageGameCreated::ServerMessageGameStarted "3" *-- PacMan.GameLogic.GameEvents.MessageHeader
+PacMan.Server.Server *-- PacMan.Server.GameMessagesHandlers.ReqRespHandler
 
 
-PacMan.GameLogic.GameEvents.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath "3" *-- PacMan.GameLogic.GameEvents.MessageHeader
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
 
 
-PacMan.GameLogic.GameEvents.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath::PlayerMessage *-- PacMan.GameLogic.GameEvents.MessageHeader
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath::PlayerMessage *-- PacMan.GameLogic.GameMessages.GameMessageHeader
 
 
 
@@ -281,7 +391,10 @@ PacMan.GameLogic.GameEvents.ServerMessageGameCreated::ServerMessageGameStarted::
 
 /' Nested objects '/
 
-PacMan.GameLogic.GameEvents.ServerMessageGameCreated +-- PacMan.GameLogic.GameEvents.ServerMessageGameCreated.ServerMessageGameStarted
+PacMan.GameLogic.GameMessages.ClientReqGetGames +-- PacMan.GameLogic.GameMessages.ClientReqGetGames.ClientReplGetGames
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated +-- PacMan.GameLogic.GameMessages.ServerMessageGameCreated.ServerMessageGameStarted
 
 
 
