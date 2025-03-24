@@ -10,20 +10,7 @@ namespace PacMan {
 namespace GameLogic {
 namespace GameMessages {
 
-enum class MessageSource : uint8_t { CLIENT, SERVER };
-enum class MessageType : uint8_t {
-  CONNECTION_MESSAGE,
-  GAME_MESSAGE,
-};
-
-struct MessageHeader {
-  MessageSource source;
-  MessageType event;
-};
-
-struct Payload {
-  std::vector<uint8_t> data;
-};
+enum class MessageType : uint8_t { GAME_STATE };
 
 } // namespace GameMessages
 } // namespace GameLogic
