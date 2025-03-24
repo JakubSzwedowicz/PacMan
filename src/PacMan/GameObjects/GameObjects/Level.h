@@ -5,6 +5,9 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+#include "Entities/Ghost.h"
+#include "Entities/IEntity.h"
+#include "Entities/PacMan.h"
 #include "LevelState.h"
 
 #include <memory>
@@ -12,12 +15,6 @@
 
 namespace PacMan {
 namespace GameObjects {
-
-namespace Entities {
-class Ghost;
-class PacMan;
-class IEntity;
-} // namespace Entities
 
 class Level {
 public:

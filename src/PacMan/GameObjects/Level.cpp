@@ -5,8 +5,6 @@
 #include "GameObjects/Level.h"
 
 #include "Entities/EntityType.h"
-#include "Entities/Ghost.h"
-#include "Entities/PacMan.h"
 
 namespace PacMan {
 namespace GameObjects {

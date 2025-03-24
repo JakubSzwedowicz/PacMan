@@ -14,10 +14,13 @@ namespace GameLogic {
 
 class GameRunner {
 public:
-  GameRunner(std::unique_ptr<GameObjects::Level> level);
+  GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level);
   bool startGame();
 
+  int getGameId() const { return m_gameId; }
+
 private:
+  const int m_gameId;
   std::unique_ptr<GameObjects::Level> m_level;
 };
 

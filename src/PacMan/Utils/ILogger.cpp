@@ -4,6 +4,8 @@
 
 #include "Utils/ILogger.h"
 
+#include <spdlog/spdlog.h>
+
 namespace PacMan {
 namespace Utils {
 
@@ -20,6 +22,7 @@ void ILogger::shutdownAll() {
   for (auto &logger : s_loggers) {
     logger->shutdown();
   }
+  spdlog::shutdown();
 }
 
 void ILogger::setLogFileName(const std::string &logFileName) {

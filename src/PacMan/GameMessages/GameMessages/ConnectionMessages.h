@@ -5,8 +5,10 @@
 #ifndef CONNECTIONMESSAGES_H
 #define CONNECTIONMESSAGES_H
 
+#include <vector>
+
 #include "ConnectionMessageType.h"
-#include "MessageType.h"
+#include "MessageHeader.h"
 
 namespace PacMan {
 namespace GameLogic {
@@ -18,12 +20,16 @@ struct ConnectionMessageHeader {
 };
 
 struct ClientReqGetGames {
-  ConnectionMessageHeader header = {{MessageSource::CLIENT, MessageType::CONNECTION_MESSAGE}, ConnectionMessageType::GET_GAMES};
+  ConnectionMessageHeader header = {
+      {MessageSource::CLIENT, MessageType::CONNECTION_MESSAGE},
+      ConnectionMessageType::GET_GAMES};
 };
 
 struct ClientReplGetGames {
-  ConnectionMessageHeader header = {{MessageSource::SERVER, MessageType::CONNECTION_MESSAGE}, ConnectionMessageType::GET_GAMES};
-
+  ConnectionMessageHeader header = {
+      {MessageSource::SERVER, MessageType::CONNECTION_MESSAGE},
+      ConnectionMessageType::GET_GAMES};
+  int gameId;
 };
 
 } // namespace GameMessages

@@ -4,7 +4,7 @@
 
 #include <csignal>
 
-#include "Server.h"
+#include "Server/Server.h"
 #include "Utils/ILogger.h"
 #include "Utils/Logger.h"
 #include "Utils/Signals.h"
@@ -18,7 +18,7 @@ int main() {
   auto logger = std::make_unique<PacMan::Utils::Logger>(
       "main", PacMan::Utils::LogLevel::DEBUG);
 
-  Server server;
-  server.startGame();
+  PacMan::Server::Server server;
+  server.main();
   return 0;
 }

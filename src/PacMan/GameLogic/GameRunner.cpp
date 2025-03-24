@@ -3,7 +3,13 @@
 //
 
 #include "GameLogic/GameRunner.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
-namespace GameLogic {} // namespace GameLogic
+namespace GameLogic {
+
+GameRunner::GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level)
+    : m_gameId(gameId), m_level(std::move(level)) {}
+
+} // namespace GameLogic
 } // namespace PacMan

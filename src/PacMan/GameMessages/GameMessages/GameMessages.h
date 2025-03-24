@@ -7,9 +7,9 @@
 
 #include <cstdint>
 
+#include "../../GameObjects/GameObjects/Level.h"
 #include "GameMessageType.h"
-#include "GameObjects/Level.h"
-#include "MessageType.h"
+#include "MessageHeader.h"
 
 namespace PacMan {
 namespace GameLogic {
@@ -21,16 +21,22 @@ struct GameMessageHeader {
 };
 
 struct ServerMessageGameCreated {
-  GameMessageHeader header = {{MessageSource::SERVER, MessageType::GAME_MESSAGE}, GameMessageType::GAME_CREATED};
+  GameMessageHeader header = {
+      {MessageSource::SERVER, MessageType::GAME_MESSAGE},
+      GameMessageType::GAME_CREATED};
   GameObjects::Level level;
 };
 
 struct ServerMessageGameStarted {
-  GameMessageHeader header = {{MessageSource::SERVER, MessageType::GAME_MESSAGE}, GameMessageType::GAME_START};
+  GameMessageHeader header = {
+      {MessageSource::SERVER, MessageType::GAME_MESSAGE},
+      GameMessageType::GAME_START};
 };
 
 struct ServerMessageGameEntityDeath {
-  GameMessageHeader header = {{MessageSource::SERVER, MessageType::GAME_MESSAGE}, GameMessageType::ENTITY_DEATH};
+  GameMessageHeader header = {
+      {MessageSource::SERVER, MessageType::GAME_MESSAGE},
+      GameMessageType::ENTITY_DEATH};
 };
 
 struct PlayerMessage {

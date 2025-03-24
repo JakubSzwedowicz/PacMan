@@ -1,10 +1,19 @@
 find_package(cppzmq REQUIRED)
 
-add_executable(Server
+add_executable(ServerApp
         main.cpp
+)
+
+target_compile_features(ServerApp PRIVATE cxx_std_17)
+target_link_libraries(ServerApp PRIVATE Utils)
+
+add_library(Server
         Server.cpp
 )
 
-target_compile_features(Server PRIVATE cxx_std_17)
-target_include_directories(Server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Server PRIVATE cppzmq Utils)
+add_subdirectory(GameMessagesHandlers)
+target_compile_features(Server PUBLIC cxx_std_17)
+target_include_directories(Server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(Server PUBLIC cppzmq GameMessagesHandlers GameMessages GameLogic Utils)
+
+target_link_libraries(ServerApp PRIVATE Server)

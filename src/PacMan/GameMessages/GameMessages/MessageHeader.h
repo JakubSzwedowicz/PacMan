@@ -21,6 +21,10 @@ struct MessageHeader {
   MessageType event;
 };
 
+struct Payload {
+  std::vector<uint8_t> data;
+};
+
 } // namespace GameMessages
 } // namespace GameLogic
 } // namespace PacMan

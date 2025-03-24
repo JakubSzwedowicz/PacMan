@@ -32,11 +32,11 @@ void Logger::initLogger() {
   static std::atomic_bool isInitialized = false;
   if (!isInitialized) {
     fileSink->set_pattern("[%Y-%m-%d %H:%M:%S] [T:%t] [%l] [%n]: %v");
+    spdlog::flush_every(std::chrono::seconds(1));
     isInitialized = true;
   }
 
   m_logger = std::make_shared<spdlog::logger>(m_scopeName, fileSink);
-
   spdlog::register_logger(m_logger);
 }
 
