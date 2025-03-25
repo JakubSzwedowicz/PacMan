@@ -35,54 +35,58 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
   m_logger.logDebug("Opened file: " + m_boardPath);
 
   std::unique_ptr<Level::Board_t> board = std::make_unique<Level::Board_t>();
-  uint32_t entityId = 0;
-  for (std::string line; std::getline(file, line); entityId++) {
+  Entities::Position position = {0, 0};
+  for (std::string line; std::getline(file, line); position.y++) {
     Level::Board_t::value_type row;
-    for (unsigned int i = 0; i < line.size(); i++) {
+    for (unsigned int colIdx = 0; colIdx < line.size();
+         colIdx++, position.x++) {
       std::unique_ptr<Entities::IEntity> entity;
-      switch (line[i]) {
+      switch (line[colIdx]) {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::EMPTY):
-        entity = std::make_unique<Entities::Empty>(entityId);
+        entity = std::make_unique<Entities::Empty>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::BRIDGE):
-        // entity = std::make_unique<Entities::Bridge>(entityId);
-        entity = std::make_unique<Entities::Empty>(entityId);
+        // entity = std::make_unique<Entities::Bridge>();
+        entity = std::make_unique<Entities::Empty>();
         m_logger.logError("Bridge entity is not implemented yet");
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::FOOD):
-        entity = std::make_unique<Entities::Food>(entityId);
+        entity = std::make_unique<Entities::Food>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
-        entity = std::make_unique<Entities::Ghost>(entityId);
+        entity = std::make_unique<Entities::Ghost>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::PAC_MAN):
-        entity = std::make_unique<Entities::PacMan>(entityId);
+        entity = std::make_unique<Entities::PacMan>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::SUPER_FOOD):
-        entity = std::make_unique<Entities::SuperFood>(entityId);
+        entity = std::make_unique<Entities::SuperFood>();
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::WALL):
-        entity = std::make_unique<Entities::Wall>(entityId);
+        entity = std::make_unique<Entities::Wall>();
         break;
       default:;
-        m_logger.logError("Unknown entity of char '" + std::string({line[i]}) +
-                          "'" + " at position (col=" + std::to_string(i) +
+        m_logger.logError("Unknown entity of char '" +
+                          std::string({line[colIdx]}) + "'" +
+                          " at position (col=" + std::to_string(colIdx) +
                           ", row=" + std::to_string(board->size()) + ")");
         break;
       }
+
+      entity->setTilePosition(position);
       row.push_back(std::move(entity));
     }
     board->push_back(std::move(row));

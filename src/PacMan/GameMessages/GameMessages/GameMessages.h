@@ -9,7 +9,7 @@
 
 #include "../../GameObjects/GameObjects/Level.h"
 #include "GameMessageType.h"
-#include "MessageHeader.h"
+#include "MessageType.h"
 
 namespace PacMan {
 namespace GameLogic {

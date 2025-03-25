@@ -15,7 +15,7 @@ namespace Entities {
 
 class Wall : public Entity<EntityType::WALL> {
 public:
-  Wall(uint32_t entityId) : Entity(entityId) {}
+  Wall() : Entity() {}
 };
 
 } // namespace Entities

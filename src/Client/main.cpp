@@ -2,8 +2,6 @@
 // Created by jakubszwedowicz on 3/23/25.
 //
 
-#include "Client.h"
+#include "Client/Client.h"
 
-int main(int argc, char** argv) {
-
-}
+int main(int argc, char **argv) {}

@@ -1,8 +1,10 @@
 set(ENTITIES_SOURCES
         Empty.cpp
         Entity.cpp
+        MovingEntity.cpp
         Food.cpp
         Ghost.cpp
+        ../../GameLogic/Strategies/GhostStrategies.cpp
         PacMan.cpp
         SuperFood.cpp
         Wall.cpp)

@@ -16,7 +16,7 @@ namespace Entities {
 
 class Empty : public Entity<EntityType::EMPTY> {
 public:
-  Empty(uint32_t entityId) : Entity(entityId) {}
+  Empty() : Entity() {}
 };
 
 } // namespace Entities

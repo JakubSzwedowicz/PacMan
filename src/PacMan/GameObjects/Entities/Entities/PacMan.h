@@ -5,17 +5,18 @@
 #ifndef PACMAN_H
 #define PACMAN_H
 
-#include <cstdint>
+#include "EntityType.h"
+#include "MovingEntity.h"
 
-#include "Entities/Entity.h"
+#include <cstdint>
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class PacMan : public Entity<EntityType::PAC_MAN> {
+class PacMan : public MovingEntity<EntityType::PAC_MAN> {
 public:
-  PacMan(uint32_t entityId) : Entity(entityId) {}
+  PacMan() : MovingEntity() {}
 };
 
 } // namespace Entities

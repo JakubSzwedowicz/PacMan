@@ -8,27 +8,32 @@
 #include <vector>
 
 #include "ConnectionMessageType.h"
-#include "MessageHeader.h"
+#include "MessageType.h"
 
 namespace PacMan {
 namespace GameLogic {
 namespace GameMessages {
 
 struct ConnectionMessageHeader {
+  ConnectionMessageHeader(MessageSource source, MessageType type,
+                          ConnectionMessageType connType)
+      : header({source, type}), event(connType) {}
   MessageHeader header;
   ConnectionMessageType event;
 };
 
-struct ClientReqGetGames {
-  ConnectionMessageHeader header = {
-      {MessageSource::CLIENT, MessageType::CONNECTION_MESSAGE},
-      ConnectionMessageType::GET_GAMES};
+struct ClientReqGetGames : public ConnectionMessageHeader {
+  ClientReqGetGames()
+      : ConnectionMessageHeader(MessageSource::CLIENT,
+                                MessageType::CONNECTION_MESSAGE,
+                                ConnectionMessageType::GET_GAMES) {}
 };
 
-struct ClientReplGetGames {
-  ConnectionMessageHeader header = {
-      {MessageSource::SERVER, MessageType::CONNECTION_MESSAGE},
-      ConnectionMessageType::GET_GAMES};
+struct ClientReplGetGames : public ConnectionMessageHeader {
+  ClientReplGetGames()
+      : ConnectionMessageHeader(MessageSource::SERVER,
+                                MessageType::CONNECTION_MESSAGE,
+                                ConnectionMessageType::GET_GAMES) {}
   int gameId;
 };
 

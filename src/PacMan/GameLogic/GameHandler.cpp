@@ -22,7 +22,6 @@ GameHandler::loadGame(const std::string &boardName) {
   m_logger.logInfo("Returning a game with id '" + std::to_string(m_nextGameId) +
                    "'");
   return std::make_unique<GameRunner>((m_nextGameId++), std::move(level));
-  ;
 }
 
 } // namespace GameLogic

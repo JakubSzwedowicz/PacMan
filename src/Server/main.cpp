@@ -18,6 +18,7 @@ int main() {
   auto logger = std::make_unique<PacMan::Utils::Logger>(
       "main", PacMan::Utils::LogLevel::DEBUG);
 
+  logger->logInfo("Launching Server");
   PacMan::Server::Server server;
   server.main();
   return 0;

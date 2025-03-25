@@ -7,7 +7,7 @@
 #include <thread>
 #include <zmq.hpp>
 
-#include "GameMessages/MessageHeader.h"
+#include "GameMessages/MessageType.h"
 #include "Server/Server.h"
 
 namespace PacMan {

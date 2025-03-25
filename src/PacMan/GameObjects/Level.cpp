@@ -4,7 +4,10 @@
 
 #include "GameObjects/Level.h"
 
+#include "Entities/Empty.h"
 #include "Entities/EntityType.h"
+
+#include <utility>
 
 namespace PacMan {
 namespace GameObjects {
@@ -21,21 +24,60 @@ bool Level::setBoard(std::unique_ptr<Board_t> board) {
       if (cell->getEntityType() == Entities::EntityType::PAC_MAN) {
         auto *pacMan = dynamic_cast<Entities::PacMan *>(cell.get());
         if (pacMan == nullptr) {
+          m_logger.logError("Entity could not be cast to PacMan at position " +
+                            cell->getTilePosition().toString());
           return false;
         }
         m_pacMans.push_back(pacMan);
       } else if (cell->getEntityType() == Entities::EntityType::GHOST) {
         auto *ghost = dynamic_cast<Entities::Ghost *>(cell.get());
         if (ghost == nullptr) {
+          m_logger.logError("Entity could not be cast to Ghost at position " +
+                            cell->getTilePosition().toString());
           return false;
         }
         m_ghosts.push_back(ghost);
+      } else if (cell->getEntityType() == Entities::EntityType::FOOD) {
+        m_numberOfFood++;
       }
     }
   }
 
   m_levelState = LevelState::READY;
   return true;
+}
+
+std::vector<Entities::Position>
+Level::getValidAdjacentPositions(const Entities::Position &pos) const {
+  std::vector<Entities::Position> result;
+
+  std::vector<Entities::Position> offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+  for (const auto &offset : offsets) {
+    int newX = pos.x + offset.x;
+    int newY = pos.y + offset.y;
+    if (newX >= 0 && newX < getWidth() && newY >= 0 && newY < getHeight()) {
+      bool isWall =
+          m_board[newY][newX]->getEntityType() == Entities::EntityType::WALL;
+      if (!isWall) {
+        result.push_back(Entities::Position{newX, newY});
+      }
+    }
+  }
+  return result;
+}
+
+void Level::swapEntities(Entities::Position pos1, Entities::Position pos2) {
+  std::swap(m_board[pos1.y][pos1.x]->getTilePosition(),
+            m_board[pos2.y][pos2.x]->getTilePosition());
+  std::swap(m_board[pos1.y][pos1.x], m_board[pos2.y][pos2.x]);
+}
+
+std::unique_ptr<Entities::IEntity> Level::removeEntity(Entities::Position pos) {
+  auto empty = std::make_unique<Entities::Empty>();
+  empty->setTilePosition(pos);
+
+  auto result = std::exchange(m_board[pos.y][pos.x], std::move(empty));
+  return result;
 }
 
 // bool Level::setBoard(Board_t &&board) {

@@ -7,15 +7,18 @@
 
 #include <cstdint>
 
-#include "Entities/Entity.h"
+#include "EntityType.h"
+#include "MovingEntity.h"
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Ghost : public Entity<EntityType::GHOST> {
+enum class GhostBehaviour : uint8_t { CHASE, SCATTER, FRIGHTENED };
+
+class Ghost : public MovingEntity<EntityType::GHOST> {
 public:
-  Ghost(uint32_t entityId) : Entity(entityId) {}
+  Ghost() : MovingEntity() {}
 };
 
 } // namespace Entities

@@ -15,7 +15,7 @@ namespace Entities {
 
 class SuperFood : public Entity<EntityType::SUPER_FOOD> {
 public:
-  SuperFood(uint32_t entityId) : Entity(entityId) {}
+  SuperFood() : Entity() {}
 };
 
 } // namespace Entities
