@@ -8,7 +8,7 @@ namespace Strategies {
 
 #include "Strategies/GhostStrategies.h"
 
-std::vector<Position> PacMan::GameLogic::Strategies::PathFinder::findPath(
+std::vector<GameObjects::Entities::TilePosition> PacMan::GameLogic::Strategies::PathFinder::findPath(
     const Position &start, const Position &goal, const Level &maze) {
   {
     // Priority queue for A* frontier

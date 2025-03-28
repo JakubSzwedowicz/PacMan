@@ -18,6 +18,8 @@
 namespace PacMan {
 namespace GameLogic {
 
+using namespace GameObjects;
+using namespace Entities;
 class GameRunner {
 public:
   GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level);
@@ -28,22 +30,13 @@ public:
 private:
   void gameLoop();
   void update(std::chrono::milliseconds deltaTime);
-  void updatePacMan(PacMan::GameObjects::Entities::PacMan &pacman,
-                    std::chrono::milliseconds deltaTime,
-                    PacMan::GameObjects::Level::Board_t &board);
-  void updateGhost(GameObjects::Entities::Ghost &ghost,
-                   std::chrono::milliseconds deltaTime,
-                   PacMan::GameObjects::Level::Board_t &board);
-  bool canMove(GameObjects::Entities::TilePosition tilePosition,
-               GameObjects::Entities::EntityDirection direction,
-               PacMan::GameObjects::Level::Board_t &board) const;
-  GameObjects::Entities::RealPosition
-  moveTowards(GameObjects::Entities::RealPosition realPosition,
-              GameObjects::Entities::EntityDirection direction,
-              float distance) const;
-  void moveTowardsGrid(int &x, int &y,
-                       GameObjects::Entities::EntityDirection direction,
-                       float distance) const;
+  void updateMovingEntity(MovingEntity& movingEntity, std::chrono::milliseconds deltaTime);
+  void updateGhost(Ghost &ghost, std::chrono::milliseconds deltaTime);
+  bool canMove(const TilePosition& tilePosition, const EntityDirection& direction) const;
+  RealPosition moveTowards(const RealPosition& realPosition, const EntityDirection& direction,
+                           const float distance) const;
+  TilePosition moveTowardsGrid(const TilePosition &tilePosition,
+      const EntityDirection& direction, const int distance) const;
   bool checkGameOver() const;
 
 private:

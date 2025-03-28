@@ -8,19 +8,20 @@
 #include <vector>
 
 #include "Entities/Ghost.h"
-#include "Entities/IEntity.h"
 #include "Entities/PacMan.h"
-#include "GameObjects/Level.h"
+#include "Entities/MovingEntity.h"
 
 namespace PacMan {
 namespace GameLogic {
 namespace Strategies {
 
+using namespace ::PacMan::GameObjects::Entities;
+
 // A* Pathfinding Algorithm
 class PathFinder {
 public:
   // Find path between two positions using A* algorithm
-  static std::vector<Position>
+  static std::vector<TilePosition>
   findPath(const Position &start, const Position &goal, const Level &maze);
 
 private:

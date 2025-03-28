@@ -5,8 +5,8 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+#include "Entities/Entity.h"
 #include "Entities/Ghost.h"
-#include "Entities/IEntity.h"
 #include "Entities/PacMan.h"
 #include "LevelState.h"
 #include "Utils/Logger.h"
@@ -19,17 +19,28 @@ namespace GameObjects {
 
 class Level {
 public:
-  using Board_t = std::vector<std::vector<std::unique_ptr<Entities::IEntity>>>;
+  using Board_t = std::vector<std::vector<std::unique_ptr<Entities::Entity>>>;
   Level() = default;
 
-  void swapEntities(Entities::Position pos1, Entities::Position pos2);
-  std::unique_ptr<Entities::IEntity> removeEntity(Entities::Position pos);
+  void swapEntities(const Entities::TilePosition &pos1,
+                           const Entities::TilePosition &pos2);
+  std::unique_ptr<Entities::Entity>
+  removeEntity(const Entities::TilePosition &pos);
 
-  std::vector<Entities::Position>
-  getValidAdjacentPositions(const Entities::Position &pos) const;
+  std::vector<Entities::TilePosition>
+  getValidAdjacentPositions(const Entities::TilePosition &pos) const;
 
   bool isReady() const { return m_levelState == LevelState::READY; }
+  bool isTilePositionValid(const Entities::TilePosition &pos) const {
+    return pos.x >= 0 && static_cast<size_t>(pos.x) < getWidth() && pos.y >= 0 &&
+           static_cast<size_t>(pos.y)  < getHeight();
+  }
   bool setBoard(std::unique_ptr<Board_t> board);
+  const Board_t::value_type::value_type &
+  getEntityOnTile(const Entities::TilePosition &tilePosition) const {
+    return m_board[tilePosition.y][tilePosition.x];
+  }
+
   Board_t &getBoard() { return m_board; }
   size_t getWidth() const { return m_board.front().size(); }
   size_t getHeight() const { return m_board.size(); }
@@ -38,6 +49,11 @@ public:
   int getNumberOfFood() const { return m_numberOfFood; }
 
 private:
+  Board_t::value_type::value_type &
+  getMutableEntityOnTile(const Entities::TilePosition &tilePosition) {
+    return m_board[tilePosition.y][tilePosition.x];
+  }
+
   Utils::Logger m_logger = Utils::Logger("Level", Utils::LogLevel::INFO);
   LevelState m_levelState = LevelState::NOT_READY;
   Board_t m_board;

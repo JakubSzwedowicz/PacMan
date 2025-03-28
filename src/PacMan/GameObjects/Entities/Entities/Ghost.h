@@ -16,9 +16,9 @@ namespace Entities {
 
 enum class GhostBehaviour : uint8_t { CHASE, SCATTER, FRIGHTENED };
 
-class Ghost : public MovingEntity<EntityType::GHOST> {
+class Ghost : public MovingEntity {
 public:
-  Ghost() : MovingEntity() {}
+  Ghost() : MovingEntity(EntityType::GHOST) {}
 };
 
 } // namespace Entities

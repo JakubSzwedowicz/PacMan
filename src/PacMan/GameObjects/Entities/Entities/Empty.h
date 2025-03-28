@@ -14,9 +14,9 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Empty : public Entity<EntityType::EMPTY> {
+class Empty : public Entity {
 public:
-  Empty() : Entity() {}
+  Empty() : Entity(EntityType::EMPTY) {}
 };
 
 } // namespace Entities

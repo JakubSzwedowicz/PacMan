@@ -35,12 +35,12 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
   m_logger.logDebug("Opened file: " + m_boardPath);
 
   std::unique_ptr<Level::Board_t> board = std::make_unique<Level::Board_t>();
-  Entities::Position position = {0, 0};
+  Entities::TilePosition position = {0, 0};
   for (std::string line; std::getline(file, line); position.y++) {
     Level::Board_t::value_type row;
     for (unsigned int colIdx = 0; colIdx < line.size();
          colIdx++, position.x++) {
-      std::unique_ptr<Entities::IEntity> entity;
+      std::unique_ptr<Entities::Entity> entity;
       switch (line[colIdx]) {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::EMPTY):
@@ -51,7 +51,7 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
           Entities::EntityType::BRIDGE):
         // entity = std::make_unique<Entities::Bridge>();
         entity = std::make_unique<Entities::Empty>();
-        m_logger.logError("Bridge entity is not implemented yet");
+        m_logger.logError("Bridge entity is not implemented yet!");
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(

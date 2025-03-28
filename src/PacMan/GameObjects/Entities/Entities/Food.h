@@ -8,7 +8,6 @@
 #include <cstdint>
 
 #include "EntityType.h"
-#include "IEntity.h"
 
 #include "Entities/Entity.h"
 
@@ -16,9 +15,9 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Food : public Entity<EntityType::FOOD> {
+class Food : public Entity {
 public:
-  Food() : Entity() {}
+  Food() : Entity(EntityType::FOOD) {}
 
 private:
 };

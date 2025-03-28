@@ -14,9 +14,9 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class PacMan : public MovingEntity<EntityType::PAC_MAN> {
+class PacMan : public MovingEntity {
 public:
-  PacMan() : MovingEntity() {}
+  PacMan() : MovingEntity(EntityType::PAC_MAN) {}
 };
 
 } // namespace Entities

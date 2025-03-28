@@ -13,9 +13,9 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-class Wall : public Entity<EntityType::WALL> {
+class Wall : public Entity {
 public:
-  Wall() : Entity() {}
+  Wall() : Entity(EntityType::WALL) {}
 };
 
 } // namespace Entities

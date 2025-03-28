@@ -5,14 +5,18 @@
 #ifndef SIGNALS_H
 #define SIGNALS_H
 
+#include <memory>
+
+#include "Logger.h"
+
 namespace PacMan::Utils {
 inline void shutdownLoggers(int signal) {
-  auto logger = std::make_unique<PacMan::Utils::Logger>(
-      "signalHandler", PacMan::Utils::LogLevel::DEBUG);
+  auto logger = std::make_unique<Logger>(
+      "signalHandler", LogLevel::DEBUG);
   logger->logCritical("Signal " + std::to_string(signal) +
                       " received, shutting down loggers");
 
-  PacMan::Utils::ILogger::shutdownAll();
+  ILogger::shutdownAll();
 
   // Continue shutting down a program
   std::signal(signal, SIG_DFL);

@@ -47,37 +47,39 @@ bool Level::setBoard(std::unique_ptr<Board_t> board) {
   return true;
 }
 
-std::vector<Entities::Position>
-Level::getValidAdjacentPositions(const Entities::Position &pos) const {
-  std::vector<Entities::Position> result;
+std::vector<Entities::TilePosition>
+Level::getValidAdjacentPositions(const Entities::TilePosition &pos) const {
+  std::vector<Entities::TilePosition> result;
 
-  std::vector<Entities::Position> offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+  std::vector<Entities::TilePosition> offsets = {
+      {-1, 0}, {1, 0}, {0, -1}, {0, 1}};
   for (const auto &offset : offsets) {
-    int newX = pos.x + offset.x;
-    int newY = pos.y + offset.y;
-    if (newX >= 0 && newX < getWidth() && newY >= 0 && newY < getHeight()) {
-      bool isWall =
-          m_board[newY][newX]->getEntityType() == Entities::EntityType::WALL;
+    Entities::TilePosition neighboringPos = (pos + offset);
+    if (isTilePositionValid(neighboringPos)) {
+      bool isWall = getEntityOnTile(neighboringPos)->getEntityType() ==
+                    Entities::EntityType::WALL;
       if (!isWall) {
-        result.push_back(Entities::Position{newX, newY});
+        result.push_back(neighboringPos);
       }
     }
   }
   return result;
 }
 
-void Level::swapEntities(Entities::Position pos1, Entities::Position pos2) {
-  std::swap(m_board[pos1.y][pos1.x]->getTilePosition(),
-            m_board[pos2.y][pos2.x]->getTilePosition());
-  std::swap(m_board[pos1.y][pos1.x], m_board[pos2.y][pos2.x]);
+void Level::swapEntities(const Entities::TilePosition &pos1,
+                         const Entities::TilePosition &pos2) {
+  std::swap(getEntityOnTile(pos1)->getMutableTilePosition(),
+            getEntityOnTile(pos2)->getMutableTilePosition());
+  std::swap(getMutableEntityOnTile(pos1), getMutableEntityOnTile(pos2));
 }
 
-std::unique_ptr<Entities::IEntity> Level::removeEntity(Entities::Position pos) {
+std::unique_ptr<Entities::Entity>
+Level::removeEntity(const Entities::TilePosition &pos) {
   auto empty = std::make_unique<Entities::Empty>();
   empty->setTilePosition(pos);
 
-  auto result = std::exchange(m_board[pos.y][pos.x], std::move(empty));
-  return result;
+  return std::exchange(getMutableEntityOnTile(pos), std::move(empty));
+  ;
 }
 
 // bool Level::setBoard(Board_t &&board) {
