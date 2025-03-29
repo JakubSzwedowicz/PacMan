@@ -18,8 +18,8 @@ PacMan::PacMan(Level *level)
 
 void PacMan::update(std::chrono::milliseconds deltaTime) {
   if (m_pacManState == PacManState::EMPOWERED) {
-    m_empoweredTime -= deltaTime;
-    if (m_empoweredTime <= 0ms) {
+    m_empoweredDurationMs -= deltaTime;
+    if (m_empoweredDurationMs <= 0ms) {
       m_gameEventsManager.publish(GameEvents::PowerPelletExpired(m_entityId));
     }
   }
@@ -50,7 +50,7 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     decreaseHealth();
 
     // Reset PacMan state if it was empowered
-    setPacmanState(PacManState::NORMAL);
+    setNormalPacManState();
     break;
   }
   case GameEvents::EntityEventType::PLAYER_RESPAWNED: {
@@ -67,11 +67,12 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     // Reset state
     setEntityState(EntityState::ALIVE); // Assuming EntityState exists
     setMovementState(MovementState::ON_TILE);
-    setPacmanState(PacManState::NORMAL);
+    setNormalPacManState();
 
     // Reset direction
     setCurrDirection(EntityDirection::NONE);
-    setNextDirection(EntityDirection::NONE);
+    // Do not reset this one. Allow to execute a player movement immediately if
+    // it was set setNextDirection(EntityDirection::NONE);
     break;
   }
   case GameEvents::EntityEventType::PELLET_EATEN: {
@@ -93,8 +94,7 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
                       std::to_string(powerPelletEvent.position.x) + "," +
                       std::to_string(powerPelletEvent.position.y) + ")");
     increaseScore(powerPelletEvent.scoreValue);
-    setPacmanState(PacManState::EMPOWERED);
-    m_empoweredTime = s_empoweredTime;
+    setEmpoweredPacManState(powerPelletEvent.frightenDuration);
     break;
   }
   case GameEvents::EntityEventType::POWER_PELLET_EXPIRED: {
@@ -103,8 +103,7 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
 
     if (m_pacManState == PacManState::EMPOWERED) {
       m_logger->logInfo("PacMan received Power Pellet expired event.");
-      setPacmanState(PacManState::NORMAL);
-      m_empoweredTime = 0ms;
+      setNormalPacManState();
     } else {
       m_logger->logWarning(
           "Received Power Pellet expired event, but PacMan was not empowered.");
@@ -146,6 +145,21 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
                        GameEvents::toString(event.eventType));
     break;
   }
+}
+
+void PacMan::setPacManState(const PacManState pacManState) {
+  m_pacManState = pacManState;
+}
+
+void PacMan::setNormalPacManState() {
+  m_empoweredDurationMs = 0ms;
+  setPacManState(PacManState::NORMAL);
+}
+
+void PacMan::setEmpoweredPacManState(
+    const std::chrono::milliseconds empoweredDuration) {
+  m_empoweredDurationMs = empoweredDuration;
+  setPacManState(PacManState::EMPOWERED);
 }
 
 } // namespace Entities

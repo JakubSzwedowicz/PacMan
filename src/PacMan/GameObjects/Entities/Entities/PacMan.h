@@ -29,15 +29,17 @@ public:
   [[nodiscard]] PacManState getPacManState() const { return m_pacManState; }
 
 private:
-  void setPacmanState(const PacManState state) { m_pacManState = state; }
+  void setPacManState(const PacManState pacManState);
+  void setNormalPacManState();
+  void setEmpoweredPacManState(std::chrono::milliseconds empoweredDuration);
 
 private:
   std::unique_ptr<Utils::ILogger> m_logger;
   GameEvents::GameEventsManager &m_gameEventsManager =
       GameEvents::GameEventsManager::getInstance();
   PacManState m_pacManState = PacManState::NORMAL;
-  static constexpr auto s_empoweredTime = std::chrono::milliseconds(5000);
-  std::chrono::milliseconds m_empoweredTime = std::chrono::milliseconds(0);
+  std::chrono::milliseconds m_empoweredDurationMs =
+      std::chrono::milliseconds(0);
 };
 
 } // namespace Entities

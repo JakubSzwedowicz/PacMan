@@ -12,7 +12,7 @@
 
 namespace PacMan::GameEvents {
 using namespace GameObjects;
-
+using namespace std::chrono_literals;
 //=============================================================================
 // Base Event Structure
 //=============================================================================
@@ -118,12 +118,13 @@ struct PelletEaten final : public EntityEvent {
 struct PowerPelletEaten final : public EntityEvent {
   Entities::TilePosition position;
   uint32_t scoreValue;
-  // std::chrono::milliseconds frightenDuration{5000};
+  std::chrono::milliseconds frightenDuration;
 
   PowerPelletEaten(Entities::EntityId pacManId, Entities::TilePosition pos,
-                   uint32_t score)
+                   uint32_t score,
+                   std::chrono::milliseconds frightenDuration = 5000ms)
       : EntityEvent(pacManId, EntityEventType::POWER_PELLET_EATEN),
-        position(pos), scoreValue(score) {}
+        position(pos), scoreValue(score), frightenDuration(frightenDuration) {}
 };
 
 /**
