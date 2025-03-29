@@ -2,6 +2,7 @@
     "dependencies": [
         "spdlog",
         "gtest",
-        "cppzmq"
+        "cppzmq",
+        "protobuf"
     ]
 }

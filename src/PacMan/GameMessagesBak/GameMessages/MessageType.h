@@ -12,7 +12,7 @@ namespace GameMessages {
 
 enum class MessageType : uint8_t { GAME_STATE };
 
-} // namespace GameMessages
+} // namespace proto
 } // namespace GameLogic
 } // namespace PacMan
 

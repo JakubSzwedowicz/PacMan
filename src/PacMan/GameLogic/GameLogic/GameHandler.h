@@ -23,7 +23,7 @@ public:
   std::unique_ptr<GameRunner> loadGame(const std::string &boardName);
 
 private:
-  Utils::Logger m_logger = {"GameHandler", PacMan::Utils::LogLevel::INFO};
+  Utils::Logger m_logger = Utils::Logger{"GameHandler", Utils::LogLevel::INFO};
   int m_nextGameId = 0;
   // TOOD: Add ResoruceManager to handle this type of stuff
   const std::vector<std::string> m_possibleBoards = {"Board1.txt"};

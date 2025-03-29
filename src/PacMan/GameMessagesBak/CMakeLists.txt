@@ -1,0 +1,5 @@
+add_library(GameMessages INTERFACE)
+
+target_compile_features(GameMessages INTERFACE cxx_std_17)
+target_include_directories(GameMessages INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(GameMessages INTERFACE GameObjects GameLogic)

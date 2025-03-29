@@ -1,0 +1,19 @@
+syntax = "proto3";
+package proto;
+
+message Position {
+  int32 row = 1;
+  int32 col = 2;
+}
+
+message PelletEatenEvent {
+  Position pos = 1;
+}
+
+message GameEvent {
+  uint64 event_id = 1;
+
+  oneof event_payload {
+    PelletEatenEvent pellet_eaten = 2;
+  }
+}

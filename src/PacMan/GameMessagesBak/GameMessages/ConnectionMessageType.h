@@ -33,7 +33,7 @@ inline std::ostream &operator<<(std::ostream &os,
   return (os << toString(type));
 }
 
-} // namespace GameMessages
+} // namespace proto
 } // namespace GameLogic
 } // namespace PacMan
 
