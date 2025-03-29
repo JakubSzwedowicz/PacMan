@@ -3,6 +3,7 @@
 //
 
 #include "Entities/MovingEntity.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
 namespace GameObjects {

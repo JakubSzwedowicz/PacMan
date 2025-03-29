@@ -3,15 +3,13 @@
 //
 
 #include "Entities/PacMan.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-void PacMan::update(std::chrono::milliseconds deltaTime,
-                    const Level::Board_t &board,
-                    const Level::Pacmans_t &pacmans,
-                    const Level::Ghosts_t &ghosts) {
+void PacMan::update(std::chrono::time_point<std::chrono::steady_clock> timePoints) {
 
 }
 

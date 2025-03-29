@@ -1,0 +1,25 @@
+syntax = "proto3";
+package PacMan.GameMessages.proto;
+
+message TilePosition {
+  uint32 row = 1;
+  uint32 col = 2;
+}
+
+message RealPosition {
+  float row = 1;
+  float col = 2;
+}
+
+message PelletEatenEvent {
+  uint32 entityId = 1;
+  TilePosition pos = 2;
+}
+
+message GameEvent {
+  uint32 eventId = 1;
+
+  oneof eventPayload {
+    PelletEatenEvent pelletEatenEvent = 2;
+  }
+}

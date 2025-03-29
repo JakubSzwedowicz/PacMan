@@ -8,10 +8,12 @@
 #include <chrono>
 
 #include "Entity.h"
-#include "GameObjects/Level.h"
 
 namespace PacMan {
 namespace GameObjects {
+// Forward declare it!
+class Level;
+
 namespace Entities {
 
 enum class MovementState : uint8_t { ON_TILE, IN_TRANSIT };
@@ -33,12 +35,9 @@ inline std::string toString(const EntityDirection &direction) {
 
 class MovingEntity : public Entity {
 public:
-  explicit MovingEntity(const EntityType entityType) : Entity(entityType) {}
+  explicit MovingEntity(const EntityType entityType, Level* level) : Entity(entityType), m_level(level) {}
 
-  virtual void update(std::chrono::milliseconds deltaTime,
-                      const Level::Board_t &board,
-                      const Level::Pacmans_t &pacmans,
-                      const Level::Ghosts_t &ghosts) = 0;
+  virtual void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) = 0;
 
   void changeDirection() {
     setCurrDirection(getNextDirection());
@@ -87,6 +86,7 @@ protected:
   MovementState m_movementState = MovementState::ON_TILE;
   float m_speedInPerSeconds = 0.5f;
 
+  Level* m_level;
   int m_score = 0;
   int m_health = 3;
 };

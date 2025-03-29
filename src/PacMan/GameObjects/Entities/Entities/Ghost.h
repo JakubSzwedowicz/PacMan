@@ -6,6 +6,8 @@
 #define GHOST_H
 
 #include <cstdint>
+#include <vector>
+#include <memory>
 
 #include "EntityType.h"
 #include "MovingEntity.h"
@@ -14,11 +16,23 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-enum class GhostBehaviour : uint8_t { CHASE, SCATTER, FRIGHTENED };
+enum class GhostState {
+  CHASING,
+  SCATTERING,
+  FRIGHTENED,
+  EATEN // Transitioning back to pen
+};
 
 class Ghost : public MovingEntity {
 public:
-  Ghost() : MovingEntity(EntityType::GHOST) {}
+  Ghost(Level* level) : MovingEntity(EntityType::GHOST, level) {}
+  void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) override;
+
+  // Getters/Setters
+  [[nodiscard]] GhostState getGhostState() const { return m_ghostState; }
+
+public:
+  GhostState m_ghostState = GhostState::CHASING;
 };
 
 } // namespace Entities

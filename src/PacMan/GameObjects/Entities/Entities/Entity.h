@@ -41,6 +41,7 @@ template <typename T> struct Position {
 
 using TilePosition = Position<int>;
 using RealPosition = Position<double>;
+using EntityId = uint32_t;
 
 template <>
 template <>
@@ -61,11 +62,11 @@ class Entity {
 public:
   Entity(EntityType entityType)
       : m_entityId(s_nextEntityId++), m_entityType(entityType) {}
-  Entity(uint32_t entityId, EntityType entityType)
+  Entity(EntityId entityId, EntityType entityType)
       : m_entityId(entityId), m_entityType(entityType) {}
   virtual ~Entity() = default;
 
-  uint32_t getEntityId() const { return m_entityId; }
+  EntityId getEntityId() const { return m_entityId; }
   EntityType getEntityType() const { return m_entityType; }
 
   std::string toString() const { return Entities::toString(m_entityType); }
@@ -88,7 +89,7 @@ public:
   }
 
 protected:
-  uint32_t m_entityId;
+  EntityId m_entityId;
   EntityType m_entityType;
   EntityState m_entityState;
   TilePosition m_tilePosition = {0, 0};

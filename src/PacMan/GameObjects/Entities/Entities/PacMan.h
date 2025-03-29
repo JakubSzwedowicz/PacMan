@@ -10,6 +10,7 @@
 
 #include <cstdint>
 
+
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {
@@ -18,10 +19,8 @@ enum class PacManState : uint8_t { NORMAL, EMPOWERED };
 
 class PacMan : public MovingEntity {
 public:
-  PacMan() : MovingEntity(EntityType::PAC_MAN) {}
-  void update(std::chrono::milliseconds deltaTime, const Level::Board_t &board,
-              const Level::Pacmans_t &pacmans,
-              const Level::Ghosts_t &ghosts) override;
+  PacMan(Level* level) : MovingEntity(EntityType::PAC_MAN, level) {}
+  void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) override;
 
 private:
   PacManState m_pacManState = PacManState::NORMAL;

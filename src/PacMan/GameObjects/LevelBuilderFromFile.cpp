@@ -59,12 +59,12 @@ void LevelBuilderFromFile::createLevel() {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
         entityType = Entities::EntityType::EMPTY;
-        ghosts.emplace_back();
+        ghosts.emplace_back(std::make_unique<Entities::Ghost>(m_level.get()));
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::PAC_MAN):
         entityType = Entities::EntityType::EMPTY;
-        pacmans.emplace_back();
+        pacmans.emplace_back(std::make_unique<Entities::PacMan>(m_level.get()));
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::SUPER_FOOD):
