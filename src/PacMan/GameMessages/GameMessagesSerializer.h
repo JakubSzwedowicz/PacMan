@@ -5,7 +5,7 @@
 #ifndef GAMEMESSAGESSERIALIZER_H
 #define GAMEMESSAGESSERIALIZER_H
 
-#include <GameMessages.pb.h> // CMake now knows where to find this
+#include <GameMessages/GameMessages.pb.h>
 
 namespace PacMan {
 namespace GameMessages {

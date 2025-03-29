@@ -1,5 +1,5 @@
 syntax = "proto3";
-package proto;
+package PacMan.GameMessages.proto;
 
 message Position {
   int32 row = 1;
