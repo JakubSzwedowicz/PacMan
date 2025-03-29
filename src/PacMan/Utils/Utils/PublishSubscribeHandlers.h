@@ -19,13 +19,14 @@ template <class Event> class ISubscriber;
 // Declarations
 template <class Event> class ISubscriber {
 public:
+  explicit ISubscriber(IPublisher<Event>* publisher);
   virtual ~ISubscriber();
   virtual void callback(const Event &event) = 0;
   virtual void unsubscribe();
 
 private:
   friend class IPublisher<Event>;
-  void selfSubscribe(IPublisher<Event> *publisher);
+  void setPublisher(IPublisher<Event> *publisher);
 
 private:
   IPublisher<Event> *m_publisher;
@@ -46,13 +47,16 @@ private:
 };
 
 // Implementations
+template <class Event>
+ISubscriber<Event>::ISubscriber(IPublisher<Event> *publisher) {
+  publisher->subscribe(this);
+}
 template <class Event> ISubscriber<Event>::~ISubscriber() { unsubscribe(); }
 
 template <class Event>
-void ISubscriber<Event>::selfSubscribe(IPublisher<Event> *publisher) {
-  if (m_publisher)
-    m_publisher->unsubscribe();
-  publisher->subscribe(this);
+void ISubscriber<Event>::setPublisher(IPublisher<Event> *publisher) {
+  unsubscribe();
+  m_publisher = publisher;
 }
 
 template <class Event> void ISubscriber<Event>::unsubscribe() {
@@ -66,7 +70,8 @@ template <class Event>
 bool IPublisher<Event>::subscribe(ISubscriber<Event> *subscriber) {
   if (subscriber == nullptr)
     return false;
-  subscriber->selfSubscribe(this);
+  m_subscribers.push_back(subscriber);
+  subscriber->setPublisher(this);
   return true;
 }
 
