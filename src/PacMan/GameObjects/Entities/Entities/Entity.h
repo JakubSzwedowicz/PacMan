@@ -68,14 +68,17 @@ public:
   uint32_t getEntityId() const { return m_entityId; }
   EntityType getEntityType() const { return m_entityType; }
 
+  std::string toString() const { return Entities::toString(m_entityType); }
   friend std::ostream &operator<<(std::ostream &os, const Entity &entity) {
     return (os << entity.getEntityType());
   }
 
-  TilePosition& getMutableTilePosition() { return m_tilePosition; }
+  TilePosition &getMutableTilePosition() { return m_tilePosition; }
   const TilePosition &getTilePosition() const { return m_tilePosition; }
-  void setTilePosition(const TilePosition &position) {
+  virtual void setTilePosition(const TilePosition &position) {
     m_tilePosition = position;
+    // Compensate for time and float errors:
+    setRealPosition(RealPosition(position));
   }
 
   RealPosition &getMutableRealPosition() { return m_realPosition; }
@@ -90,7 +93,6 @@ protected:
   EntityState m_entityState;
   TilePosition m_tilePosition = {0, 0};
   RealPosition m_realPosition = {0, 0};
-
 
   // Overflow is not an issue here
   inline static uint32_t s_nextEntityId = 0;

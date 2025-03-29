@@ -2,9 +2,12 @@
 // Created by Jakub Szwedowicz on 3/23/25.
 //
 
-#include "GameLogic/GameRunner.h"
+#include <algorithm>
+#include <chrono>
+
 #include "Entities/Ghost.h"
 #include "Entities/PacMan.h"
+#include "GameLogic/GameRunner.h"
 #include "GameObjects/Level.h"
 
 namespace PacMan {
@@ -65,13 +68,12 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
     updateMovingEntity(*pacman, deltaTime);
   }
 
-  // Move Ghosts in their directions
-  for (auto const &ghost : m_level->getGhosts()) {
-    updateMovingEntity(*ghost, deltaTime);
+  for (auto const &ghosts : m_level->getGhosts()) {
+    updateMovingEntity(*ghosts, deltaTime);
   }
 
   // Handle collisions
-  // handleCollisions(board);
+  handleCollisions();
 
   // Check for game over conditions
   if (checkGameOver()) {
@@ -89,16 +91,15 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
       movingEntity.getNextDirection() != EntityDirection::NONE) {
     if (canMove(movingEntity.getTilePosition(),
                 movingEntity.getNextDirection())) {
-      movingEntity.setCurrDirection(movingEntity.getNextDirection());
-      movingEntity.setNextDirection(EntityDirection::NONE);
-      movingEntity.setMovementState(MovementState::IN_TRANSIT);
+      movingEntity.changeDirection();
     }
   }
 
   if (movingEntity.getMovementState() == MovementState::IN_TRANSIT) {
-
-    // We are in transit. Check if we reach the next tile.
-    float distance = movingEntity.getSpeedIn100Ms() * deltaTime.count();
+    // Entity is in transit. Check if it reached the next tile.
+    float distance =
+        movingEntity.getSpeedPerSeconds() *
+        std::chrono::duration_cast<std::chrono::seconds>(deltaTime).count();
     auto newRealPosition =
         moveTowards(movingEntity.getRealPosition(),
                     movingEntity.getCurrDirection(), distance);
@@ -106,58 +107,66 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
 
     const auto &currentTilePosition = movingEntity.getTilePosition();
     auto newTilePosition = TilePosition(newRealPosition);
-    // Check if we are still in transit between the tiles.
+    // Check if Entity is still in transit between the tiles.
     if (newTilePosition.x == currentTilePosition.x &&
         newTilePosition.y == currentTilePosition.y) {
       return;
     }
+    // Entity arrived to the next tile!
+    movingEntity.setTilePosition(newTilePosition);
+    movingEntity.update(deltaTime, m_level->getBoard(), m_level->getPacmans(),
+                        m_level->getGhosts());
 
-    // TODO: Handle collisions!
-    // auto &entityOnTile =
-    //     m_level->getBoard()
-    //     // Handle pellet consumption
-    //     if (newGridX >= 0 && newGridX < board[0].size() && newGridY >= 0 &&
-    //         newGridY < board.size() && board[newGridY][newGridX]) {
-    //   if (board[newGridY][newGridX]->getSymbol() ==
-    //       '.') {                           // Assuming '.' represents a
-    //       pellet
-    //     board[newGridY][newGridX].reset(); // Remove the pellet from the
-    //     board m_score += 10; std::cout << "Player ate a pellet! Score: " <<
-    //     m_score << std::endl;
-    //     // Check if all pellets are eaten (you'd need a way to track this in
-    //     // the Level class)
-    //   } else if (board[newGridY][newGridX]->getSymbol() ==
-    //              'o') {
-    //     // Assuming 'o' represents a power pellet
-    //     board[newGridY][newGridX].reset(); // Remove the power pellet
-    //     m_score += 50;
-    //     std::cout << "Player ate a power pellet!" << std::endl;
-    //     // Set all ghosts to vulnerable state
-    //     for (const auto &row : board) {
-    //       for (const auto &entityPtr : row) {
-    //         if (auto ghost =
-    //                 dynamic_cast<PacMan::Entities::Ghost *>(entityPtr.get()))
-    //                 {
-    //           ghost->setState(PacMan::Entities::Ghost::State::VULNERABLE);
-    //           ghost->setVulnerableTimer(
-    //               std::chrono::seconds(10)); // Example duration
-    //                 }
-    //       }
-    //     }
-    //   }
+    if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {
+      m_logger.logError("In game '" + std::to_string(m_gameId) + " entity " +
+                        movingEntity.toString() +
+                        " hit bridge which should not be possible! They are "
+                        "not implemented!");
+      throw std::runtime_error(
+          "In game '" + std::to_string(m_gameId) + " entity " +
+          movingEntity.toString() +
+          " hit bridge which should not be possible! They are "
+          "not implemented!");
+    }
   }
-  return;
+}
+
+void GameRunner::handleCollisions() {
+  // Handle pellet consumption
+  // if (newGridX >= 0 && newGridX < board[0].size() && newGridY >= 0 &&
+  //     newGridY < board.size() && board[newGridY][newGridX]) {
+  //   if (board[newGridY][newGridX]->getSymbol() ==
+  //       '.') {                                  // Assuming '.' represents a
+  //     pellet board[newGridY][newGridX].reset(); // Remove the pellet from the
+  //     board m_score += 10;
+  //     std::cout << "Player ate a pellet! Score: " << m_score << std::endl;
+  //     // Check if all pellets are eaten (you'd need a way to track this in
+  //     // the Level class)
+  //   } else if (board[newGridY][newGridX]->getSymbol() == 'o') {
+  //     // Assuming 'o' represents a power pellet
+  //     board[newGridY][newGridX].reset(); // Remove the power pellet
+  //     m_score += 50;
+  //     std::cout << "Player ate a power pellet!" << std::endl;
+  //     // Set all ghosts to vulnerable state
+  //     for (const auto &row : board) {
+  //       for (const auto &entityPtr : row) {
+  //         if (auto ghost =
+  //                 dynamic_cast<PacMan::Entities::Ghost *>(entityPtr.get())) {
+  //           ghost->setState(PacMan::Entities::Ghost::State::VULNERABLE);
+  //           ghost->setVulnerableTimer(
+  //               std::chrono::seconds(10)); // Example duration
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 bool GameRunner::canMove(const TilePosition &tilePosition,
                          const EntityDirection &direction) const {
   auto nextPosition = moveTowardsGrid(tilePosition, direction, 1);
 
-  if (m_level->isTilePositionValid(nextPosition)) {
-    return m_level->getEntityOnTile(nextPosition)->getEntityType() !=
-           EntityType::WALL;
-  }
-  return false;
+  return m_level->isTilePositionValid(nextPosition);
 }
 
 RealPosition GameRunner::moveTowards(const RealPosition &realPosition,
@@ -205,7 +214,7 @@ TilePosition GameRunner::moveTowardsGrid(const TilePosition &tilePosition,
 bool GameRunner::checkGameOver() const {
   // Example: Game over if no players are left or no pellets remaining
   if (std::all_of(m_level->getPacmans().cbegin(), m_level->getPacmans().cend(),
-                  [](const PacMan *pacman) -> bool {
+                  [](const auto &pacman) -> bool {
                     return pacman->getEntityState() == EntityState::DEAD;
                   })) {
     m_logger.logInfo("Game Over!, all players are dead.");

@@ -2,45 +2,47 @@
 // Created by jakubszwedowicz on 2/28/25.
 //
 
-#include "GameObjects/Level.h"
-
-#include "Entities/Empty.h"
-#include "Entities/EntityType.h"
-
+#include <algorithm>
 #include <utility>
+
+#include "Entities/EntityType.h"
+#include "Entities/Ghost.h"
+#include "Entities/PacMan.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
 namespace GameObjects {
 
-bool Level::setBoard(std::unique_ptr<Board_t> board) {
+Level::Level(Board_t &&board, Pacmans_t &&pacmans, Ghosts_t &&ghosts)
+    : m_board(std::move(board)), m_pacMans(std::move(pacmans)),
+      m_ghosts(std::move(ghosts)) {
+  verifyBoard();
+}
+
+bool Level::verifyBoard() {
   m_levelState = LevelState::NOT_READY;
-  m_board = std::move(*board);
   for (const auto &row : m_board) {
     for (const auto &cell : row) {
-      if (!cell) {
-        continue;
-      }
-
-      if (cell->getEntityType() == Entities::EntityType::PAC_MAN) {
-        auto *pacMan = dynamic_cast<Entities::PacMan *>(cell.get());
-        if (pacMan == nullptr) {
-          m_logger.logError("Entity could not be cast to PacMan at position " +
-                            cell->getTilePosition().toString());
-          return false;
-        }
-        m_pacMans.push_back(pacMan);
-      } else if (cell->getEntityType() == Entities::EntityType::GHOST) {
-        auto *ghost = dynamic_cast<Entities::Ghost *>(cell.get());
-        if (ghost == nullptr) {
-          m_logger.logError("Entity could not be cast to Ghost at position " +
-                            cell->getTilePosition().toString());
-          return false;
-        }
-        m_ghosts.push_back(ghost);
-      } else if (cell->getEntityType() == Entities::EntityType::FOOD) {
+      if (cell == Entities::EntityType::FOOD) {
         m_numberOfFood++;
+      } else if (cell == Entities::EntityType::WALL) {
+        // Do nothing...
+      } else if (cell == Entities::EntityType::EMPTY) {
+        // Empty...
+      } else {
+        m_logger.logError("Not a valid entity type: " + toString(cell));
       }
     }
+  }
+
+  // What a smart thing!!!
+  auto pred = [this](const auto &entity) -> bool {
+    return getEntityOnTile(entity->getTilePosition()) !=
+           Entities::EntityType::EMPTY;
+  };
+  if (std::any_of(m_pacMans.cbegin(), m_pacMans.cend(), pred) ||
+      std::any_of(m_ghosts.cbegin(), m_ghosts.cend(), pred)) {
+    return false;
   }
 
   m_levelState = LevelState::READY;
@@ -56,30 +58,10 @@ Level::getValidAdjacentPositions(const Entities::TilePosition &pos) const {
   for (const auto &offset : offsets) {
     Entities::TilePosition neighboringPos = (pos + offset);
     if (isTilePositionValid(neighboringPos)) {
-      bool isWall = getEntityOnTile(neighboringPos)->getEntityType() ==
-                    Entities::EntityType::WALL;
-      if (!isWall) {
-        result.push_back(neighboringPos);
-      }
+      result.push_back(neighboringPos);
     }
   }
   return result;
-}
-
-void Level::swapEntities(const Entities::TilePosition &pos1,
-                         const Entities::TilePosition &pos2) {
-  std::swap(getEntityOnTile(pos1)->getMutableTilePosition(),
-            getEntityOnTile(pos2)->getMutableTilePosition());
-  std::swap(getMutableEntityOnTile(pos1), getMutableEntityOnTile(pos2));
-}
-
-std::unique_ptr<Entities::Entity>
-Level::removeEntity(const Entities::TilePosition &pos) {
-  auto empty = std::make_unique<Entities::Empty>();
-  empty->setTilePosition(pos);
-
-  return std::exchange(getMutableEntityOnTile(pos), std::move(empty));
-  ;
 }
 
 // bool Level::setBoard(Board_t &&board) {

@@ -5,11 +5,11 @@
 #ifndef GAMEHANDLER_H
 #define GAMEHANDLER_H
 
-#include "Utils/Logger.h"
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "Utils/Logger.h"
 
 namespace PacMan::GameLogic {
 class GameRunner;

@@ -5,17 +5,20 @@
 #ifndef GAMERUNNER_H
 #define GAMERUNNER_H
 
-#include "GameStatus.h"
-
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <thread>
 
-#include "GameObjects/Level.h"
+#include "Entities/MovingEntity.h"
+#include "GameStatus.h"
 #include "Utils/Logger.h"
 
 namespace PacMan {
+namespace GameObjects {
+class Level;
+}
+
 namespace GameLogic {
 
 using namespace GameObjects;
@@ -30,13 +33,17 @@ public:
 private:
   void gameLoop();
   void update(std::chrono::milliseconds deltaTime);
-  void updateMovingEntity(MovingEntity& movingEntity, std::chrono::milliseconds deltaTime);
-  void updateGhost(Ghost &ghost, std::chrono::milliseconds deltaTime);
-  bool canMove(const TilePosition& tilePosition, const EntityDirection& direction) const;
-  RealPosition moveTowards(const RealPosition& realPosition, const EntityDirection& direction,
+  void updateMovingEntity(MovingEntity &movingEntity,
+                          std::chrono::milliseconds deltaTime);
+  void handleCollisions();
+  bool canMove(const TilePosition &tilePosition,
+               const EntityDirection &direction) const;
+  RealPosition moveTowards(const RealPosition &realPosition,
+                           const EntityDirection &direction,
                            const float distance) const;
   TilePosition moveTowardsGrid(const TilePosition &tilePosition,
-      const EntityDirection& direction, const int distance) const;
+                               const EntityDirection &direction,
+                               const int distance) const;
   bool checkGameOver() const;
 
 private:

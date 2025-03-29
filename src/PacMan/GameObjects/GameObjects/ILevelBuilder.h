@@ -18,13 +18,7 @@ public:
   std::unique_ptr<Level> release() { return std::move(m_level); }
 
 protected:
-  void reset() { m_level = std::make_unique<Level>(); }
-
-  virtual void setBoard(std::unique_ptr<Level::Board_t> board) {
-    m_level->setBoard(std::move(board));
-  };
-
-private:
+  void reset() { m_level = nullptr; }
   std::unique_ptr<Level> m_level;
 };
 

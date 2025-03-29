@@ -5,10 +5,14 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <memory>
 #include <string>
 
 #include "ILogger.h"
-#include <spdlog/spdlog.h>
+
+namespace spdlog {
+class logger;
+}
 
 namespace PacMan {
 namespace Utils {

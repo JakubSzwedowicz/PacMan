@@ -1,5 +1,5 @@
-add_subdirectory(GameMessages)
 add_subdirectory(Utils)
+add_subdirectory(GameMessages)
 add_subdirectory(GameObjects)
 add_subdirectory(Resources)
 add_subdirectory(GameLogic)

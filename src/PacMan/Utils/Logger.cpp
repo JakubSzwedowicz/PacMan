@@ -2,11 +2,11 @@
 // Created by Jakub Szwedowicz on 3/23/25.
 //
 
-#include "Utils/Logger.h"
-#include <csignal>
 #include <memory>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
+
+#include "Utils/Logger.h"
 
 namespace PacMan {
 namespace Utils {

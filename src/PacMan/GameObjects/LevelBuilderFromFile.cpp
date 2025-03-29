@@ -17,66 +17,63 @@ namespace PacMan {
 namespace GameObjects {
 
 LevelBuilderFromFile::LevelBuilderFromFile(const std::string &boardPath)
-    : m_logger("LevelBuilderFromFile", Utils::LogLevel::INFO),
-      m_boardPath(boardPath) {
-  auto board = createBoard();
-  if (!board) {
+    : m_boardPath(boardPath) {
+  createLevel();
+  if (!m_level) {
     m_logger.logError("Failed to create board");
   }
-  setBoard(std::move(board));
 }
 
-std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
+void LevelBuilderFromFile::createLevel() {
   std::ifstream file(m_boardPath);
   if (!file.is_open()) {
     m_logger.logError("Failed to open file: " + m_boardPath);
-    return nullptr;
+    return;
   }
   m_logger.logDebug("Opened file: " + m_boardPath);
 
-  std::unique_ptr<Level::Board_t> board = std::make_unique<Level::Board_t>();
+  auto board = std::make_unique<Level::Board_t>();
+  Level::Pacmans_t pacmans;
+  Level::Ghosts_t ghosts;
   Entities::TilePosition position = {0, 0};
   for (std::string line; std::getline(file, line); position.y++) {
     Level::Board_t::value_type row;
     for (unsigned int colIdx = 0; colIdx < line.size();
          colIdx++, position.x++) {
       std::unique_ptr<Entities::Entity> entity;
+      Entities::EntityType entityType;
       switch (line[colIdx]) {
-      case static_cast<std::underlying_type_t<Entities::EntityType>>(
-          Entities::EntityType::EMPTY):
-        entity = std::make_unique<Entities::Empty>();
-        break;
-
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::BRIDGE):
         // entity = std::make_unique<Entities::Bridge>();
-        entity = std::make_unique<Entities::Empty>();
         m_logger.logError("Bridge entity is not implemented yet!");
+        return;
+      case static_cast<std::underlying_type_t<Entities::EntityType>>(
+          Entities::EntityType::EMPTY):
+        entityType = Entities::EntityType::EMPTY;
         break;
-
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::FOOD):
-        entity = std::make_unique<Entities::Food>();
+        entityType = Entities::EntityType::FOOD;
         break;
-
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
-        entity = std::make_unique<Entities::Ghost>();
+        entityType = Entities::EntityType::EMPTY;
+        ghosts.emplace_back();
         break;
-
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::PAC_MAN):
-        entity = std::make_unique<Entities::PacMan>();
+        entityType = Entities::EntityType::EMPTY;
+        pacmans.emplace_back();
         break;
-
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::SUPER_FOOD):
-        entity = std::make_unique<Entities::SuperFood>();
+        entityType = Entities::EntityType::SUPER_FOOD;
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::WALL):
-        entity = std::make_unique<Entities::Wall>();
+        entityType = Entities::EntityType::WALL;
         break;
       default:;
         m_logger.logError("Unknown entity of char '" +
@@ -86,8 +83,7 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
         break;
       }
 
-      entity->setTilePosition(position);
-      row.push_back(std::move(entity));
+      row.push_back(entityType);
     }
     board->push_back(std::move(row));
   }
@@ -95,7 +91,8 @@ std::unique_ptr<Level::Board_t> LevelBuilderFromFile::createBoard() const {
   m_logger.logInfo("Created a board from file: " + m_boardPath +
                    ", of size: " + std::to_string(board->size()) + "x" +
                    std::to_string(board->front().size()));
-  return board;
+  m_level = std::make_unique<Level>(std::move(*board), std::move(pacmans),
+                                    std::move(ghosts));
 }
 
 } // namespace GameObjects

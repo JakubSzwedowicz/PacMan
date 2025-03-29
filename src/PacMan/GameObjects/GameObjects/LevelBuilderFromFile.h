@@ -18,8 +18,11 @@ public:
   explicit LevelBuilderFromFile(const std::string &boardPath);
 
 private:
-  mutable Utils::Logger m_logger;
-  std::unique_ptr<Level::Board_t> createBoard() const;
+  void createLevel();
+
+private:
+  mutable Utils::Logger m_logger =
+      Utils::Logger("LevelBuilderFromFile", Utils::LogLevel::INFO);
   const std::string &m_boardPath;
 };
 

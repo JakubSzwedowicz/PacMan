@@ -21,26 +21,30 @@ enum class EntityType : char {
   EMPTY = ' '
 };
 
+inline std::string toString(EntityType entityType) {
+  switch (entityType) {
+  case EntityType::BRIDGE:
+    return "B";
+  case EntityType::EMPTY:
+    return " ";
+  case EntityType::FOOD:
+    return ".";
+  case EntityType::GHOST:
+    return "G";
+  case EntityType::PAC_MAN:
+    return "P";
+  case EntityType::SUPER_FOOD:
+    return "S";
+  case EntityType::WALL:
+    return "#";
+  default:
+    return "?";
+  }
+}
+
 inline std::ostream &operator<<(std::ostream &os,
                                 const EntityType &entityType) {
-  switch (entityType) {
-  case EntityType::PAC_MAN:
-    return (os << 'P');
-  case EntityType::GHOST:
-    return (os << 'G');
-  case EntityType::WALL:
-    return (os << '#');
-  case EntityType::BRIDGE:
-    return (os << 'B');
-  case EntityType::FOOD:
-    return (os << '.');
-  case EntityType::SUPER_FOOD:
-    return (os << 'S');
-  case EntityType::EMPTY:
-    return (os << ' ');
-  default:
-    return (os << '?');
-  }
+  return (os << toString(entityType));
 }
 
 } // namespace Entities
