@@ -19,7 +19,7 @@ template <class Event> class ISubscriber;
 template <class Event> class ISubscriber {
 public:
   virtual ~ISubscriber();
-  virtual void callback() = 0;
+  virtual void callback(const Event& event) = 0;
   virtual void unsubscribe();
 
 private:
@@ -38,7 +38,7 @@ public:
   void unsubscribe(ISubscriber<Event> *subscriber);
 
 protected:
-  void publish(const Event &event);
+  virtual void publish(const Event &event);
 
 private:
   std::vector<ISubscriber<Event> *> m_subscribers;

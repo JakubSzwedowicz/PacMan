@@ -20,7 +20,7 @@ enum class PacManState : uint8_t { NORMAL, EMPOWERED };
 class PacMan : public MovingEntity {
 public:
   PacMan(Level* level) : MovingEntity(EntityType::PAC_MAN, level) {}
-  void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) override;
+  void update(std::chrono::milliseconds deltaTime) override;
 
 private:
   PacManState m_pacManState = PacManState::NORMAL;

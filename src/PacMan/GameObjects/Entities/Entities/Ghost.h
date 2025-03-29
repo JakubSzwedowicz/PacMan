@@ -26,7 +26,7 @@ enum class GhostState {
 class Ghost : public MovingEntity {
 public:
   Ghost(Level* level) : MovingEntity(EntityType::GHOST, level) {}
-  void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) override;
+  void update(std::chrono::milliseconds deltaTime) override;
 
   // Getters/Setters
   [[nodiscard]] GhostState getGhostState() const { return m_ghostState; }

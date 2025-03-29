@@ -9,7 +9,7 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-void PacMan::update(std::chrono::time_point<std::chrono::steady_clock> timePoints) {
+void PacMan::update(std::chrono::milliseconds deltaTime) {
 
 }
 

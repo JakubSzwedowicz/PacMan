@@ -114,8 +114,7 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
     }
     // Entity arrived to the next tile!
     movingEntity.setTilePosition(newTilePosition);
-    movingEntity.update(deltaTime, m_level->getBoard(), m_level->getPacmans(),
-                        m_level->getGhosts());
+    movingEntity.update(deltaTime);
 
     if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {
       m_logger.logError("In game '" + std::to_string(m_gameId) + " entity " +

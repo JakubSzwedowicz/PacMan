@@ -37,7 +37,7 @@ class MovingEntity : public Entity {
 public:
   explicit MovingEntity(const EntityType entityType, Level* level) : Entity(entityType), m_level(level) {}
 
-  virtual void update(std::chrono::time_point<std::chrono::steady_clock> timePoints) = 0;
+  virtual void update(std::chrono::milliseconds deltaTime) = 0;
 
   void changeDirection() {
     setCurrDirection(getNextDirection());

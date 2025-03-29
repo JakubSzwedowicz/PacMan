@@ -6,6 +6,7 @@
 #include "Client/Client.h"
 #include "Entities/PacMan.h"
 #include "Entities/Ghost.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
 namespace Client {}
