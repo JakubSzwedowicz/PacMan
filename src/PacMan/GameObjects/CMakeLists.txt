@@ -11,4 +11,4 @@ target_include_directories(GameObjects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(Entities)
 
 target_link_libraries(GameObjects
-        PUBLIC Entities Utils)
+        PUBLIC Entities Utils GameEventsManager)

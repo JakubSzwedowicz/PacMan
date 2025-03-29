@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "GameEventsManager/GameEventsManager.h"
 #include "Utils/Logger.h"
 
 namespace PacMan::GameLogic {
@@ -19,11 +20,12 @@ namespace GameLogic {
 
 class GameHandler {
 public:
-  GameHandler() = default;
+  GameHandler(GameEvents::GameEventsManager& gameEventsManager);
   std::unique_ptr<GameRunner> loadGame(const std::string &boardName);
 
 private:
   Utils::Logger m_logger = Utils::Logger{"GameHandler", Utils::LogLevel::INFO};
+  GameEvents::GameEventsManager& m_gameEventsManager;
   int m_nextGameId = 0;
   // TOOD: Add ResoruceManager to handle this type of stuff
   const std::vector<std::string> m_possibleBoards = {"Board1.txt"};

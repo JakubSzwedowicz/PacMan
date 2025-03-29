@@ -26,7 +26,7 @@ using namespace GameObjects;
 using namespace Entities;
 class GameRunner {
 public:
-  GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level);
+  GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level, GameEvents::GameEventsManager& gameEventsManager);
   bool startGame();
 
   int getGameId() const { return m_gameId; }
@@ -56,8 +56,7 @@ private:
 
   // Utils
   mutable std::unique_ptr<Utils::ILogger> m_logger;
-  GameEvents::GameEventsManager &m_gameEventsManager =
-      GameEvents::GameEventsManager::getInstance();
+  GameEvents::GameEventsManager &m_gameEventsManager;
 };
 
 } // namespace GameLogic

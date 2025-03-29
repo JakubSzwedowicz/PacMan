@@ -38,8 +38,6 @@ public:
 
   bool subscribe(ISubscriber<Event> *subscriber);
   void unsubscribe(ISubscriber<Event> *subscriber);
-
-protected:
   virtual void publish(const Event &event);
 
 private:

@@ -14,10 +14,12 @@
 namespace PacMan {
 namespace GameLogic {
 
-GameRunner::GameRunner(int gameId, std::unique_ptr<Level> level)
+GameRunner::GameRunner(int gameId, std::unique_ptr<Level> level,
+                       GameEvents::GameEventsManager &gameEventsManager)
     : m_gameId(gameId), m_level(std::move(level)),
       m_logger(std::make_unique<Utils::Logger>("GameRunner",
-                                               Utils::LogLevel::DEBUG)) {
+                                               Utils::LogLevel::DEBUG)),
+      m_gameEventsManager(gameEventsManager) {
   m_logger->logInfo("Created GameRunner with id '" + std::to_string(m_gameId) +
                     "'");
 }
@@ -116,7 +118,7 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
       return;
     }
     // Entity arrived to the next tile!
-    m_gameEventsManager.publish(GameEvents::EntityMoved(
+    m_gameEventsManager.getEntityEventPublisher().publish(GameEvents::EntityMoved(
         movingEntity.getEntityId(), currentTilePosition, newTilePosition));
     movingEntity.update(deltaTime);
 

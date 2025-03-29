@@ -9,18 +9,14 @@
 namespace PacMan {
 namespace GameEvents {
 
-GameEventsManager::GameEventsManager()
+GameEventsManager::GameEventsManager(
+    std::unique_ptr<Utils::IPublisher<EntityEvent>> entityEventPublisher)
     : m_logger(std::make_unique<Utils::Logger>("GameEventsManager",
-                                               Utils::LogLevel::DEBUG)) {}
+                                               Utils::LogLevel::DEBUG)),
+      m_entityEventPublisher(std::move(entityEventPublisher)) {}
 
-void GameEventsManager::publish(const EntityEvent &event) {
-  m_logger->logDebug("Publishing event " + event.toString());
-  IPublisher<EntityEvent>::publish(event);
-}
-
-GameEventsManager &GameEventsManager::getInstance() {
-  static GameEventsManager instance;
-  return instance;
+Utils::IPublisher<EntityEvent>& GameEventsManager::getEntityEventPublisher() const {
+  return *m_entityEventPublisher;
 }
 } // GameEvents
 } // PacMan

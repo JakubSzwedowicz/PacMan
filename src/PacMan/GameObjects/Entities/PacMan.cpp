@@ -11,16 +11,18 @@ namespace Entities {
 
 using namespace std::chrono_literals;
 
-PacMan::PacMan(Level *level)
+PacMan::PacMan(Level *level, GameEvents::GameEventsManager &gameEventsPublisher)
     : MovingEntity(EntityType::PAC_MAN, level),
+      ISubscriber(&gameEventsPublisher.getEntityEventPublisher()),
       m_logger(
-          std::make_unique<Utils::Logger>("PacMan", Utils::LogLevel::INFO)) {}
+          std::make_unique<Utils::Logger>("PacMan", Utils::LogLevel::INFO)),
+      m_entityEventsPublisher(gameEventsPublisher.getEntityEventPublisher()) {}
 
 void PacMan::update(std::chrono::milliseconds deltaTime) {
   if (m_pacManState == PacManState::EMPOWERED) {
     m_empoweredDurationMs -= deltaTime;
     if (m_empoweredDurationMs <= 0ms) {
-      m_gameEventsManager.publish(GameEvents::PowerPelletExpired(m_entityId));
+      m_entityEventsPublisher.publish(GameEvents::PowerPelletExpired(m_entityId));
     }
   }
 }

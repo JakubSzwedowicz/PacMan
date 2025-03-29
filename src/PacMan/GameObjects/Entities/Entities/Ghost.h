@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "EntitiesStates.h"
 #include "EntityType.h"
 #include "GameEventsManager/GameEventsManager.h"
 #include "MovingEntity.h"
@@ -20,25 +21,19 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-enum class GhostState {
-  CHASING,
-  SCATTERING,
-  FRIGHTENED,
-  EATEN // Transitioning back to pen
-};
-
-class Ghost : public MovingEntity {
+class Ghost : public MovingEntity,
+              public Utils::ISubscriber<GameEvents::EntityEvent> {
 public:
-  Ghost(Level *level) : MovingEntity(EntityType::GHOST, level) {}
+  Ghost(Level *level, GameEvents::GameEventsManager& gameEventsManager);
   void update(std::chrono::milliseconds deltaTime) override;
+  void callback(const GameEvents::EntityEvent &event) override;
 
   // Getters/Setters
   [[nodiscard]] GhostState getGhostState() const { return m_ghostState; }
 
 public:
   std::unique_ptr<Utils::ILogger> m_logger;
-  GameEvents::GameEventsManager &m_gameEventsManager =
-      GameEvents::GameEventsManager::getInstance();
+  Utils::IPublisher<GameEvents::EntityEvent> & m_entityEventsPublisher;
   GhostState m_ghostState = GhostState::CHASING;
 
   std::chrono::milliseconds m_frightenedDurationMs =

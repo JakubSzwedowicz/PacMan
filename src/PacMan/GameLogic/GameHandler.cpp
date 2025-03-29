@@ -14,17 +14,19 @@
 namespace PacMan {
 namespace GameLogic {
 
+GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager) : m_gameEventsManager(gameEventsManager) {}
+
 std::unique_ptr<GameRunner>
 GameHandler::loadGame(const std::string &boardName) {
   m_logger.logInfo("Starting a game from board '" + boardName + "'");
 
   GameObjects::LevelBuilderFromFile builder =
-      GameObjects::LevelBuilderFromFile(boardName);
+      GameObjects::LevelBuilderFromFile(boardName, m_gameEventsManager);
   auto level = builder.release();
 
   m_logger.logInfo("Returning a game with id '" + std::to_string(m_nextGameId) +
                    "'");
-  return std::make_unique<GameRunner>((m_nextGameId++), std::move(level));
+  return std::make_unique<GameRunner>((m_nextGameId++), std::move(level), m_gameEventsManager);
 }
 
 } // namespace GameLogic

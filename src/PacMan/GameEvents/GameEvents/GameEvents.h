@@ -5,8 +5,8 @@
 #ifndef GAMEEVENTS_H
 #define GAMEEVENTS_H
 
+#include "Entities/EntitiesStates.h"
 #include "Entities/Entity.h"
-#include "Entities/Ghost.h"
 
 #include <chrono>
 
@@ -42,7 +42,7 @@ enum class EntityEventType {
   GHOST_STATE_CHANGED
 };
 
-std::string toString(const EntityEventType type) {
+inline std::string toString(const EntityEventType type) {
   switch (type) {
   case EntityEventType::ENTITY_MOVED:
     return "EntityMoved";

@@ -5,24 +5,32 @@
 #ifndef LEVELBUILDERFROMFILE_H
 #define LEVELBUILDERFROMFILE_H
 
+#include <memory>
+#include <string>
+
 #include "ILevelBuilder.h"
 #include "Utils/Logger.h"
 
-#include <memory>
-
 namespace PacMan {
+namespace Utils {
+class ILogger;
+}
+
+namespace GameEvents {
+class GameEventsManager;
+}
+
 namespace GameObjects {
 
 class LevelBuilderFromFile : public ILevelBuilder {
 public:
-  explicit LevelBuilderFromFile(const std::string &boardPath);
+  explicit LevelBuilderFromFile(const std::string &boardPath, GameEvents::GameEventsManager& gameEventsManager);
 
 private:
   void createLevel();
 
 private:
-  mutable Utils::Logger m_logger =
-      Utils::Logger("LevelBuilderFromFile", Utils::LogLevel::INFO);
+  mutable std::unique_ptr<Utils::ILogger> m_logger;
   const std::string &m_boardPath;
 };
 

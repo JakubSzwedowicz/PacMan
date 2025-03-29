@@ -9,9 +9,13 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-void Ghost::update(std::chrono::milliseconds deltaTime) {
+Ghost::Ghost(Level *level, GameEvents::GameEventsManager &gameEventsManager)
+    : MovingEntity(EntityType::GHOST, level),
+      ISubscriber(&gameEventsManager.getEntityEventPublisher()), m_entityEventsPublisher(gameEventsManager.getEntityEventPublisher()) {}
 
-}
+void Ghost::update(std::chrono::milliseconds deltaTime) {}
+
+void Ghost::callback(const GameEvents::EntityEvent &event) {}
 
 } // namespace Entities
 } // namespace GameObjects

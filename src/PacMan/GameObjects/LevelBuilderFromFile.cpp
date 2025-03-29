@@ -2,7 +2,6 @@
 // Created by jakubszwedowicz on 2/28/25.
 //
 
-#include "GameObjects/LevelBuilderFromFile.h"
 #include <fstream>
 #include <memory>
 
@@ -12,25 +11,32 @@
 #include "Entities/PacMan.h"
 #include "Entities/SuperFood.h"
 #include "Entities/Wall.h"
+#include "GameObjects/LevelBuilderFromFile.h"
+#include "Utils/Logger.h"
+#include "GameEventsManager/GameEventsManager.h"
 
 namespace PacMan {
 namespace GameObjects {
 
-LevelBuilderFromFile::LevelBuilderFromFile(const std::string &boardPath)
-    : m_boardPath(boardPath) {
+LevelBuilderFromFile::LevelBuilderFromFile(
+    const std::string &boardPath,
+    GameEvents::GameEventsManager &gameEventsManager)
+    : ILevelBuilder(gameEventsManager),
+      m_logger(std::make_unique<Utils::Logger>("LevelBuilderFromFile", Utils::LogLevel::DEBUG)),
+    m_boardPath(boardPath) {
   createLevel();
   if (!m_level) {
-    m_logger.logError("Failed to create board");
+    m_logger->logError("Failed to create board");
   }
 }
 
 void LevelBuilderFromFile::createLevel() {
   std::ifstream file(m_boardPath);
   if (!file.is_open()) {
-    m_logger.logError("Failed to open file: " + m_boardPath);
+    m_logger->logError("Failed to open file: " + m_boardPath);
     return;
   }
-  m_logger.logDebug("Opened file: " + m_boardPath);
+  m_logger->logDebug("Opened file: " + m_boardPath);
 
   auto board = std::make_unique<Level::Board_t>();
   Level::Pacmans_t pacmans;
@@ -46,7 +52,7 @@ void LevelBuilderFromFile::createLevel() {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::BRIDGE):
         // entity = std::make_unique<Entities::Bridge>();
-        m_logger.logError("Bridge entity is not implemented yet!");
+        m_logger->logError("Bridge entity is not implemented yet!");
         return;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::EMPTY):
@@ -59,12 +65,14 @@ void LevelBuilderFromFile::createLevel() {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
         entityType = Entities::EntityType::EMPTY;
-        ghosts.emplace_back(std::make_unique<Entities::Ghost>(m_level.get()));
+        ghosts.emplace_back(
+            std::make_unique<Entities::Ghost>(m_level.get(), m_gameEventsManager));
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::PAC_MAN):
         entityType = Entities::EntityType::EMPTY;
-        pacmans.emplace_back(std::make_unique<Entities::PacMan>(m_level.get()));
+        pacmans.emplace_back(
+            std::make_unique<Entities::PacMan>(m_level.get(), m_gameEventsManager));
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::SUPER_FOOD):
@@ -76,7 +84,7 @@ void LevelBuilderFromFile::createLevel() {
         entityType = Entities::EntityType::WALL;
         break;
       default:;
-        m_logger.logError("Unknown entity of char '" +
+        m_logger->logError("Unknown entity of char '" +
                           std::string({line[colIdx]}) + "'" +
                           " at position (col=" + std::to_string(colIdx) +
                           ", row=" + std::to_string(board->size()) + ")");
@@ -88,7 +96,7 @@ void LevelBuilderFromFile::createLevel() {
     board->push_back(std::move(row));
   }
 
-  m_logger.logInfo("Created a board from file: " + m_boardPath +
+  m_logger->logInfo("Created a board from file: " + m_boardPath +
                    ", of size: " + std::to_string(board->size()) + "x" +
                    std::to_string(board->front().size()));
   m_level = std::make_unique<Level>(std::move(*board), std::move(pacmans),

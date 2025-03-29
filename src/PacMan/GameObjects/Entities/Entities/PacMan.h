@@ -7,6 +7,7 @@
 
 #include <cstdint>
 
+#include "EntitiesStates.h"
 #include "EntityType.h"
 #include "GameEventsManager/GameEventsManager.h"
 #include "MovingEntity.h"
@@ -17,12 +18,10 @@ namespace PacMan {
 namespace GameObjects {
 namespace Entities {
 
-enum class PacManState : uint8_t { NORMAL, EMPOWERED };
-
 class PacMan : public MovingEntity,
                public Utils::ISubscriber<GameEvents::EntityEvent> {
 public:
-  explicit PacMan(Level *level);
+  explicit PacMan(Level *level, GameEvents::GameEventsManager& gameEventsManager);
   void update(std::chrono::milliseconds deltaTime) override;
   void callback(const GameEvents::EntityEvent &event) override;
 
@@ -35,8 +34,7 @@ private:
 
 private:
   std::unique_ptr<Utils::ILogger> m_logger;
-  GameEvents::GameEventsManager &m_gameEventsManager =
-      GameEvents::GameEventsManager::getInstance();
+  Utils::IPublisher<GameEvents::EntityEvent>& m_entityEventsPublisher;
   PacManState m_pacManState = PacManState::NORMAL;
   std::chrono::milliseconds m_empoweredDurationMs =
       std::chrono::milliseconds(0);
