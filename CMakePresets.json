@@ -48,7 +48,6 @@
       "configuration": "Debug",
       "jobs": 8,
       "targets": [
-        "ServerApp",
         "App",
         "ClientApp"
       ]

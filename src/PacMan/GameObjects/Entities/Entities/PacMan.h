@@ -19,10 +19,9 @@ enum class PacManState : uint8_t { NORMAL, EMPOWERED };
 class PacMan : public MovingEntity {
 public:
   PacMan() : MovingEntity(EntityType::PAC_MAN) {}
-  virtual void update(std::chrono::milliseconds deltaTime,
-                      const Level::Board_t &board,
-                      const Level::Pacmans_t &pacmans,
-                      const Level::Ghosts_t &ghosts) override;
+  void update(std::chrono::milliseconds deltaTime, const Level::Board_t &board,
+              const Level::Pacmans_t &pacmans,
+              const Level::Ghosts_t &ghosts) override;
 
 private:
   PacManState m_pacManState = PacManState::NORMAL;

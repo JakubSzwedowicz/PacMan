@@ -9,12 +9,17 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <condition_variable>
 
 #include "GameLogic/GameHandler.h"
-#include "GameLogic/GameRunner.h"
 #include "Utils/Logger.h"
 
 namespace PacMan {
+
+namespace GameLogic {
+class GameRunner;
+}
+
 namespace Client {
 
 class Client {
