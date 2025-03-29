@@ -9,29 +9,32 @@
 #include "Entities/PacMan.h"
 #include "GameLogic/GameRunner.h"
 #include "GameObjects/Level.h"
+#include "Utils/Logger.h"
 
 namespace PacMan {
 namespace GameLogic {
 
 GameRunner::GameRunner(int gameId, std::unique_ptr<Level> level)
-    : m_gameId(gameId), m_level(std::move(level)) {
-  m_logger.logInfo("Created GameRunner with id '" + std::to_string(m_gameId) +
-                   "'");
+    : m_gameId(gameId), m_level(std::move(level)),
+      m_logger(std::make_unique<Utils::Logger>("GameRunner",
+                                               Utils::LogLevel::DEBUG)) {
+  m_logger->logInfo("Created GameRunner with id '" + std::to_string(m_gameId) +
+                    "'");
 }
 
 bool GameRunner::startGame() {
   if (m_gameStatus != GameStatus::WAITING) {
-    m_logger.logError("Game '" + std::to_string(m_gameId) +
-                      "' has already been started!");
+    m_logger->logError("Game '" + std::to_string(m_gameId) +
+                       "' has already been started!");
     return false;
   }
 
   if (m_level == nullptr || !m_level->isReady()) {
-    m_logger.logError("Game '" + std::to_string(m_gameId) + "' has no level!");
+    m_logger->logError("Game '" + std::to_string(m_gameId) + "' has no level!");
     return false;
   }
 
-  m_logger.logInfo("Starting Game '" + std::to_string(m_gameId) + "'");
+  m_logger->logInfo("Starting Game '" + std::to_string(m_gameId) + "'");
 
   m_gameStatus = GameStatus::RUNNING;
   m_gameThread = std::thread(&GameRunner::gameLoop, this);
@@ -55,8 +58,8 @@ void GameRunner::gameLoop() {
       std::this_thread::sleep_for(targetUpdateTime - elapsedTime);
     }
   }
-  m_logger.logInfo("Game '" + std::to_string(m_gameId) +
-                   " changed status to '" + toString(m_gameStatus) + "'");
+  m_logger->logInfo("Game '" + std::to_string(m_gameId) +
+                    " changed status to '" + toString(m_gameStatus) + "'");
 }
 
 void GameRunner::update(std::chrono::milliseconds deltaTime) {
@@ -78,7 +81,7 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
   // Check for game over conditions
   if (checkGameOver()) {
     m_gameStatus = GameStatus::FINISHED;
-    m_logger.logInfo("Game '" + std::to_string(m_gameId) + "' finished!");
+    m_logger->logInfo("Game '" + std::to_string(m_gameId) + "' finished!");
   }
 
   // TODO: trigger an event to notify clients about the updated game state
@@ -113,14 +116,15 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
       return;
     }
     // Entity arrived to the next tile!
-    movingEntity.setTilePosition(newTilePosition);
+    m_gameEventsManager.publish(GameEvents::EntityMoved(
+        movingEntity.getEntityId(), currentTilePosition, newTilePosition));
     movingEntity.update(deltaTime);
 
     if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {
-      m_logger.logError("In game '" + std::to_string(m_gameId) + " entity " +
-                        movingEntity.toString() +
-                        " hit bridge which should not be possible! They are "
-                        "not implemented!");
+      m_logger->logError("In game '" + std::to_string(m_gameId) + " entity " +
+                         movingEntity.toString() +
+                         " hit bridge which should not be possible! They are "
+                         "not implemented!");
       throw std::runtime_error(
           "In game '" + std::to_string(m_gameId) + " entity " +
           movingEntity.toString() +
@@ -174,8 +178,8 @@ RealPosition GameRunner::moveTowards(const RealPosition &realPosition,
   RealPosition newPosition = realPosition;
   // TODO: get back here if distance is sometimes too big!
   if (distance >= 2.0f) {
-    m_logger.logError("Distance to move entity in '" +
-                      std::to_string(distance) + "' is greater than 2.0!");
+    m_logger->logError("Distance to move entity in '" +
+                       std::to_string(distance) + "' is greater than 2.0!");
   }
   if (distance >= 1.0f)
     switch (direction) {
@@ -192,9 +196,9 @@ RealPosition GameRunner::moveTowards(const RealPosition &realPosition,
       newPosition.x += distance;
       break;
     case GameObjects::Entities::EntityDirection::NONE:
-      m_logger.logError("Tested tile position " + realPosition.toString() +
-                        " for direction " + toString(direction) +
-                        " and distance " + std::to_string(distance) + "!");
+      m_logger->logError("Tested tile position " + realPosition.toString() +
+                         " for direction " + toString(direction) +
+                         " and distance " + std::to_string(distance) + "!");
       break;
     }
 
@@ -216,13 +220,13 @@ bool GameRunner::checkGameOver() const {
                   [](const auto &pacman) -> bool {
                     return pacman->getEntityState() == EntityState::DEAD;
                   })) {
-    m_logger.logInfo("Game Over!, all players are dead.");
+    m_logger->logInfo("Game Over!, all players are dead.");
     return true;
   }
 
   // Check for remaining pellets
   if (m_level->getNumberOfFood() == 0) {
-    m_logger.logInfo("Game Over!, all the food is gone.");
+    m_logger->logInfo("Game Over!, all the food is gone.");
     return true;
   }
 

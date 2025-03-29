@@ -15,19 +15,17 @@ namespace GameEvents {
 class GameEventsManager final : Utils::IPublisher<EntityEvent> {
 public:
   explicit GameEventsManager();
-
-protected:
   void publish(const EntityEvent &event) override;
 
 public:
   // Accessors
-  static GameEventsManager& getInstance();
+  static GameEventsManager &getInstance();
+
 private:
   std::unique_ptr<Utils::ILogger> m_logger;
-
 };
 
-} // GameEvents
-} // PacMan
+} // namespace GameEvents
+} // namespace PacMan
 
-#endif //GAMEEVENTSMANAGER_H
+#endif // GAMEEVENTSMANAGER_H

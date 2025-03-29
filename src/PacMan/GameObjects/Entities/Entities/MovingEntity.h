@@ -35,7 +35,8 @@ inline std::string toString(const EntityDirection &direction) {
 
 class MovingEntity : public Entity {
 public:
-  explicit MovingEntity(const EntityType entityType, Level* level) : Entity(entityType), m_level(level) {}
+  explicit MovingEntity(const EntityType entityType, Level *level)
+      : Entity(entityType), m_level(level) {}
 
   virtual void update(std::chrono::milliseconds deltaTime) = 0;
 
@@ -69,16 +70,21 @@ public:
     m_entityState = entityState;
   }
 
-  MovementState getMovementState() const { return m_movementState; }
+  [[nodiscard]] MovementState getMovementState() const {
+    return m_movementState;
+  }
   void setMovementState(const MovementState movementState) {
     m_movementState = movementState;
   }
 
-  int getScore() const { return m_score; }
+  uint32_t decreaseHealth() { return --m_health; }
+  uint32_t increaseScore(uint32_t score) { return (m_score += score); }
+
+  [[nodiscard]] uint32_t getScore() const { return m_score; }
   void setScore(int score) { m_score = score; }
-  int getHealth() const { return m_health; }
+  [[nodiscard]] uint32_t getHealth() const { return m_health; }
   void setHealth(int health) { m_health = health; }
-  float getSpeedPerSeconds() const { return m_speedInPerSeconds; }
+  [[nodiscard]] float getSpeedPerSeconds() const { return m_speedInPerSeconds; }
 
 protected:
   EntityDirection m_currDirection = EntityDirection::NONE;
@@ -86,9 +92,9 @@ protected:
   MovementState m_movementState = MovementState::ON_TILE;
   float m_speedInPerSeconds = 0.5f;
 
-  Level* m_level;
-  int m_score = 0;
-  int m_health = 3;
+  Level *m_level;
+  uint32_t m_score = 0;
+  uint32_t m_health = 3;
 };
 
 } // namespace Entities

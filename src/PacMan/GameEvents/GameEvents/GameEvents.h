@@ -35,8 +35,8 @@ enum class EntityEventType {
   ENTITY_MOVED,
   PELLET_EATEN,
   POWER_PELLET_EATEN,
+  POWER_PELLET_EXPIRED,
   GHOST_EATEN,
-  PLAYER_CAUGHT,
   PLAYER_DIED,
   PLAYER_RESPAWNED,
   GHOST_STATE_CHANGED
@@ -44,16 +44,16 @@ enum class EntityEventType {
 
 std::string toString(const EntityEventType type) {
   switch (type) {
-      case EntityEventType::ENTITY_MOVED:
+  case EntityEventType::ENTITY_MOVED:
     return "EntityMoved";
   case EntityEventType::PELLET_EATEN:
     return "PelletEaten";
   case EntityEventType::POWER_PELLET_EATEN:
     return "PowerPelletEaten";
+  case EntityEventType::POWER_PELLET_EXPIRED:
+    return "PowerPelletExpired";
   case EntityEventType::GHOST_EATEN:
     return "GhostEaten";
-  case EntityEventType::PLAYER_CAUGHT:
-    return "PlayerCaught";
   case EntityEventType::PLAYER_DIED:
     return "PlayerDied";
   case EntityEventType::PLAYER_RESPAWNED:
@@ -61,7 +61,9 @@ std::string toString(const EntityEventType type) {
   case EntityEventType::GHOST_STATE_CHANGED:
     return "GhostStateChanged";
   }
-  return "Unknown";
+  return "Unknown: " +
+         std::to_string(
+             static_cast<std::underlying_type_t<EntityEventType>>(type));
 }
 
 /**
@@ -125,6 +127,14 @@ struct PowerPelletEaten final : public EntityEvent {
 };
 
 /**
+ * @brief Event published when PacMan stops being empowered.
+ */
+struct PowerPelletExpired final : public EntityEvent {
+  explicit PowerPelletExpired(Entities::EntityId pacManId)
+      : EntityEvent(pacManId, EntityEventType::POWER_PELLET_EXPIRED) {}
+};
+
+/**
  * @brief Event published when PacMan eats a frightened ghost.
  */
 struct GhostEaten final : public EntityEvent {
@@ -139,25 +149,17 @@ struct GhostEaten final : public EntityEvent {
 };
 
 /**
- * @brief Event published when PacMan collides with a non-frightened ghost.
- */
-struct PlayerCaught final : public EntityEvent {
-  Entities::EntityId ghostId;
-  Entities::TilePosition position;
-
-  PlayerCaught(Entities::EntityId pacManId, Entities::EntityId ghostId,
-               Entities::TilePosition pos)
-      : EntityEvent(pacManId, EntityEventType::PLAYER_CAUGHT), ghostId(ghostId),
-        position(pos) {}
-};
-
-/**
  * @brief Event published when PacMan loses a life and the death animation
  * starts.
  */
 struct PlayerDied final : public EntityEvent {
-  explicit PlayerDied(Entities::EntityId pacManId)
-      : EntityEvent(pacManId, EntityEventType::PLAYER_DIED) {}
+  Entities::EntityId ghostId;
+  Entities::TilePosition position;
+
+  explicit PlayerDied(Entities::EntityId pacManId, Entities::EntityId ghostId,
+                      Entities::TilePosition pos)
+      : EntityEvent(pacManId, EntityEventType::PLAYER_DIED), ghostId(ghostId),
+        position(pos) {}
 };
 
 /**

@@ -5,6 +5,7 @@
 #ifndef PUBLISHSUBSCRIBEHANDLERS_H
 #define PUBLISHSUBSCRIBEHANDLERS_H
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -19,7 +20,7 @@ template <class Event> class ISubscriber;
 template <class Event> class ISubscriber {
 public:
   virtual ~ISubscriber();
-  virtual void callback(const Event& event) = 0;
+  virtual void callback(const Event &event) = 0;
   virtual void unsubscribe();
 
 private:
@@ -69,10 +70,19 @@ bool IPublisher<Event>::subscribe(ISubscriber<Event> *subscriber) {
   return true;
 }
 
+/**
+ * @brief This function removes a subscriber from the ones receiving events from
+ * this publisher. It's quite slow however at O(N) time complexity
+ * @param subscriber Object that wants to subscribe for events published by this
+ * publisher
+ */
 template <class Event>
 void IPublisher<Event>::unsubscribe(ISubscriber<Event> *subscriber) {
-  subscriber->unsubscribe(this);
-  m_subscribers.erase(subscriber);
+  auto it = std::find(m_subscribers.begin(), m_subscribers.end(), subscriber);
+  if (it != m_subscribers.end()) {
+    subscriber->unsubscribe();
+    m_subscribers.erase(it);
+  }
 }
 
 template <class Event> void IPublisher<Event>::publish(const Event &event) {

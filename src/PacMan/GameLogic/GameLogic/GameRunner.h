@@ -11,8 +11,9 @@
 #include <thread>
 
 #include "Entities/MovingEntity.h"
+#include "GameEventsManager/GameEventsManager.h"
 #include "GameStatus.h"
-#include "Utils/Logger.h"
+#include "Utils/ILogger.h"
 
 namespace PacMan {
 namespace GameObjects {
@@ -54,8 +55,9 @@ private:
   std::thread m_gameThread;
 
   // Utils
-  mutable Utils::Logger m_logger =
-      Utils::Logger("GameRunner", Utils::LogLevel::DEBUG);
+  mutable std::unique_ptr<Utils::ILogger> m_logger;
+  GameEvents::GameEventsManager &m_gameEventsManager =
+      GameEvents::GameEventsManager::getInstance();
 };
 
 } // namespace GameLogic
