@@ -23,7 +23,7 @@ bool Level::verifyBoard() {
   m_levelState = LevelState::NOT_READY;
   for (const auto &row : m_board) {
     for (const auto &cell : row) {
-      if (cell == Entities::EntityType::FOOD) {
+      if (cell == Entities::EntityType::PELLET) {
         m_numberOfFood++;
       } else if (cell == Entities::EntityType::WALL) {
         // Do nothing...

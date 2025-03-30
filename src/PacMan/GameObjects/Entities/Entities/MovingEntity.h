@@ -40,8 +40,8 @@ public:
 
   virtual void update(std::chrono::milliseconds deltaTime) = 0;
 
-  void changeDirection() {
-    setCurrDirection(getNextDirection());
+  void changeDirection(EntityDirection direction) {
+    setCurrDirection(direction);
     setNextDirection(EntityDirection::NONE);
     setMovementState(MovementState::IN_TRANSIT);
   }

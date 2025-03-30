@@ -31,10 +31,19 @@ public:
   // Getters/Setters
   [[nodiscard]] GhostState getGhostState() const { return m_ghostState; }
 
+private:
+  void setGhostState(GhostState newState);
+  void setFrightenedState(std::chrono::milliseconds duration);
+  void setDeadState();
+  void revertFromFrightenedState();
+
+  void reverseDirection();
+
 public:
   std::unique_ptr<Utils::ILogger> m_logger;
   Utils::IPublisher<GameEvents::EntityEvent> & m_entityEventsPublisher;
-  GhostState m_ghostState = GhostState::CHASING;
+  GhostState m_ghostState = GhostState::SCATTERING;
+  GhostState m_previousGhostState = GhostState::SCATTERING;
 
   std::chrono::milliseconds m_frightenedDurationMs =
       std::chrono::milliseconds(0);

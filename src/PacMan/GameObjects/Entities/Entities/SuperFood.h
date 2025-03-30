@@ -15,7 +15,7 @@ namespace Entities {
 
 class SuperFood : public Entity {
 public:
-  SuperFood() : Entity(EntityType::SUPER_FOOD) {}
+  SuperFood() : Entity(EntityType::SUPER_PELLET) {}
 };
 
 } // namespace Entities

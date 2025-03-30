@@ -70,10 +70,12 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
 
   // Move players in their directions
   for (auto const &pacman : m_level->getPacmans()) {
+    pacman->update(deltaTime);
     updateMovingEntity(*pacman, deltaTime);
   }
 
   for (auto const &ghosts : m_level->getGhosts()) {
+    ghosts->update(deltaTime);
     updateMovingEntity(*ghosts, deltaTime);
   }
 
@@ -92,11 +94,11 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
 void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
                                     std::chrono::milliseconds deltaTime) {
   // Update direction of the movement when ON_TILE
+  EntityDirection direction = movingEntity.getNextDirection();
   if (movingEntity.getMovementState() == MovementState::ON_TILE &&
-      movingEntity.getNextDirection() != EntityDirection::NONE) {
-    if (canMove(movingEntity.getTilePosition(),
-                movingEntity.getNextDirection())) {
-      movingEntity.changeDirection();
+      direction != EntityDirection::NONE) {
+    if (canMove(movingEntity.getTilePosition(), direction)) {
+      movingEntity.changeDirection(direction);
     }
   }
 
@@ -118,9 +120,9 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
       return;
     }
     // Entity arrived to the next tile!
-    m_gameEventsManager.getEntityEventPublisher().publish(GameEvents::EntityMoved(
-        movingEntity.getEntityId(), currentTilePosition, newTilePosition));
-    movingEntity.update(deltaTime);
+    m_gameEventsManager.getEntityEventPublisher().publish(
+        GameEvents::EntityMoved(movingEntity.getEntityId(), currentTilePosition,
+                                newTilePosition));
 
     if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {
       m_logger->logError("In game '" + std::to_string(m_gameId) + " entity " +

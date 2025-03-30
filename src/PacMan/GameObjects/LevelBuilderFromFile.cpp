@@ -59,8 +59,8 @@ void LevelBuilderFromFile::createLevel() {
         entityType = Entities::EntityType::EMPTY;
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
-          Entities::EntityType::FOOD):
-        entityType = Entities::EntityType::FOOD;
+          Entities::EntityType::PELLET):
+        entityType = Entities::EntityType::PELLET;
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
@@ -75,8 +75,8 @@ void LevelBuilderFromFile::createLevel() {
             std::make_unique<Entities::PacMan>(m_level.get(), m_gameEventsManager));
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
-          Entities::EntityType::SUPER_FOOD):
-        entityType = Entities::EntityType::SUPER_FOOD;
+          Entities::EntityType::SUPER_PELLET):
+        entityType = Entities::EntityType::SUPER_PELLET;
         break;
 
       case static_cast<std::underlying_type_t<Entities::EntityType>>(

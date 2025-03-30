@@ -16,35 +16,52 @@ enum class EntityType : char {
   GHOST = 'G',
   WALL = '#',
   BRIDGE = 'B',
-  FOOD = '.',
-  SUPER_FOOD = 'S',
+  PELLET = '.',
+  SUPER_PELLET = 'S',
   EMPTY = ' '
 };
 
 inline std::string toString(EntityType entityType) {
   switch (entityType) {
   case EntityType::BRIDGE:
-    return "B";
+    return "BRIDGE";
   case EntityType::EMPTY:
-    return " ";
-  case EntityType::FOOD:
-    return ".";
+    return "EMPTY";
+  case EntityType::PELLET:
+    return "PELLET";
   case EntityType::GHOST:
-    return "G";
+    return "GHOST";
   case EntityType::PAC_MAN:
-    return "P";
-  case EntityType::SUPER_FOOD:
-    return "S";
+    return "PAC_MAN";
+  case EntityType::SUPER_PELLET:
+    return "SUPER_PELLET";
   case EntityType::WALL:
-    return "#";
+    return "WALL";
   default:
-    return "?";
+    return "UNKNOWN";
   }
 }
 
 inline std::ostream &operator<<(std::ostream &os,
                                 const EntityType &entityType) {
   return (os << toString(entityType));
+}
+
+enum class GhostType { PINKY, BLINKY };
+
+inline std::string toString(GhostType ghostType) {
+  switch (ghostType) {
+  case GhostType::BLINKY:
+    return "BLINKY";
+  case GhostType::PINKY:
+    return "PINKY";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+inline std::ostream &operator<<(std::ostream &os, const GhostType &ghostType) {
+  return (os << toString(ghostType));
 }
 
 } // namespace Entities

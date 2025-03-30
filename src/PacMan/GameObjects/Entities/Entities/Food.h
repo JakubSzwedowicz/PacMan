@@ -17,7 +17,7 @@ namespace Entities {
 
 class Food : public Entity {
 public:
-  Food() : Entity(EntityType::FOOD) {}
+  Food() : Entity(EntityType::PELLET) {}
 
 private:
 };

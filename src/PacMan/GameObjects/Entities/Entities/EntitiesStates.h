@@ -14,8 +14,7 @@ enum class PacManState : uint8_t { NORMAL, EMPOWERED };
 enum class GhostState {
   CHASING,
   SCATTERING,
-  FRIGHTENED,
-  EATEN // Transitioning back to pen
+  FRIGHTENED
 };
 
 inline std::string toString(const GhostState state) {
@@ -26,8 +25,6 @@ inline std::string toString(const GhostState state) {
     return "SCATTERING";
   case GhostState::FRIGHTENED:
     return "FRIGHTENED";
-  case GhostState::EATEN:
-    return "EATEN";
   }
   return "UNKNOWN " +
          std::to_string(static_cast<std::underlying_type_t<GhostState>>(state));

@@ -66,10 +66,10 @@ public:
       : m_entityId(entityId), m_entityType(entityType) {}
   virtual ~Entity() = default;
 
-  EntityId getEntityId() const { return m_entityId; }
-  EntityType getEntityType() const { return m_entityType; }
+  [[nodiscard]] EntityId getEntityId() const { return m_entityId; }
+  [[nodiscard]] EntityType getEntityType() const { return m_entityType; }
 
-  std::string toString() const { return Entities::toString(m_entityType); }
+  [[nodiscard]] std::string toString() const { return "{EntityId: " + std::to_string(m_entityId) + ", EntityType: '" + Entities::toString(m_entityType) + "'}";  }
   friend std::ostream &operator<<(std::ostream &os, const Entity &entity) {
     return (os << entity.getEntityType());
   }
@@ -83,7 +83,7 @@ public:
   }
 
   RealPosition &getMutableRealPosition() { return m_realPosition; }
-  const RealPosition &getRealPosition() const { return m_realPosition; }
+  [[nodiscard]] const RealPosition &getRealPosition() const { return m_realPosition; }
   void setRealPosition(const RealPosition &position) {
     m_realPosition = position;
   }
