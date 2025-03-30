@@ -1,9 +1,10 @@
 # Define the source and destination directories
 set(RESOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-set(DESTINATION_PATH "${CMAKE_BINARY_DIR}/src")
+set(RESOURCES_DESTINATION_PATH "${CMAKE_BINARY_DIR}/Resources" CACHE PATH "Path to the resources directory")
+file(MAKE_DIRECTORY ${RESOURCES_DESTINATION_PATH})
 
 # Copy the Resources directory to the binary directory
-file(COPY ${RESOURCE_PATH} DESTINATION ${DESTINATION_PATH})
+configure_file("${RESOURCE_PATH}/Board1.txt" ${RESOURCES_DESTINATION_PATH} COPYONLY)
 #add_library(Resources
 #        ResourcesHandler.cpp)
 #

@@ -30,7 +30,7 @@ public:
   bool startGame();
 
   int getGameId() const { return m_gameId; }
-
+  void printToCLI() const;
 private:
   void gameLoop();
   void update(std::chrono::milliseconds deltaTime);

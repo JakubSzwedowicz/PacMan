@@ -105,7 +105,7 @@ void Level::setPacMans(Pacmans_t &&pacmans) {
   }
 
   for (const auto &pacman : m_pacMans) {
-    setEntityOnTile(pacman->getTilePosition(), Entities::EntityType::EMPTY);
+    setEntityOnTile(pacman->getStartingPosition(), Entities::EntityType::EMPTY);
   }
 }
 void Level::setGhosts(Ghosts_t &&ghosts) {
@@ -115,7 +115,7 @@ void Level::setGhosts(Ghosts_t &&ghosts) {
   }
 
   for (const auto &ghost : m_ghosts) {
-    setEntityOnTile(ghost->getTilePosition(), Entities::EntityType::EMPTY);
+    setEntityOnTile(ghost->getStartingPosition(), Entities::EntityType::EMPTY);
   }
 }
 

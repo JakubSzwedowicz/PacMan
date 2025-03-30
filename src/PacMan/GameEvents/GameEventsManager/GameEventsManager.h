@@ -16,9 +16,10 @@ namespace GameEvents {
 
 class GameEventsManager {
 public:
-  explicit GameEventsManager(std::unique_ptr<Utils::IPublisher<EntityEvent>> entityEvenPublisher);
+  explicit GameEventsManager(
+      std::unique_ptr<Utils::IPublisher<EntityEvent>> entityEvenPublisher);
   ~GameEventsManager() = default;
-  [[nodiscard]] Utils::IPublisher<EntityEvent>& getEntityEventPublisher() const;
+  [[nodiscard]] Utils::IPublisher<EntityEvent> &getEntityEventPublisher() const;
 
 private:
   std::unique_ptr<Utils::ILogger> m_logger;

@@ -59,7 +59,7 @@ void LevelBuilderFromFile::createLevel() {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::BRIDGE):
         // entity = std::make_unique<Entities::Bridge>();
-        m_logger->logError("Bridge entity is not implemented yet!");
+        m_logger->logCritical("Bridge entity is not implemented yet!");
         return;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::EMPTY):

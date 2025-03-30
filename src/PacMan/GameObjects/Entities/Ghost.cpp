@@ -20,7 +20,7 @@ Ghost::Ghost(GhostType ghostType, TilePosition startingPosition, Level &level,
              GameEvents::GameEventsManager &gameEventsManager)
     : MovingEntity(EntityType::GHOST, startingPosition, level),
       ISubscriber(&gameEventsManager.getEntityEventPublisher()),
-      m_logger(std::make_unique<Utils::Logger>("Ghost", Utils::LogLevel::INFO)),
+      m_logger(std::make_unique<Utils::Logger>(toString(), Utils::LogLevel::INFO)),
       m_ghostType(ghostType),
       m_scatterPosition(m_level.getScatteringPositionOfGhost(m_ghostType)),
       m_entityEventsPublisher(gameEventsManager.getEntityEventPublisher()) {
@@ -139,6 +139,10 @@ void Ghost::setGhostStrategies(
   for (const auto &[state, strategy] : ghostStrategies) {
     m_ghostStrategies[state] = strategy->clone();
   }
+}
+
+std::string Ghost::toString() const {
+  return "Ghost(" + std::to_string(m_entityId) + ", " + Entities::toString(m_ghostType) + ")";
 }
 
 // --- Private Helper Methods ---

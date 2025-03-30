@@ -29,7 +29,7 @@ private:
   void setPublisher(IPublisher<Event> *publisher);
 
 private:
-  IPublisher<Event> *m_publisher;
+  IPublisher<Event> *m_publisher = nullptr;
 };
 
 template <class Event> class IPublisher {

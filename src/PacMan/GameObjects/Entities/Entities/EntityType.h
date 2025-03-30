@@ -5,6 +5,7 @@
 #ifndef ENTITYUID_H
 #define ENTITYUID_H
 
+#include <iostream>
 #include <ostream>
 
 namespace PacMan {
@@ -20,6 +21,22 @@ enum class EntityType : char {
   SUPER_PELLET = 'S',
   EMPTY = ' '
 };
+
+inline char toChar(EntityType entityType) {
+  switch (entityType) {
+
+  case EntityType::PAC_MAN:
+  case EntityType::GHOST:
+  case EntityType::WALL:
+  case EntityType::BRIDGE:
+  case EntityType::PELLET:
+  case EntityType::SUPER_PELLET:
+  case EntityType::EMPTY:
+    return static_cast<std::underlying_type_t<EntityType>>(entityType);
+  default:
+    return '?';
+  }
+}
 
 inline std::string toString(EntityType entityType) {
   switch (entityType) {

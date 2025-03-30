@@ -6,9 +6,9 @@
 
 #include "Entities/Ghost.h"
 #include "Entities/PacMan.h"
+#include "GameObjects/Level.h"
 #include "GameLogic/GameHandler.h"
 #include "GameLogic/GameRunner.h"
-#include "GameObjects/Level.h"
 #include "GameObjects/LevelBuilderFromFile.h"
 
 namespace PacMan {
@@ -22,12 +22,16 @@ GameHandler::loadGame(const std::string &boardName) {
   m_logger.logInfo("Starting a game from board '" + boardName + "'");
 
   GameObjects::LevelBuilderFromFile builder =
-      GameObjects::LevelBuilderFromFile(boardName, m_gameEventsManager);
+      GameObjects::LevelBuilderFromFile(std::string(RESOURCES_DIR) + "/" + boardName, m_gameEventsManager);
   auto level = builder.release();
+
+  if (level == nullptr) {
+    m_logger.logError("Failed to load level from file '" + boardName + "'");
+    return nullptr;
+  }
 
   m_logger.logInfo("Returning a game with id '" + std::to_string(m_nextGameId) +
                    "'");
-
   auto ghostStrategies = getGhostStrategies(*level);
   std::for_each(level->getGhosts().begin(), level->getGhosts().end(),
                 [&ghostStrategies](const auto &ghost) {

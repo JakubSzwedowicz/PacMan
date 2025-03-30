@@ -41,6 +41,7 @@ public:
   [[nodiscard]] TilePosition getScatteringPosition() const;
   void setScatteringPosition(TilePosition scatteringPosition);
   void setGhostStrategies(const GhostStateToGhostStrategies_t& ghostStrategies);
+  std::string toString() const;
 
 private:
   void setGhostState(GhostState newState);

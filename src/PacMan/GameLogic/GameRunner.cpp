@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 
 #include "Entities/Ghost.h"
 #include "Entities/PacMan.h"
@@ -42,6 +43,97 @@ bool GameRunner::startGame() {
   m_gameThread = std::thread(&GameRunner::gameLoop, this);
 
   return true;
+}
+
+void GameRunner::printToCLI() const {
+  if (m_gameId != 0) {
+    m_logger->logCritical("This function can print first and only game!");
+    return;
+  }
+
+  static std::vector<std::string> previousBuffer;
+  static std::vector<std::string> buffer;
+  buffer.reserve(m_level->getHeight() + 10);
+
+  // --- Render Header (Optional) ---
+  buffer.push_back("---- Pac-Man Game ID: " + std::to_string(m_gameId) +
+                   " ----\n");
+  buffer.push_back("----------------------------\n");
+
+  // --- Print Board ---
+  const size_t height = m_level->getHeight();
+  const size_t width = m_level->getWidth();
+
+  for (size_t row = 0; row < height; ++row) {
+    std::string line;
+    for (size_t col = 0; col < width; ++col) {
+      TilePosition currentPos = {static_cast<int>(col), static_cast<int>(row)};
+      // Assuming Level provides a way to get the type at a position
+      EntityType type = m_level->getEntityOnTile(currentPos);
+      line += Entities::toChar(type);
+    }
+    line += "\n";
+    buffer.push_back(line);
+  }
+
+  // --- Print Footer (Optional) ---
+  buffer.push_back("----------------------------\n");
+  buffer.push_back("Status: " + toString(m_gameStatus.load()) + "\n");
+
+  if (previousBuffer.empty()) {
+    for (const auto &row : buffer)
+      std::cout << row;
+  } else {
+    // Delta update
+    for (size_t row = 0; row < buffer.size(); ++row) {
+      // Ensure previous buffer has this line before comparing characters
+      if (row < previousBuffer.size()) {
+        size_t lineLength = buffer[row].length();
+        size_t prevLineLength = previousBuffer[row].length();
+
+        for (size_t col = 0; col < lineLength; ++col) {
+          // Get current char and previous char (handle length diff)
+          char current_char = buffer[row][col];
+          char previous_char =
+              (col < prevLineLength)
+                  ? previousBuffer[row][col]
+                  : '\0'; // Use null if x exceeds previous line length
+
+          if (current_char != previous_char) {
+            // Move cursor (1-based)
+            std::cout << "\033[" << (row + 1) << ";" << (col + 1) << "H";
+            // Print the new character
+            std::cout << current_char;
+          }
+        }
+        // If the new line is shorter than the old line, clear the rest
+        if (lineLength < prevLineLength) {
+          std::cout << "\033[" << (row + 1) << ";" << (lineLength + 1)
+                    << "H"; // Move after last char
+          for (size_t k = lineLength; k < prevLineLength; ++k) {
+            std::cout << ' '; // Overwrite with spaces
+          }
+        }
+      } else {
+        // New line added compared to previous buffer - print the whole line
+        std::cout << "\033[" << (row + 1) << ";1H"; // Move to start of line
+        std::cout << buffer[row];                   // Print the new line
+      }
+    }
+    // If previous buffer had more lines than current, clear them (less likely
+    // here)
+    if (previousBuffer.size() > buffer.size()) {
+      for (size_t y = buffer.size(); y < previousBuffer.size(); ++y) {
+        std::cout << "\033[" << (y + 1) << ";1H"; // Move to start of line
+        std::cout << "\033[K"; // ANSI code to clear line from cursor to end
+      }
+    }
+
+    // Move cursor after the printed content
+    std::cout << "\033[" << (buffer.size() + 1) << ";1H";
+    std::cout << std::flush; // Flush output
+  }
+  previousBuffer = std::move(buffer);
 }
 
 void GameRunner::gameLoop() {

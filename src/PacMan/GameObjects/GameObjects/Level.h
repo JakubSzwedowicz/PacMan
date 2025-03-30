@@ -46,9 +46,7 @@ public:
   }
   [[nodiscard]] bool
   isTilePositionValid(const Entities::TilePosition &pos) const {
-    return pos.x >= 0 && static_cast<size_t>(pos.x) < getWidth() &&
-           pos.y >= 0 && static_cast<size_t>(pos.y) < getHeight() &&
-           m_board[pos.y][pos.x] != Entities::EntityType::WALL;
+    return isTileInsideTheBoard(pos) && m_board[pos.y][pos.x] != Entities::EntityType::WALL;
   }
 
   [[nodiscard]] bool
