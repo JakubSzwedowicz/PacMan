@@ -14,7 +14,8 @@
 namespace PacMan {
 namespace GameLogic {
 
-GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager) : m_gameEventsManager(gameEventsManager) {}
+GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager)
+    : m_gameEventsManager(gameEventsManager) {}
 
 std::unique_ptr<GameRunner>
 GameHandler::loadGame(const std::string &boardName) {
@@ -26,7 +27,55 @@ GameHandler::loadGame(const std::string &boardName) {
 
   m_logger.logInfo("Returning a game with id '" + std::to_string(m_nextGameId) +
                    "'");
-  return std::make_unique<GameRunner>((m_nextGameId++), std::move(level), m_gameEventsManager);
+
+  auto ghostStrategies = getGhostStrategies(*level);
+  std::for_each(level->getGhosts().begin(), level->getGhosts().end(),
+                [&ghostStrategies](const auto &ghost) {
+                  ghost->setGhostStrategies(
+                      ghostStrategies[ghost->getGhostType()]);
+                });
+
+  return std::make_unique<GameRunner>((m_nextGameId++), std::move(level),
+                                      m_gameEventsManager);
+}
+
+GhostTypeToGhostStateToGhostStrategies_t
+GameHandler::getGhostStrategies(const GameObjects::Level &level) const {
+  GhostTypeToGhostStateToGhostStrategies_t strategies;
+  for (const auto &ghost : level.getGhosts()) {
+    auto scatterStrat = std::make_unique<Strategies::ScatterStrategy>();
+    auto frightenedStrat =
+        std::make_unique<Strategies::FrightenedStrategy>();
+    auto eatenStrat = std::make_unique<Strategies::EatenStrategy>();
+    std::unique_ptr<Strategies::IGhostStrategy> chaseStrat = nullptr;
+    switch (ghost->getGhostType()) {
+    case GhostType::BLINKY:
+      chaseStrat = std::make_unique<Strategies::BlinkyChaseStrategy>();
+      break;
+    case GhostType::CLYDE:
+      chaseStrat = std::make_unique<Strategies::ClydeChaseStrategy>();
+      break;
+    case GhostType::INKY:
+      chaseStrat = std::make_unique<Strategies::InkyChaseStrategy>();
+      break;
+    case GhostType::PINKY:
+      chaseStrat = std::make_unique<Strategies::PinkyChaseStrategy>();
+      break;
+    default:
+      m_logger.logError("Unknown ghost type!" +
+                        toString(ghost->getGhostType()));
+      chaseStrat = std::make_unique<Strategies::BlinkyChaseStrategy>();
+      break;
+    }
+    GhostStateToGhostStrategies_t ghostStrategies;
+    ghostStrategies.emplace(GhostState::SCATTERING, std::move(scatterStrat));
+    ghostStrategies.emplace(GhostState::FRIGHTENED, std::move(frightenedStrat));
+    ghostStrategies.emplace(GhostState::EATEN, std::move(eatenStrat));
+    ghostStrategies.emplace(GhostState::CHASING, std::move(chaseStrat));
+    strategies.emplace(ghost->getGhostType(), std::move(ghostStrategies));
+  }
+
+  return strategies;
 }
 
 } // namespace GameLogic

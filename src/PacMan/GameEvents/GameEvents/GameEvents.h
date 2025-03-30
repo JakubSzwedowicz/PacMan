@@ -5,10 +5,12 @@
 #ifndef GAMEEVENTS_H
 #define GAMEEVENTS_H
 
+#include <chrono>
+#include <vector>
+
 #include "Entities/EntitiesStates.h"
 #include "Entities/Entity.h"
 
-#include <chrono>
 
 namespace PacMan::GameEvents {
 using namespace GameObjects;
@@ -33,6 +35,7 @@ struct BaseEvent {
 
 enum class EntityEventType {
   ENTITY_MOVED,
+  ENTITY_AT_JUNCTION,
   PELLET_EATEN,
   POWER_PELLET_EATEN,
   POWER_PELLET_EXPIRED,
@@ -46,6 +49,8 @@ inline std::string toString(const EntityEventType type) {
   switch (type) {
   case EntityEventType::ENTITY_MOVED:
     return "EntityMoved";
+  case EntityEventType::ENTITY_AT_JUNCTION:
+    return "EntityAtJunction";
   case EntityEventType::PELLET_EATEN:
     return "PelletEaten";
   case EntityEventType::POWER_PELLET_EATEN:
@@ -92,6 +97,19 @@ struct EntityMoved final : public EntityEvent {
               Entities::TilePosition newPos)
       : EntityEvent(id, EntityEventType::ENTITY_MOVED),
         previousPosition(prevPos), newPosition(newPos) {}
+};
+
+/**
+ * @brief Event published when an entity moves to a new tile.
+ */
+struct EntityAtJunction final : public EntityEvent {
+  Entities::TilePosition junctionPosition;
+  const std::vector<Entities::TilePosition>& adjacentNodes;
+
+  EntityAtJunction(Entities::EntityId id, Entities::TilePosition junctionPosition,
+              const std::vector<Entities::TilePosition>& adjacentNodes)
+      : EntityEvent(id, EntityEventType::ENTITY_AT_JUNCTION),
+        junctionPosition(junctionPosition), adjacentNodes(adjacentNodes) {}
 };
 
 //-----------------------------------------------------------------------------

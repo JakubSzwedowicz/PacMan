@@ -4,6 +4,7 @@
 
 #include "Entities/PacMan.h"
 #include "GameObjects/Level.h"
+#include "Utils/Logger.h"
 
 namespace PacMan {
 namespace GameObjects {
@@ -11,8 +12,8 @@ namespace Entities {
 
 using namespace std::chrono_literals;
 
-PacMan::PacMan(Level *level, GameEvents::GameEventsManager &gameEventsPublisher)
-    : MovingEntity(EntityType::PAC_MAN, level),
+PacMan::PacMan(TilePosition startingPosition, Level& level, GameEvents::GameEventsManager &gameEventsPublisher)
+    : MovingEntity(EntityType::PAC_MAN, startingPosition, level),
       ISubscriber(&gameEventsPublisher.getEntityEventPublisher()),
       m_logger(
           std::make_unique<Utils::Logger>("PacMan", Utils::LogLevel::INFO)),
@@ -162,6 +163,10 @@ void PacMan::setEmpoweredPacManState(
     const std::chrono::milliseconds empoweredDuration) {
   m_empoweredDurationMs = empoweredDuration;
   setPacManState(PacManState::EMPOWERED);
+}
+
+std::unique_ptr<PacMan> PacManBuilder::build() {
+  return std::make_unique<PacMan>(startingPosition, *level, gameEventsManager);
 }
 
 } // namespace Entities

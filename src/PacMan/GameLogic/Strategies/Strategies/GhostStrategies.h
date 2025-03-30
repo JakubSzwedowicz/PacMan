@@ -5,62 +5,115 @@
 #ifndef GHOSTSTRATEGIES_H
 #define GHOSTSTRATEGIES_H
 
-#include <vector>
-
-#include "Entities/Ghost.h"
-#include "Entities/PacMan.h"
+#include "Entities/Entity.h"
 #include "Entities/MovingEntity.h"
+#include "GameObjects/Level.h"
 
 namespace PacMan {
+namespace GameObjects {
+class Level;
+namespace Entities {
+class Ghost;
+class PacMan;
+} // namespace Entities
+} // namespace GameObjects
+
 namespace GameLogic {
 namespace Strategies {
 
-using namespace ::PacMan::GameObjects::Entities;
+using namespace GameObjects;
+using namespace GameObjects::Entities;
 
-// A* Pathfinding Algorithm
-class PathFinder {
+struct StrategyContext {
+  const Ghost &askingGhost;
+  const PacMan &pacMan;
+  const Level &level;
+  TilePosition blinkyPosition; // Blinky's current position (needed by Inky)
+};
+
+TilePosition getValidTileInDirectionAndDistance(
+    const StrategyContext &context, TilePosition target,
+    GameObjects::Entities::EntityDirection direction, int distance);
+
+TilePosition getValidTileClosestToTarget(const StrategyContext &context,
+                                         const TilePosition target);
+/**
+ * @brief Abstract base class for Ghost targeting strategies.
+ */
+class IGhostStrategy {
 public:
-  // Find path between two positions using A* algorithm
-  static std::vector<TilePosition>
-  findPath(const Position &start, const Position &goal, const Level &maze);
+  virtual ~IGhostStrategy() = default;
+
+  /**
+   * @brief Calculates the target tile for the ghost based on the strategy.
+   * @param context Game state information needed for the calculation.
+   * @return The TilePosition the ghost should target.
+   */
+  [[nodiscard]] virtual TilePosition
+  getTargetTile(const StrategyContext &context) const = 0;
+
+  [[nodiscard]] virtual std::unique_ptr<IGhostStrategy> clone() const = 0;
+};
+
+// --- Concrete Strategy Declarations ---
+class BlinkyChaseStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
+};
+
+class PinkyChaseStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
+};
+
+class InkyChaseStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
+};
+
+class ClydeChaseStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
 
 private:
-  // Manhattan distance heuristic
-  static float manhattanDistance(const Position &a, const Position &b) {
-    return std::abs(a.x - b.x) + std::abs(a.y - b.y);
-  }
-
-  // Reconstruct the path from start to goal
-  static std::vector<Position> reconstructPath(
-      const Position &start, const Position &goal,
-      const std::unordered_map<Position, Position, Position::Hash> &came_from) {
-    std::vector<Position> path;
-    Position current = goal;
-
-    // If no path found
-    if (came_from.find(goal) == came_from.end()) {
-      return path;
-    }
-
-    // Backtrack from goal to start
-    while (!(current.x == start.x && current.y == start.y)) {
-      path.push_back(current);
-      current = came_from.at(current);
-    }
-    path.push_back(start);
-
-    // Reverse to get start-to-goal order
-    std::reverse(path.begin(), path.end());
-    return path;
-  }
+  // Define Clyde's proximity threshold and scatter target here or pass via
+  // constructor
+  static constexpr float CLYDE_THRESHOLD_DISTANCE = 8.0f;
 };
 
-class GhostStrategy {
+class ScatterStrategy : public IGhostStrategy {
 public:
-  virtual ~GhostStrategy() = default;
-  virtual Position getTargetTile(const Ghost &ghost,
-                                 const PacMan &pacMan) const = 0;
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
 };
+
+class EatenStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
+};
+
+class FrightenedStrategy : public IGhostStrategy {
+public:
+  [[nodiscard]] TilePosition
+  getTargetTile(const StrategyContext &context) const override;
+  [[nodiscard]] std::unique_ptr<IGhostStrategy> clone() const override;
+};
+
+// Frightened Strategy: Note - Frightened movement is often random-like at
+// junctions, not targeting a specific tile. This might be handled directly in
+// Ghost::update when state is FRIGHTENED, rather than using the strategy
+// pattern here. If you wanted a strategy, it might return an invalid position
+// or a special marker.
 
 } // namespace Strategies
 } // namespace GameLogic

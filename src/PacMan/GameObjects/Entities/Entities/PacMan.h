@@ -21,7 +21,7 @@ namespace Entities {
 class PacMan : public MovingEntity,
                public Utils::ISubscriber<GameEvents::EntityEvent> {
 public:
-  explicit PacMan(Level *level, GameEvents::GameEventsManager& gameEventsManager);
+  explicit PacMan(TilePosition startingPosition, Level& level, GameEvents::GameEventsManager& gameEventsManager);
   void update(std::chrono::milliseconds deltaTime) override;
   void callback(const GameEvents::EntityEvent &event) override;
 
@@ -38,6 +38,14 @@ private:
   PacManState m_pacManState = PacManState::NORMAL;
   std::chrono::milliseconds m_empoweredDurationMs =
       std::chrono::milliseconds(0);
+};
+
+struct PacManBuilder {
+  TilePosition startingPosition = {0, 0};
+  Level* level = nullptr;
+  GameEvents::GameEventsManager& gameEventsManager;
+
+  std::unique_ptr<PacMan> build();
 };
 
 } // namespace Entities

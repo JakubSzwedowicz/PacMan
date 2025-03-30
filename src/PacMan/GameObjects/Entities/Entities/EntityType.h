@@ -47,12 +47,21 @@ inline std::ostream &operator<<(std::ostream &os,
   return (os << toString(entityType));
 }
 
-enum class GhostType { PINKY, BLINKY };
+enum class GhostType {
+  BLINKY,
+  CLYDE,
+  INKY,
+  PINKY,
+};
 
 inline std::string toString(GhostType ghostType) {
   switch (ghostType) {
   case GhostType::BLINKY:
     return "BLINKY";
+  case GhostType::CLYDE:
+    return "CLYDE";
+  case GhostType::INKY:
+    return "INKY";
   case GhostType::PINKY:
     return "PINKY";
   default:

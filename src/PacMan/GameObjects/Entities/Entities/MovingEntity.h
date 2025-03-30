@@ -35,8 +35,8 @@ inline std::string toString(const EntityDirection &direction) {
 
 class MovingEntity : public Entity {
 public:
-  explicit MovingEntity(const EntityType entityType, Level *level)
-      : Entity(entityType), m_level(level) {}
+  explicit MovingEntity(const EntityType entityType, const TilePosition startingPosition, Level& level)
+      : Entity(entityType), m_startingPosition(startingPosition), m_level(level) {}
 
   virtual void update(std::chrono::milliseconds deltaTime) = 0;
 
@@ -85,14 +85,17 @@ public:
   [[nodiscard]] uint32_t getHealth() const { return m_health; }
   void setHealth(int health) { m_health = health; }
   [[nodiscard]] float getSpeedPerSeconds() const { return m_speedInPerSeconds; }
+  [[nodiscard]] TilePosition getStartingPosition() const { return m_startingPosition; }
+  void setStartingPosition(TilePosition startingPosition) { m_startingPosition = startingPosition; }
 
 protected:
   EntityDirection m_currDirection = EntityDirection::NONE;
   EntityDirection m_nextDirection = EntityDirection::NONE;
   MovementState m_movementState = MovementState::ON_TILE;
   float m_speedInPerSeconds = 0.5f;
+  TilePosition m_startingPosition;
 
-  Level *m_level;
+  Level& m_level;
   uint32_t m_score = 0;
   uint32_t m_health = 3;
 };

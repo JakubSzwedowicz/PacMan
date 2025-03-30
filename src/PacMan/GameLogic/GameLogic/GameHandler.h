@@ -5,6 +5,8 @@
 #ifndef GAMEHANDLER_H
 #define GAMEHANDLER_H
 
+#include "Entities/Ghost.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,7 +26,10 @@ public:
   std::unique_ptr<GameRunner> loadGame(const std::string &boardName);
 
 private:
-  Utils::Logger m_logger = Utils::Logger{"GameHandler", Utils::LogLevel::INFO};
+  GameObjects::Entities::GhostTypeToGhostStateToGhostStrategies_t getGhostStrategies(const GameObjects::Level& level) const;
+
+private:
+  mutable Utils::Logger m_logger = Utils::Logger{"GameHandler", Utils::LogLevel::INFO};
   GameEvents::GameEventsManager& m_gameEventsManager;
   int m_nextGameId = 0;
   // TOOD: Add ResoruceManager to handle this type of stuff

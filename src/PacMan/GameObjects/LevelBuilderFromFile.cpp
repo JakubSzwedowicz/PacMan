@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <memory>
+#include <algorithm>
 
 #include "Entities/Empty.h"
 #include "Entities/Food.h"
@@ -11,9 +12,12 @@
 #include "Entities/PacMan.h"
 #include "Entities/SuperFood.h"
 #include "Entities/Wall.h"
-#include "GameObjects/LevelBuilderFromFile.h"
-#include "Utils/Logger.h"
 #include "GameEventsManager/GameEventsManager.h"
+#include "GameObjects/LevelBuilderFromFile.h"
+#include "Strategies/GhostStrategies.h"
+#include "Utils/Logger.h"
+
+#include <queue>
 
 namespace PacMan {
 namespace GameObjects {
@@ -39,10 +43,13 @@ void LevelBuilderFromFile::createLevel() {
   m_logger->logDebug("Opened file: " + m_boardPath);
 
   auto board = std::make_unique<Level::Board_t>();
-  Level::Pacmans_t pacmans;
-  Level::Ghosts_t ghosts;
+  std::deque<Entities::GhostType> ghostTypesOrdered = {Entities::GhostType::PINKY, Entities::GhostType::BLINKY,  Entities::GhostType::INKY, Entities::GhostType::CLYDE};
+  std::vector<Entities::GhostBuilder> ghostBuilders;
+  std::vector<Entities::PacManBuilder> pacMansBuilders;
+
   Entities::TilePosition position = {0, 0};
   for (std::string line; std::getline(file, line); position.y++) {
+    position.x = 0;
     Level::Board_t::value_type row;
     for (unsigned int colIdx = 0; colIdx < line.size();
          colIdx++, position.x++) {
@@ -65,14 +72,13 @@ void LevelBuilderFromFile::createLevel() {
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::GHOST):
         entityType = Entities::EntityType::EMPTY;
-        ghosts.emplace_back(
-            std::make_unique<Entities::Ghost>(m_level.get(), m_gameEventsManager));
+        ghostBuilders.push_back({ghostTypesOrdered.front(), position, nullptr, m_gameEventsManager});
+        ghostTypesOrdered.pop_front();
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::PAC_MAN):
         entityType = Entities::EntityType::EMPTY;
-        pacmans.emplace_back(
-            std::make_unique<Entities::PacMan>(m_level.get(), m_gameEventsManager));
+        pacMansBuilders.push_back({position, nullptr, m_gameEventsManager});
         break;
       case static_cast<std::underlying_type_t<Entities::EntityType>>(
           Entities::EntityType::SUPER_PELLET):
@@ -99,8 +105,21 @@ void LevelBuilderFromFile::createLevel() {
   m_logger->logInfo("Created a board from file: " + m_boardPath +
                    ", of size: " + std::to_string(board->size()) + "x" +
                    std::to_string(board->front().size()));
-  m_level = std::make_unique<Level>(std::move(*board), std::move(pacmans),
-                                    std::move(ghosts));
+  m_level = std::make_unique<Level>(std::move(*board));
+
+  Level::Ghosts_t ghosts;
+  for (auto& ghostBuilder : ghostBuilders) {
+    ghostBuilder.level = m_level.get();
+    ghosts.emplace_back(ghostBuilder.build());
+  }
+  m_level->setGhosts(std::move(ghosts));
+
+  Level::Pacmans_t pacMans;
+  for (auto& pacManBuilder : pacMansBuilders) {
+    pacManBuilder.level = m_level.get();
+    pacMans.emplace_back(pacManBuilder.build());
+  }
+  m_level->setPacMans(std::move(pacMans));
 }
 
 } // namespace GameObjects

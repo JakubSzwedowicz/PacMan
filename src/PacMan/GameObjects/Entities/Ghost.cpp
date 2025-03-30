@@ -2,8 +2,13 @@
 // Created by Jakub Szwedowicz on 2/24/25.
 //
 
+#include <limits>
+
 #include "Entities/Ghost.h"
+
+#include "Entities/PacMan.h"
 #include "GameObjects/Level.h"
+#include "PathFinders/AStarPathFinder.h"
 #include "Utils/Logger.h"
 
 namespace PacMan {
@@ -11,10 +16,13 @@ namespace GameObjects {
 namespace Entities {
 
 using namespace std::chrono_literals;
-Ghost::Ghost(Level *level, GameEvents::GameEventsManager &gameEventsManager)
-    : MovingEntity(EntityType::GHOST, level),
+Ghost::Ghost(GhostType ghostType, TilePosition startingPosition, Level &level,
+             GameEvents::GameEventsManager &gameEventsManager)
+    : MovingEntity(EntityType::GHOST, startingPosition, level),
       ISubscriber(&gameEventsManager.getEntityEventPublisher()),
       m_logger(std::make_unique<Utils::Logger>("Ghost", Utils::LogLevel::INFO)),
+      m_ghostType(ghostType),
+      m_scatterPosition(m_level.getScatteringPositionOfGhost(m_ghostType)),
       m_entityEventsPublisher(gameEventsManager.getEntityEventPublisher()) {
   m_logger->logInfo(toString() + " initialized and subscribed to events.");
 }
@@ -66,7 +74,23 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
           "Processing own ENTITY_MOVED event: " + movedEvent.toString() +
           " To (" + std::to_string(movedEvent.newPosition.x) + "," +
           std::to_string(movedEvent.newPosition.y) + ")");
-      // TODO: decide where to go!
+      // We do nothing here. Decisions are made in junctions!
+    }
+    break;
+  }
+
+  case GameEvents::EntityEventType::ENTITY_AT_JUNCTION: {
+    if (event.entityId == m_entityId) {
+      const auto &entityAtJunctionEvent =
+          static_cast<const GameEvents::EntityAtJunction &>(event);
+      m_logger->logDebug(
+          "Processing own ENTITY_AT_JUNCTION event: " +
+          entityAtJunctionEvent.toString() + " To (" +
+          std::to_string(entityAtJunctionEvent.junctionPosition.x) + "," +
+          std::to_string(entityAtJunctionEvent.junctionPosition.y) + ")");
+      EntityDirection nextDirection =
+          getDirectionAtJunction(entityAtJunctionEvent.junctionPosition);
+      setNextDirection(nextDirection);
     }
     break;
   }
@@ -102,6 +126,18 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
   default:
     m_logger->logError("Received unhandled EntityEvent: " + event.toString());
     break;
+  }
+}
+
+TilePosition Ghost::getScatteringPosition() const { return m_scatterPosition; }
+void Ghost::setScatteringPosition(TilePosition scatteringPosition) {
+  m_scatterPosition = scatteringPosition;
+}
+
+void Ghost::setGhostStrategies(
+    const GhostStateToGhostStrategies_t &ghostStrategies) {
+  for (const auto &[state, strategy] : ghostStrategies) {
+    m_ghostStrategies[state] = strategy->clone();
   }
 }
 
@@ -177,6 +213,61 @@ void Ghost::reverseDirection() {
     setCurrDirection(reversed);
     setNextDirection(EntityDirection::NONE);
   }
+}
+
+EntityDirection
+Ghost::getDirectionBasedOnAdjacentTiles(TilePosition start,
+                                        TilePosition adjacent) const {
+  TilePosition vec = adjacent - start;
+  if (vec.x == 0) {
+    // Positive 'y' means 'adjacent' is lower than 'start'.
+    return vec.y > 0 ? EntityDirection::DOWN : EntityDirection::UP;
+  } else if (vec.y == 0) {
+    // Positive 'x' means 'adjacent' is to the right of the 'start'
+    return vec.x > 0 ? EntityDirection::RIGHT : EntityDirection::LEFT;
+  }
+  m_logger->logWarning("Looks suspicious! Returning direction " +
+                       Entities::toString(EntityDirection::NONE) +
+                       " for the entity: " + toString() + " when going from " +
+                       start.toString() + " to " + adjacent.toString());
+  return EntityDirection::NONE;
+}
+
+EntityDirection
+Ghost::getDirectionAtJunction(TilePosition junctionPosition) const {
+  PacMan *targetPacMan = nullptr;
+  {
+    float minValue = std::numeric_limits<float>::max();
+    for (const auto &pacman : m_level.getPacMans()) {
+      float computedValue =
+          GameLogic::Strategies::PathFinders::Heuristics::manhattanDistance(
+              junctionPosition, pacman->getTilePosition());
+      if (computedValue < minValue) {
+        minValue = computedValue;
+        targetPacMan = pacman.get();
+      }
+    }
+  }
+  Ghost *blinkyOrAny = m_level.getGhostOrAnyButNot(*this, GhostType::BLINKY);
+  TilePosition maybeBlinkyPosition =
+      (blinkyOrAny ? blinkyOrAny->getTilePosition()
+                   : (targetPacMan ? targetPacMan->getTilePosition()
+                                   : getStartingPosition()));
+  GameLogic::Strategies::StrategyContext context = {
+      *this, (*targetPacMan), m_level, maybeBlinkyPosition};
+  TilePosition target =
+      m_ghostStrategies.at(m_ghostState)->getTargetTile(context);
+  // TODO: Consider caching this path. Will revaluate based on framerate and
+  // lag.
+  auto path = GameLogic::Strategies::PathFinders::AStarPathFinder::findPath(
+      getTilePosition(), target, m_level);
+
+  return getDirectionBasedOnAdjacentTiles(getTilePosition(), path.front());
+}
+
+std::unique_ptr<Ghost> GhostBuilder::build() {
+  return std::make_unique<Ghost>(ghostType, startingPosition, *level,
+                                 gameEventsManager);
 }
 
 } // namespace Entities

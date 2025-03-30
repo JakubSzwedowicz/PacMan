@@ -11,7 +11,7 @@
 #include "Entities/Entity.h"
 #include "Entities/EntityType.h"
 #include "LevelState.h"
-#include "Utils/Logger.h"
+#include "Utils/ILogger.h"
 
 namespace PacMan {
 namespace GameObjects {
@@ -26,7 +26,15 @@ public:
   using Board_t = std::vector<std::vector<Entities::EntityType>>;
   using Pacmans_t = std::vector<std::unique_ptr<Entities::PacMan>>;
   using Ghosts_t = std::vector<std::unique_ptr<Entities::Ghost>>;
-  Level(Board_t &&board, Pacmans_t &&pacmans, Ghosts_t &&ghosts);
+
+  struct GhostScatterPositions {
+    Entities::TilePosition blinkyScatterPositionTopRight = {0, 0};
+    Entities::TilePosition pinkyScatterPositionTopLeft = {0, 0};
+    Entities::TilePosition inkyScatterPositionBottomRight = {0, 0};
+    Entities::TilePosition clydeScatterPositionBottomLeft = {0, 0};
+  };
+
+  Level(Board_t &&board);
 
   bool verifyBoard();
 
@@ -43,6 +51,12 @@ public:
            m_board[pos.y][pos.x] != Entities::EntityType::WALL;
   }
 
+  [[nodiscard]] bool
+  isTileInsideTheBoard(const Entities::TilePosition &pos) const {
+    return pos.x >= 0 && static_cast<size_t>(pos.x) < getWidth() &&
+           pos.y >= 0 && static_cast<size_t>(pos.y) < getHeight();
+  }
+
   [[nodiscard]] Board_t::value_type::value_type
   getEntityOnTile(const Entities::TilePosition &tilePosition) const {
     return m_board[tilePosition.y][tilePosition.x];
@@ -55,9 +69,18 @@ public:
   [[nodiscard]] const Board_t &getBoard() const { return m_board; }
   [[nodiscard]] size_t getWidth() const { return m_board.front().size(); }
   [[nodiscard]] size_t getHeight() const { return m_board.size(); }
-  Pacmans_t &getPacmans() { return m_pacMans; }
+  Pacmans_t &getPacMans() { return m_pacMans; }
   Ghosts_t &getGhosts() { return m_ghosts; }
-  [[nodiscard]] int getNumberOfFood() const { return m_numberOfFood; }
+  Entities::Ghost *getGhostOrAnyButNot(const Entities::Ghost &notThisGhost,
+                                       Entities::GhostType ghostType) const;
+  const Pacmans_t &getPacMans() const { return m_pacMans; }
+  const Ghosts_t &getGhosts() const { return m_ghosts; }
+  void setPacMans(Pacmans_t &&pacMans);
+  void setGhosts(Ghosts_t &&ghosts);
+  [[nodiscard]] int getNumberOfFood() const;
+  [[nodiscard]] GhostScatterPositions getGhostScatterPositions() const;
+  [[nodiscard]] Entities::TilePosition
+  getScatteringPositionOfGhost(Entities::GhostType ghostType) const;
 
 private:
   Board_t::value_type::value_type
@@ -66,11 +89,13 @@ private:
   }
 
 private:
-  Utils::Logger m_logger = Utils::Logger("Level", Utils::LogLevel::INFO);
+  mutable std::unique_ptr<Utils::ILogger> m_logger;
   LevelState m_levelState = LevelState::NOT_READY;
   Board_t m_board;
   Pacmans_t m_pacMans;
   Ghosts_t m_ghosts;
+
+  GhostScatterPositions m_ghostScatterPositions;
 
   int m_numberOfFood = 0;
 };

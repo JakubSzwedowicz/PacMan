@@ -69,7 +69,7 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
     return;
 
   // Move players in their directions
-  for (auto const &pacman : m_level->getPacmans()) {
+  for (auto const &pacman : m_level->getPacMans()) {
     pacman->update(deltaTime);
     updateMovingEntity(*pacman, deltaTime);
   }
@@ -220,7 +220,7 @@ TilePosition GameRunner::moveTowardsGrid(const TilePosition &tilePosition,
 
 bool GameRunner::checkGameOver() const {
   // Example: Game over if no players are left or no pellets remaining
-  if (std::all_of(m_level->getPacmans().cbegin(), m_level->getPacmans().cend(),
+  if (std::all_of(m_level->getPacMans().cbegin(), m_level->getPacMans().cend(),
                   [](const auto &pacman) -> bool {
                     return pacman->getEntityState() == EntityState::DEAD;
                   })) {

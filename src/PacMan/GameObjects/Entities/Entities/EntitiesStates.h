@@ -14,7 +14,8 @@ enum class PacManState : uint8_t { NORMAL, EMPOWERED };
 enum class GhostState {
   CHASING,
   SCATTERING,
-  FRIGHTENED
+  FRIGHTENED,
+  EATEN,
 };
 
 inline std::string toString(const GhostState state) {
@@ -25,10 +26,12 @@ inline std::string toString(const GhostState state) {
     return "SCATTERING";
   case GhostState::FRIGHTENED:
     return "FRIGHTENED";
+  case GhostState::EATEN:
+    return "EATEN";
   }
   return "UNKNOWN " +
          std::to_string(static_cast<std::underlying_type_t<GhostState>>(state));
 }
 
-}
-#endif //ENTITIESSTATES_H
+} // namespace PacMan::GameObjects::Entities
+#endif // ENTITIESSTATES_H

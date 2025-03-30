@@ -17,15 +17,24 @@ template <typename T> struct Position {
   T x;
   T y;
 
+  explicit Position() : x(0), y(0) {}
   template <typename TT> Position(TT x, TT y) : x(x), y(y) {}
-  template <typename TT> explicit Position(const Position<TT> &position);
+  template <typename TT> explicit Position(const Position<TT> &position) : x(position.x), y(position.y) {};
 
   bool operator==(const Position &other) const {
     return x == other.x && y == other.y;
   }
 
+  bool operator!=(const Position &other) const {
+    return x != other.x || y != other.y;
+  }
+
   Position operator+(const Position &other) const {
     return Position(x + other.x, y + other.y);
+  }
+
+  Position operator-(const Position &other) const {
+    return Position(x - other.x, y - other.y);
   }
 
   struct Hash {
@@ -42,16 +51,6 @@ template <typename T> struct Position {
 using TilePosition = Position<int>;
 using RealPosition = Position<double>;
 using EntityId = uint32_t;
-
-template <>
-template <>
-inline TilePosition::Position(const RealPosition &position)
-    : x(position.x), y(position.y) {}
-
-template <>
-template <>
-inline RealPosition::Position(const TilePosition &position)
-    : x(position.x), y(position.y) {}
 
 enum class EntityState : uint8_t {
   ALIVE,
