@@ -23,7 +23,7 @@ void PacMan::update(std::chrono::milliseconds deltaTime) {
   if (m_pacManState == PacManState::EMPOWERED) {
     m_empoweredDurationMs -= deltaTime;
     if (m_empoweredDurationMs <= 0ms) {
-      m_entityEventsPublisher.publish(GameEvents::PowerPelletExpired(m_entityId));
+      m_entityEventsPublisher.publish(GameEvents::PowerPelletExpiredEvent(m_entityId));
     }
   }
 }
@@ -34,9 +34,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
   }
   // Handle events targeted at this PacMan instance
   switch (event.eventType) {
-  case GameEvents::EntityEventType::PLAYER_DIED: {
+  case GameEvents::EntityEventType::PLAYER_DIED_EVENT: {
     const auto &caughtEvent =
-        static_cast<const GameEvents::PlayerDied &>(event);
+        static_cast<const GameEvents::PlayerDiedEvent &>(event);
 
     m_logger->logInfo(
         "PacMan died by Ghost ID: " + std::to_string(caughtEvent.ghostId) +
@@ -56,9 +56,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     setNormalPacManState();
     break;
   }
-  case GameEvents::EntityEventType::PLAYER_RESPAWNED: {
+  case GameEvents::EntityEventType::PLAYER_RESPAWNED_EVENT: {
     const auto &respawnEvent =
-        static_cast<const GameEvents::PlayerRespawned &>(event);
+        static_cast<const GameEvents::PlayerRespawnedEvent &>(event);
 
     m_logger->logInfo("PacMan respawned at (" +
                       std::to_string(respawnEvent.spawnPosition.x) + "," +
@@ -78,9 +78,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     // it was set setNextDirection(EntityDirection::NONE);
     break;
   }
-  case GameEvents::EntityEventType::PELLET_EATEN: {
+  case GameEvents::EntityEventType::PELLET_EATEN_EVENT: {
     const auto &pelletEvent =
-        static_cast<const GameEvents::PelletEaten &>(event);
+        static_cast<const GameEvents::PelletEatenEvent &>(event);
     // Log confirmation.
     m_logger->logDebug(
         "Processing PELLET_EATEN event at (" +
@@ -90,9 +90,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     increaseScore(pelletEvent.scoreValue);
     break;
   }
-  case GameEvents::EntityEventType::POWER_PELLET_EATEN: {
+  case GameEvents::EntityEventType::POWER_PELLET_EATEN_EVENT: {
     const auto &powerPelletEvent =
-        dynamic_cast<const GameEvents::PowerPelletEaten &>(event);
+        dynamic_cast<const GameEvents::PowerPelletEatenEvent &>(event);
     m_logger->logInfo("PacMan ate power pellet eaten at (" +
                       std::to_string(powerPelletEvent.position.x) + "," +
                       std::to_string(powerPelletEvent.position.y) + ")");
@@ -100,9 +100,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     setEmpoweredPacManState(powerPelletEvent.frightenDuration);
     break;
   }
-  case GameEvents::EntityEventType::POWER_PELLET_EXPIRED: {
+  case GameEvents::EntityEventType::POWER_PELLET_EXPIRED_EVENT: {
     [[maybe_unused]] const auto &expiredEvent =
-        static_cast<const GameEvents::PowerPelletExpired &>(event);
+        static_cast<const GameEvents::PowerPelletExpiredEvent &>(event);
 
     if (m_pacManState == PacManState::EMPOWERED) {
       m_logger->logInfo("PacMan received Power Pellet expired event.");
@@ -113,9 +113,9 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     }
     break;
   }
-  case GameEvents::EntityEventType::ENTITY_MOVED: {
+  case GameEvents::EntityEventType::ENTITY_MOVED_EVENT: {
     const auto &movedEvent =
-        static_cast<const GameEvents::EntityMoved &>(event);
+        static_cast<const GameEvents::EntityMovedEvent &>(event);
     m_logger->logDebug("Processing ENTITY_MOVED event: Moved from (" +
                        std::to_string(movedEvent.previousPosition.x) + "," +
                        std::to_string(movedEvent.previousPosition.y) +
@@ -125,10 +125,10 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     break;
   }
 
-  case GameEvents::EntityEventType::GHOST_EATEN: {
+  case GameEvents::EntityEventType::GHOST_EATEN_EVENT: {
     // Event confirms PacMan ate a frightened ghost.
     const auto &ghostEatenEvent =
-        static_cast<const GameEvents::GhostEaten &>(event);
+        static_cast<const GameEvents::GhostEatenEvent &>(event);
     // Log confirmation, including which ghost was eaten.
     m_logger->logInfo(
         "Processing GHOST_EATEN event: Ate Ghost ID " +
@@ -141,7 +141,7 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
   }
 
     // --- Ignored Cases ---
-  case GameEvents::EntityEventType::GHOST_STATE_CHANGED:
+  case GameEvents::EntityEventType::GHOST_STATE_CHANGED_EVENT:
     break;
   default:
     m_logger->logError("Received unhandled EntityEvent type: " +

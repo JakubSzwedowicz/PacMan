@@ -8,15 +8,20 @@
 #include "Utils/PublishSubscribeHandlers.h"
 #include "Utils/Signals.h"
 
+using namespace PacMan::GameEvents;
+
 class EntityEventsPublisher final
-    : public PacMan::Utils::IPublisher<PacMan::GameEvents::EntityEvent> {};
+    : public GameEventsManager::EntityEventPublisher_t {};
+class GameEventsPublisher final
+    : public GameEventsManager::GameEventPublisher_t {};
+
 
 int main() {
   PacMan::Utils::ILogger::setLogFileName("MainLogs.txt");
   std::signal(SIGSEGV, PacMan::Utils::shutdownLoggers);
 
-  auto gameEventsManager = PacMan::GameEvents::GameEventsManager{
-      std::make_unique<EntityEventsPublisher>()};
+  auto gameEventsManager = GameEventsManager{
+      std::make_unique<EntityEventsPublisher>(), std::make_unique<GameEventsPublisher>()};
   PacMan::GameLogic::GameHandler gameHandler{gameEventsManager};
   auto gameRunner = gameHandler.loadGame("Board1.txt");
   if (gameRunner) {

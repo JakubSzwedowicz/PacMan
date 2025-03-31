@@ -39,6 +39,7 @@ bool GameRunner::startGame() {
 
   m_logger->logInfo("Starting Game '" + std::to_string(m_gameId) + "'");
 
+  m_gameEventsManager.getGameEventPublisher().publish(GameEvents::GameStartedEvent(m_gameId));
   m_gameStatus = GameStatus::RUNNING;
   m_gameThread = std::thread(&GameRunner::gameLoop, this);
 
@@ -176,18 +177,10 @@ void GameRunner::gameLoop() {
 }
 
 void GameRunner::update(std::chrono::milliseconds deltaTime) {
-  if (!m_level || m_level->getBoard().empty())
-    return;
-
-  // Move players in their directions
-  for (auto const &pacman : m_level->getPacMans()) {
-    pacman->update(deltaTime);
-    updateMovingEntity(*pacman, deltaTime);
-  }
-
-  for (auto const &ghosts : m_level->getGhosts()) {
-    ghosts->update(deltaTime);
-    updateMovingEntity(*ghosts, deltaTime);
+  // Move movingEntities in their directions
+  for (auto const &movingEntities : m_level->getMovingEntities()) {
+    movingEntities->update(deltaTime);
+    updateMovingEntity(*movingEntities, deltaTime);
   }
 
   // Handle collisions
@@ -232,7 +225,7 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
     }
     // Entity arrived to the next tile!
     m_gameEventsManager.getEntityEventPublisher().publish(
-        GameEvents::EntityMoved(movingEntity.getEntityId(), currentTilePosition,
+        GameEvents::EntityMovedEvent(movingEntity.getEntityId(), currentTilePosition,
                                 newTilePosition));
 
     if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {

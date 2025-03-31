@@ -10,3 +10,4 @@ set (GAME_EVENTS_MANAGER_SOURCES
 add_library(GameEventsManager ${GAME_EVENTS_MANAGER_SOURCES})
 target_include_directories(GameEventsManager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(GameEventsManager PUBLIC GameEvents Entities)
+target_compile_options(Entities PUBLIC -Werror=switch-enum)

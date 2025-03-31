@@ -16,14 +16,20 @@ namespace GameEvents {
 
 class GameEventsManager {
 public:
-  explicit GameEventsManager(
-      std::unique_ptr<Utils::IPublisher<EntityEvent>> entityEvenPublisher);
+  using EntityEventPublisher_t = Utils::IPublisher<EntityEvent>;
+  using GameEventPublisher_t = Utils::IPublisher<GameEvent>;
+  using EntityEventPublisherPtr_t = std::unique_ptr<EntityEventPublisher_t>;
+  using GameEventPublisherPtr_t = std::unique_ptr<GameEventPublisher_t>;
+  explicit GameEventsManager(EntityEventPublisherPtr_t entityEvenPublisher,
+                             GameEventPublisherPtr_t gameEventPublisher);
   ~GameEventsManager() = default;
-  [[nodiscard]] Utils::IPublisher<EntityEvent> &getEntityEventPublisher() const;
+  [[nodiscard]] EntityEventPublisher_t &getEntityEventPublisher() const;
+  [[nodiscard]] GameEventPublisher_t &getGameEventPublisher() const;
 
 private:
   std::unique_ptr<Utils::ILogger> m_logger;
-  std::unique_ptr<Utils::IPublisher<EntityEvent>> m_entityEventPublisher;
+  EntityEventPublisherPtr_t m_entityEventPublisher;
+  GameEventPublisherPtr_t m_gameEventPublisher;
 };
 
 } // namespace GameEvents

@@ -28,6 +28,8 @@ inline std::string toString(const EntityDirection &direction) {
     return "'LEFT'";
   case EntityDirection::RIGHT:
     return "'RIGHT'";
+  case EntityDirection::NONE:
+    return "'NONE'";
   default:
     return "'INVALID!!!'";
   }

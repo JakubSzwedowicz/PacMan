@@ -20,7 +20,8 @@ Ghost::Ghost(GhostType ghostType, TilePosition startingPosition, Level &level,
              GameEvents::GameEventsManager &gameEventsManager)
     : MovingEntity(EntityType::GHOST, startingPosition, level),
       ISubscriber(&gameEventsManager.getEntityEventPublisher()),
-      m_logger(std::make_unique<Utils::Logger>(toString(), Utils::LogLevel::INFO)),
+      m_logger(
+          std::make_unique<Utils::Logger>(toString(), Utils::LogLevel::INFO)),
       m_ghostType(ghostType),
       m_scatterPosition(m_level.getScatteringPositionOfGhost(m_ghostType)),
       m_entityEventsPublisher(gameEventsManager.getEntityEventPublisher()) {
@@ -41,22 +42,23 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
   m_logger->logDebug("Callback received event: " + event.toString());
 
   switch (event.eventType) {
-  case GameEvents::EntityEventType::POWER_PELLET_EATEN: {
+  case GameEvents::EntityEventType::POWER_PELLET_EATEN_EVENT: {
     const auto &pelletEvent =
-        static_cast<const GameEvents::PowerPelletEaten &>(event);
+        static_cast<const GameEvents::PowerPelletEatenEvent &>(event);
     m_logger->logDebug("Processing POWER_PELLET_EATEN event.");
     setFrightenedState(pelletEvent.frightenDuration);
     break;
   }
 
-  case GameEvents::EntityEventType::POWER_PELLET_EXPIRED: {
+  case GameEvents::EntityEventType::POWER_PELLET_EXPIRED_EVENT: {
     m_logger->logDebug("Processing POWER_PELLET_EXPIRED event.");
     // ghosts clears frightened state in update(...)
     break;
   }
 
-  case GameEvents::EntityEventType::GHOST_EATEN: {
-    const auto &eatenEvent = static_cast<const GameEvents::GhostEaten &>(event);
+  case GameEvents::EntityEventType::GHOST_EATEN_EVENT: {
+    const auto &eatenEvent =
+        static_cast<const GameEvents::GhostEatenEvent &>(event);
     if (eatenEvent.eatenGhostId == m_entityId) {
       m_logger->logDebug("Processing GHOST_EATEN event: " +
                          eatenEvent.toString());
@@ -66,10 +68,10 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
   }
 
     // --- Events Ghosts Might Log or Ignore ---
-  case GameEvents::EntityEventType::ENTITY_MOVED: {
+  case GameEvents::EntityEventType::ENTITY_MOVED_EVENT: {
     if (event.entityId == m_entityId) {
       const auto &movedEvent =
-          static_cast<const GameEvents::EntityMoved &>(event);
+          static_cast<const GameEvents::EntityMovedEvent &>(event);
       m_logger->logDebug(
           "Processing own ENTITY_MOVED event: " + movedEvent.toString() +
           " To (" + std::to_string(movedEvent.newPosition.x) + "," +
@@ -79,10 +81,10 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
     break;
   }
 
-  case GameEvents::EntityEventType::ENTITY_AT_JUNCTION: {
+  case GameEvents::EntityEventType::ENTITY_AT_JUNCTION_EVENT: {
     if (event.entityId == m_entityId) {
       const auto &entityAtJunctionEvent =
-          static_cast<const GameEvents::EntityAtJunction &>(event);
+          static_cast<const GameEvents::EntityAtJunctionEvent &>(event);
       m_logger->logDebug(
           "Processing own ENTITY_AT_JUNCTION event: " +
           entityAtJunctionEvent.toString() + " To (" +
@@ -95,11 +97,11 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
     break;
   }
 
-  case GameEvents::EntityEventType::GHOST_STATE_CHANGED: {
+  case GameEvents::EntityEventType::GHOST_STATE_CHANGED_EVENT: {
     // Log own state change confirmation if needed
     if (event.entityId == m_entityId) {
       const auto &stateEvent =
-          static_cast<const GameEvents::GhostStateChanged &>(event);
+          static_cast<const GameEvents::GhostStateChangedEvent &>(event);
       m_logger->logDebug("Received confirmation of own state change to: " +
                          Entities::toString(stateEvent.newState));
     } else {
@@ -109,20 +111,12 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
   }
 
     // --- Events Ghosts Typically Ignore ---
-  case GameEvents::EntityEventType::PELLET_EATEN: {
+  case GameEvents::EntityEventType::PELLET_EATEN_EVENT:
     break;
-  }
-  case GameEvents::EntityEventType::PLAYER_DIED: {
-    // TODO: Maybe update target direction?
-    //        On the other hand it will happen anyway once it reaches tile.
+  case GameEvents::EntityEventType::PLAYER_DIED_EVENT:
     break;
-  }
-  case GameEvents::EntityEventType::PLAYER_RESPAWNED:
-    // Ghosts generally don't react directly to these events in their callback.
-    // AI logic in update() might consider PacMan's state/position indirectly.
-    m_logger->logDebug("Ignoring event type: " + event.toString());
+  case GameEvents::EntityEventType::PLAYER_RESPAWNED_EVENT:
     break;
-
   default:
     m_logger->logError("Received unhandled EntityEvent: " + event.toString());
     break;
@@ -142,7 +136,8 @@ void Ghost::setGhostStrategies(
 }
 
 std::string Ghost::toString() const {
-  return "Ghost(" + std::to_string(m_entityId) + ", " + Entities::toString(m_ghostType) + ")";
+  return "Ghost(" + std::to_string(m_entityId) + ", " +
+         Entities::toString(m_ghostType) + ")";
 }
 
 // --- Private Helper Methods ---
@@ -158,7 +153,7 @@ void Ghost::setGhostState(const GhostState newState) {
                     Entities::toString(m_ghostState));
 
   // Publish the state change event
-  m_entityEventsPublisher.publish(GameEvents::GhostStateChanged(
+  m_entityEventsPublisher.publish(GameEvents::GhostStateChangedEvent(
       m_entityId, m_previousGhostState, m_ghostState));
 }
 
