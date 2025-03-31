@@ -12,6 +12,7 @@
 #include "Entities/EntityType.h"
 #include "LevelState.h"
 #include "Utils/ILogger.h"
+#include "Entities/MovingEntity.h"
 
 namespace PacMan {
 namespace GameObjects {
@@ -26,6 +27,7 @@ public:
   using Board_t = std::vector<std::vector<Entities::EntityType>>;
   using Pacmans_t = std::vector<std::unique_ptr<Entities::PacMan>>;
   using Ghosts_t = std::vector<std::unique_ptr<Entities::Ghost>>;
+  using MovingEntities_t = std::vector<Entities::MovingEntity*>;
 
   struct GhostScatterPositions {
     Entities::TilePosition blinkyScatterPositionTopRight = {0, 0};
@@ -69,6 +71,7 @@ public:
   [[nodiscard]] size_t getHeight() const { return m_board.size(); }
   Pacmans_t &getPacMans() { return m_pacMans; }
   Ghosts_t &getGhosts() { return m_ghosts; }
+  MovingEntities_t &getMovingEntities() { return m_movingEntities; }
   Entities::Ghost *getGhostOrAnyButNot(const Entities::Ghost &notThisGhost,
                                        Entities::GhostType ghostType) const;
   const Pacmans_t &getPacMans() const { return m_pacMans; }
@@ -81,6 +84,7 @@ public:
   getScatteringPositionOfGhost(Entities::GhostType ghostType) const;
 
 private:
+  void processSetPacMandAndGhosts();
   Board_t::value_type::value_type
   getMutableEntityOnTile(const Entities::TilePosition &tilePosition) {
     return m_board[tilePosition.y][tilePosition.x];
@@ -92,6 +96,7 @@ private:
   Board_t m_board;
   Pacmans_t m_pacMans;
   Ghosts_t m_ghosts;
+  MovingEntities_t m_movingEntities;
 
   GhostScatterPositions m_ghostScatterPositions;
 

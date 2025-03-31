@@ -100,23 +100,11 @@ Entities::Ghost *Level::getGhostOrAnyButNot(const Entities::Ghost &notThisGhost,
 
 void Level::setPacMans(Pacmans_t &&pacmans) {
   m_pacMans = std::move(pacmans);
-  if (!m_ghosts.empty()) {
-    m_levelState = LevelState::READY;
-  }
-
-  for (const auto &pacman : m_pacMans) {
-    setEntityOnTile(pacman->getStartingPosition(), Entities::EntityType::EMPTY);
-  }
+  processSetPacMandAndGhosts();
 }
 void Level::setGhosts(Ghosts_t &&ghosts) {
   m_ghosts = std::move(ghosts);
-  if (!m_pacMans.empty()) {
-    m_levelState = LevelState::READY;
-  }
-
-  for (const auto &ghost : m_ghosts) {
-    setEntityOnTile(ghost->getStartingPosition(), Entities::EntityType::EMPTY);
-  }
+  processSetPacMandAndGhosts();
 }
 
 [[nodiscard]] int Level::getNumberOfFood() const { return m_numberOfFood; }
@@ -140,6 +128,20 @@ Level::getScatteringPositionOfGhost(Entities::GhostType ghostType) const {
                        Entities::toString(ghostType));
     return m_ghostScatterPositions.clydeScatterPositionBottomLeft;
   }
+}
+
+void Level::processSetPacMandAndGhosts() {
+  if (m_pacMans.empty() || m_ghosts.empty()) {return;}
+  m_movingEntities.clear();
+  for (const auto& pacMan : m_pacMans) {
+    m_movingEntities.push_back(pacMan.get());
+    setEntityOnTile(pacMan->getStartingPosition(), Entities::EntityType::EMPTY);
+  }
+  for (const auto& ghost : m_ghosts) {
+    m_movingEntities.push_back(ghost.get());
+    setEntityOnTile(ghost->getStartingPosition(), Entities::EntityType::EMPTY);
+  }
+  m_levelState = LevelState::READY;
 }
 
 // bool Level::setBoard(Board_t &&board) {

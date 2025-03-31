@@ -36,7 +36,7 @@ inline std::string toString(const EntityDirection &direction) {
 class MovingEntity : public Entity {
 public:
   explicit MovingEntity(const EntityType entityType, const TilePosition startingPosition, Level& level)
-      : Entity(entityType), m_startingPosition(startingPosition), m_level(level) {}
+      : Entity(entityType), m_startingPosition(startingPosition), m_level(level) {setTilePosition(m_startingPosition);}
 
   virtual void update(std::chrono::milliseconds deltaTime) = 0;
 

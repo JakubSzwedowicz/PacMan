@@ -56,6 +56,7 @@ void GameRunner::printToCLI() const {
   buffer.reserve(m_level->getHeight() + 10);
 
   // --- Render Header (Optional) ---
+  const int headerOffset = 2;
   buffer.push_back("---- Pac-Man Game ID: " + std::to_string(m_gameId) +
                    " ----\n");
   buffer.push_back("----------------------------\n");
@@ -76,7 +77,12 @@ void GameRunner::printToCLI() const {
     buffer.push_back(line);
   }
 
+  for (const auto& movingEntities : m_level->getMovingEntities()) {
+    buffer[headerOffset + movingEntities->getTilePosition().y][movingEntities->getTilePosition().x] = Entities::toChar(movingEntities->getEntityType());
+  }
+
   // --- Print Footer (Optional) ---
+  const int footerOffset = 2;
   buffer.push_back("----------------------------\n");
   buffer.push_back("Status: " + toString(m_gameStatus.load()) + "\n");
 
