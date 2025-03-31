@@ -28,6 +28,7 @@ public:
   [[nodiscard]] PacManState getPacManState() const { return m_pacManState; }
 
 private:
+  uint32_t increaseScore(uint32_t score) override;
   void setPacManState(const PacManState pacManState);
   void setNormalPacManState();
   void setEmpoweredPacManState(std::chrono::milliseconds empoweredDuration);

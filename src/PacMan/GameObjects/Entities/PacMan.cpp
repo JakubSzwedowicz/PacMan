@@ -12,7 +12,8 @@ namespace Entities {
 
 using namespace std::chrono_literals;
 
-PacMan::PacMan(TilePosition startingPosition, Level& level, GameEvents::GameEventsManager &gameEventsPublisher)
+PacMan::PacMan(TilePosition startingPosition, Level &level,
+               GameEvents::GameEventsManager &gameEventsPublisher)
     : MovingEntity(EntityType::PAC_MAN, startingPosition, level),
       ISubscriber(&gameEventsPublisher.getEntityEventPublisher()),
       m_logger(
@@ -23,7 +24,8 @@ void PacMan::update(std::chrono::milliseconds deltaTime) {
   if (m_pacManState == PacManState::EMPOWERED) {
     m_empoweredDurationMs -= deltaTime;
     if (m_empoweredDurationMs <= 0ms) {
-      m_entityEventsPublisher.publish(GameEvents::PowerPelletExpiredEvent(m_entityId));
+      m_entityEventsPublisher.publish(
+          GameEvents::PowerPelletExpiredEvent(m_entityId));
     }
   }
 }
@@ -140,14 +142,25 @@ void PacMan::callback(const GameEvents::EntityEvent &event) {
     break;
   }
 
-    // --- Ignored Cases ---
+    // --- Ignored Events ---
+  case GameEvents::EntityEventType::SCORED_UPDATED_EVENT:
+    break;
   case GameEvents::EntityEventType::GHOST_STATE_CHANGED_EVENT:
+    break;
+  case GameEvents::EntityEventType::ENTITY_AT_JUNCTION_EVENT:
     break;
   default:
     m_logger->logError("Received unhandled EntityEvent type: " +
                        GameEvents::toString(event.eventType));
     break;
   }
+}
+
+uint32_t PacMan::increaseScore(const uint32_t score) {
+  const auto res = MovingEntity::increaseScore(score);
+  m_entityEventsPublisher.publish(
+      GameEvents::ScoreUpdatedEvent(m_entityId, m_score, score));
+  return res;
 }
 
 void PacMan::setPacManState(const PacManState pacManState) {

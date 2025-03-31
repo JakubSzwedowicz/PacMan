@@ -202,10 +202,10 @@ struct PlayerRespawnedEvent final : public EntityEvent {
  * can simplify score display logic
  */
 struct ScoreUpdatedEvent final : public EntityEvent {
-  int newTotalScore;
+  uint32_t newTotalScore;
   int changeAmount; // How much the score changed by
 
-  ScoreUpdatedEvent(Entities::EntityId entityId, int newTotalScore,
+  ScoreUpdatedEvent(Entities::EntityId entityId, uint32_t newTotalScore,
                     int changeAmount)
       : EntityEvent(entityId, EntityEventType::SCORED_UPDATED_EVENT),
         newTotalScore(newTotalScore), changeAmount(changeAmount) {}

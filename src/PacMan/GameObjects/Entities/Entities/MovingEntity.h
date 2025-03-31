@@ -80,7 +80,7 @@ public:
   }
 
   uint32_t decreaseHealth() { return --m_health; }
-  uint32_t increaseScore(uint32_t score) { return (m_score += score); }
+  virtual uint32_t increaseScore(uint32_t score) { return (m_score += score); }
 
   [[nodiscard]] uint32_t getScore() const { return m_score; }
   void setScore(int score) { m_score = score; }

@@ -110,7 +110,9 @@ void Ghost::callback(const GameEvents::EntityEvent &event) {
     break;
   }
 
-    // --- Events Ghosts Typically Ignore ---
+    // --- Ignored Events ---
+  case GameEvents::EntityEventType::SCORED_UPDATED_EVENT:
+    break;
   case GameEvents::EntityEventType::PELLET_EATEN_EVENT:
     break;
   case GameEvents::EntityEventType::PLAYER_DIED_EVENT:
