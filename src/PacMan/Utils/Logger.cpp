@@ -8,6 +8,9 @@
 
 #include "Utils/Logger.h"
 
+#include <iostream>
+#include <ostream>
+
 namespace PacMan {
 namespace Utils {
 
@@ -37,6 +40,20 @@ void Logger::initLogger() {
   }
 
   m_logger = std::make_shared<spdlog::logger>(m_scopeName, fileSink);
+  switch (m_logLevel) {
+  case LogLevel::DEBUG:
+    m_logger->set_level(spdlog::level::debug);
+    break;
+  case LogLevel::INFO:
+    m_logger->set_level(spdlog::level::info);
+    break;
+  case LogLevel::WARNING:
+    m_logger->set_level(spdlog::level::warn);
+    break;
+  case LogLevel::ERROR:
+    m_logger->set_level(spdlog::level::err);
+    break;
+  }
   spdlog::register_logger(m_logger);
 }
 

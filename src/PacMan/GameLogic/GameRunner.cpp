@@ -140,13 +140,26 @@ void GameRunner::gameLoop() {
   auto lastUpdateTime = std::chrono::high_resolution_clock::now();
   const std::chrono::milliseconds targetUpdateTime(100);
 
+  constexpr int averageLoops = 10;
+  unsigned long accumulateTimeInNs = 0;
+  int currentLoop = 0;
   while (m_gameStatus == GameStatus::RUNNING) {
     auto currentTime = std::chrono::high_resolution_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         currentTime - lastUpdateTime);
 
     if (elapsedTime >= targetUpdateTime) {
+      const auto updateBegin = std::chrono::high_resolution_clock::now();
       update(elapsedTime);
+      const auto updateEnd = std::chrono::high_resolution_clock::now();
+      accumulateTimeInNs += std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd - updateBegin).count();
+      currentLoop++;
+      if (currentLoop == averageLoops) {
+        const auto averageTimePerLoopInNs = accumulateTimeInNs / currentLoop;
+        m_logger->logDebug("Average loop time: " + std::to_string(averageTimePerLoopInNs) + "ns");
+        currentLoop = 0;
+        accumulateTimeInNs = 0;
+      }
       lastUpdateTime = currentTime;
     } else {
       std::this_thread::sleep_for(targetUpdateTime - elapsedTime);

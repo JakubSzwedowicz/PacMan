@@ -7,14 +7,31 @@
   },
   "configurePresets": [
     {
-      "name": "toolchain",
+      "name": "base-toolchain",
       "hidden": true,
       "environment": {
         "VCPKG_ROOT": "${sourceDir}/lib/vcpkg"
       },
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -g -O2 -frecord-gcc-switches"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        }
+      },
+    {
+      "name": "debug-toolchain",
+      "hidden": true,
+      "inherits": "base-toolchain",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Og -frecord-gcc-switches",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-toolchain",
+      "hidden": true,
+      "inherits": "base-toolchain",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -g -O3 -frecord-gcc-switches",
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -23,10 +40,7 @@
       "description": "Default debug configuration preset",
       "generator": "Ninja",
       "binaryDir": "build/debug",
-      "inherits": "toolchain",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
+      "inherits": "debug-toolchain"
     },
     {
       "name": "release",
@@ -34,9 +48,8 @@
       "description": "Default release configuration preset",
       "generator": "Ninja",
       "binaryDir": "build/release",
-      "inherits": "toolchain",
+      "inherits": "release-toolchain",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
