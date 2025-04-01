@@ -9,19 +9,30 @@
 namespace PacMan {
 namespace GameEvents {
 
-GameEventsManager::GameEventsManager(EntityEventPublisherPtr_t entityEvenPublisher,
-                                     GameEventPublisherPtr_t gameEventPublisher)
+GameEventsManager::GameEventsManager(
+    EntityEventPublisherPtr_t entityEvenPublisherPtr,
+    GameEventPublisherPtr_t gameEventPublisherPtr,
+    GameSessionEventPublisherPtr_t gameSessionEventPublisherPtr)
     : m_logger(std::make_unique<Utils::Logger>("GameEventsManager",
                                                Utils::LogLevel::DEBUG)),
-      m_entityEventPublisher(std::move(entityEvenPublisher)), m_gameEventPublisher(std::move(gameEventPublisher)) {}
+      m_entityEventPublisherPtr(std::move(entityEvenPublisherPtr)),
+      m_gameEventPublisherPtr(std::move(gameEventPublisherPtr)),
+      m_gameSessionEventPublisherPtr(std::move(gameSessionEventPublisherPtr)) {}
 
-GameEventsManager::EntityEventPublisher_t & GameEventsManager::getEntityEventPublisher() const {
-  return *m_entityEventPublisher;
+GameEventsManager::EntityEventPublisher_t &
+GameEventsManager::getEntityEventPublisher() const {
+  return *m_entityEventPublisherPtr;
 }
 
 GameEventsManager::GameEventPublisher_t &
 GameEventsManager::getGameEventPublisher() const {
-  return *m_gameEventPublisher;
+  return *m_gameEventPublisherPtr;
 }
-} // GameEvents
-} // PacMan
+
+GameEventsManager::GameSessionEventPublisher_t &
+GameEventsManager::getGameSessionEventPublisher() const {
+  return *m_gameSessionEventPublisherPtr;
+}
+
+} // namespace GameEvents
+} // namespace PacMan

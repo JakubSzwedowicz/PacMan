@@ -6,9 +6,10 @@
 
 #include "Entities/Ghost.h"
 #include "Entities/PacMan.h"
-#include "GameObjects/Level.h"
 #include "GameLogic/GameHandler.h"
 #include "GameLogic/GameRunner.h"
+#include "GameLogic/GameSession.h"
+#include "GameObjects/Level.h"
 #include "GameObjects/LevelBuilderFromFile.h"
 
 namespace PacMan {
@@ -17,7 +18,7 @@ namespace GameLogic {
 GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager)
     : m_gameEventsManager(gameEventsManager) {}
 
-std::unique_ptr<GameRunner>
+std::unique_ptr<pacMan::GameLogic::GameSession>
 GameHandler::loadGame(const std::string &boardName) {
   m_logger.logInfo("Starting a game from board '" + boardName + "'");
 
@@ -39,7 +40,7 @@ GameHandler::loadGame(const std::string &boardName) {
                       ghostStrategies[ghost->getGhostType()]);
                 });
 
-  return std::make_unique<GameRunner>((m_nextGameId++), std::move(level),
+  return std::make_unique<pacMan::GameLogic::GameSession>((m_nextGameId++), std::move(level),
                                       m_gameEventsManager);
 }
 

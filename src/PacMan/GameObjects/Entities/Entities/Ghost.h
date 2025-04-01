@@ -8,18 +8,16 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
+#include "Utils/ILogger.h"
 #include "EntitiesStates.h"
 #include "EntityType.h"
 #include "GameEventsManager/GameEventsManager.h"
 #include "MovingEntity.h"
 #include "Strategies/GhostStrategies.h"
 
-#include <unordered_map>
 
-namespace PacMan::Utils {
-class ILogger;
-}
 namespace PacMan {
 namespace GameObjects {
 namespace Entities {

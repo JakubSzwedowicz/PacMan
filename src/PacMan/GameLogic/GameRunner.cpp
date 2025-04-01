@@ -15,39 +15,51 @@
 namespace PacMan {
 namespace GameLogic {
 
-GameRunner::GameRunner(int gameId, std::unique_ptr<Level> level,
+GameRunner::GameRunner(int gameRunnerId, std::unique_ptr<Level> level,
                        GameEvents::GameEventsManager &gameEventsManager)
-    : m_gameId(gameId), m_level(std::move(level)),
+    : ISubscriber(&gameEventsManager.getGameEventPublisher()),
+      m_gameRunnerId(gameRunnerId), m_level(std::move(level)),
       m_logger(std::make_unique<Utils::Logger>("GameRunner",
                                                Utils::LogLevel::DEBUG)),
       m_gameEventsManager(gameEventsManager) {
-  m_logger->logInfo("Created GameRunner with id '" + std::to_string(m_gameId) +
-                    "'");
+  m_logger->logInfo("Created GameRunner with id '" +
+                    std::to_string(m_gameRunnerId) + "'");
 }
 
 bool GameRunner::startGame() {
-  if (m_gameStatus != GameStatus::WAITING) {
-    m_logger->logError("Game '" + std::to_string(m_gameId) +
-                       "' has already been started!");
+  if (m_gameStatus != GameStatus::CREATING) {
+    m_logger->logError("Game '" + std::to_string(m_gameRunnerId) +
+                       "' has already transitioned to state " +
+                       toString(GameStatus::WAITING) + "!");
     return false;
   }
 
   if (m_level == nullptr || !m_level->isReady()) {
-    m_logger->logError("Game '" + std::to_string(m_gameId) + "' has no level!");
+    m_logger->logError("Game '" + std::to_string(m_gameRunnerId) +
+                       "' has no level!");
     return false;
   }
 
-  m_logger->logInfo("Starting Game '" + std::to_string(m_gameId) + "'");
-
-  m_gameEventsManager.getGameEventPublisher().publish(GameEvents::GameStartedEvent(m_gameId));
-  m_gameStatus = GameStatus::RUNNING;
+  m_logger->logInfo("Waiting for players to connect '" +
+                    std::to_string(m_gameRunnerId) + "' on separate thread");
+  const auto gameStatusRunning = GameStatus::WAITING;
+  m_gameEventsManager.getGameEventPublisher().publish(
+      GameEvents::GameStatusChanged(m_gameRunnerId, gameStatusRunning));
+  m_gameStatus = gameStatusRunning;
   m_gameThread = std::thread(&GameRunner::gameLoop, this);
 
   return true;
 }
 
+void GameRunner::callback(const GameEvents::GameEvent &event) {
+  switch (event.gameEventType) {
+    default:
+      break;
+  }
+}
+
 void GameRunner::printToCLI() const {
-  if (m_gameId != 0) {
+  if (m_gameRunnerId != 0) {
     m_logger->logCritical("This function can print first and only game!");
     return;
   }
@@ -58,7 +70,7 @@ void GameRunner::printToCLI() const {
 
   // --- Render Header (Optional) ---
   const int headerOffset = 2;
-  buffer.push_back("---- Pac-Man Game ID: " + std::to_string(m_gameId) +
+  buffer.push_back("---- Pac-Man Game ID: " + std::to_string(m_gameRunnerId) +
                    " ----\n");
   buffer.push_back("----------------------------\n");
 
@@ -78,8 +90,10 @@ void GameRunner::printToCLI() const {
     buffer.push_back(line);
   }
 
-  for (const auto& movingEntities : m_level->getMovingEntities()) {
-    buffer[headerOffset + movingEntities->getTilePosition().y][movingEntities->getTilePosition().x] = Entities::toChar(movingEntities->getEntityType());
+  for (const auto &movingEntities : m_level->getMovingEntities()) {
+    buffer[headerOffset + movingEntities->getTilePosition().y]
+          [movingEntities->getTilePosition().x] =
+              Entities::toChar(movingEntities->getEntityType());
   }
 
   // --- Print Footer (Optional) ---
@@ -150,29 +164,45 @@ void GameRunner::gameLoop() {
   constexpr int averageLoops = 10;
   unsigned long accumulateTimeInNs = 0;
   int currentLoop = 0;
-  while (m_gameStatus == GameStatus::RUNNING) {
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-        currentTime - lastUpdateTime);
+  // If FINISHED close the game session.
+  while (m_gameStatus != GameStatus::FINISHED) {
+    std::unique_lock l(m_gameLoopRunningMutex);
 
-    if (elapsedTime >= targetUpdateTime) {
-      const auto updateBegin = std::chrono::high_resolution_clock::now();
-      update(elapsedTime);
-      const auto updateEnd = std::chrono::high_resolution_clock::now();
-      accumulateTimeInNs += std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd - updateBegin).count();
-      currentLoop++;
-      if (currentLoop == averageLoops) {
-        const auto averageTimePerLoopInNs = accumulateTimeInNs / currentLoop;
-        m_logger->logDebug("Average loop time: " + std::to_string(averageTimePerLoopInNs) + "ns");
-        currentLoop = 0;
-        accumulateTimeInNs = 0;
+    // if WAITING for players then wait for a signal to run the game
+    // if for example PAUSED then wait till it's resumed
+    m_gameLoopRunningLoopCV.wait(l, [this]() -> bool {
+      return (this->m_gameStatus == GameStatus::RUNNING);
+    });
+
+    // If RUNNING then run the loop iteration.
+    while (m_gameStatus == GameStatus::RUNNING) {
+      auto currentTime = std::chrono::high_resolution_clock::now();
+      auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+          currentTime - lastUpdateTime);
+
+      if (elapsedTime >= targetUpdateTime) {
+        const auto updateBegin = std::chrono::high_resolution_clock::now();
+        update(elapsedTime);
+        const auto updateEnd = std::chrono::high_resolution_clock::now();
+        accumulateTimeInNs +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd -
+                                                                 updateBegin)
+                .count();
+        currentLoop++;
+        if (currentLoop == averageLoops) {
+          const auto averageTimePerLoopInNs = accumulateTimeInNs / currentLoop;
+          m_logger->logDebug("Average loop time: " +
+                             std::to_string(averageTimePerLoopInNs) + "ns");
+          currentLoop = 0;
+          accumulateTimeInNs = 0;
+        }
+        lastUpdateTime = currentTime;
+      } else {
+        std::this_thread::sleep_for(targetUpdateTime - elapsedTime);
       }
-      lastUpdateTime = currentTime;
-    } else {
-      std::this_thread::sleep_for(targetUpdateTime - elapsedTime);
     }
   }
-  m_logger->logInfo("Game '" + std::to_string(m_gameId) +
+  m_logger->logInfo("Game '" + std::to_string(m_gameRunnerId) +
                     " changed status to '" + toString(m_gameStatus) + "'");
 }
 
@@ -189,7 +219,8 @@ void GameRunner::update(std::chrono::milliseconds deltaTime) {
   // Check for game over conditions
   if (checkGameOver()) {
     m_gameStatus = GameStatus::FINISHED;
-    m_logger->logInfo("Game '" + std::to_string(m_gameId) + "' finished!");
+    m_logger->logInfo("Game '" + std::to_string(m_gameRunnerId) +
+                      "' finished!");
   }
 
   // TODO: trigger an event to notify clients about the updated game state
@@ -225,16 +256,16 @@ void GameRunner::updateMovingEntity(MovingEntity &movingEntity,
     }
     // Entity arrived to the next tile!
     m_gameEventsManager.getEntityEventPublisher().publish(
-        GameEvents::EntityMovedEvent(movingEntity.getEntityId(), currentTilePosition,
-                                newTilePosition));
+        GameEvents::EntityMovedEvent(movingEntity.getEntityId(),
+                                     currentTilePosition, newTilePosition));
 
     if (m_level->getEntityOnTile(newTilePosition) == EntityType::BRIDGE) {
-      m_logger->logError("In game '" + std::to_string(m_gameId) + " entity " +
-                         movingEntity.toString() +
+      m_logger->logError("In game '" + std::to_string(m_gameRunnerId) +
+                         " entity " + movingEntity.toString() +
                          " hit bridge which should not be possible! They are "
                          "not implemented!");
       throw std::runtime_error(
-          "In game '" + std::to_string(m_gameId) + " entity " +
+          "In game '" + std::to_string(m_gameRunnerId) + " entity " +
           movingEntity.toString() +
           " hit bridge which should not be possible! They are "
           "not implemented!");

@@ -2,9 +2,9 @@
 // Created by Jakub Szwedowicz on 3/23/25.
 //
 
-#include "Utils/ILogger.h"
-
 #include <spdlog/spdlog.h>
+
+#include "Utils/ILogger.h"
 
 namespace PacMan {
 namespace Utils {

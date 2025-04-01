@@ -1,20 +1,28 @@
 //
-// Created by jakubszwedowicz on 3/24/25.
+// Created by jakubszwedowicz on 3/31/25.
 //
 
 #ifndef GAMESTATUS_H
 #define GAMESTATUS_H
 
-#include <cstdint>
+#include <iostream>
 #include <string>
+#include <cstdint>
 
-namespace PacMan {
-namespace GameLogic {
+namespace PacMan::GameLogic {
 
-enum class GameStatus : uint8_t { WAITING, RUNNING, PAUSED, FINISHED };
+enum class GameStatus : uint8_t {
+  CREATING,
+  WAITING,
+  RUNNING,
+  PAUSED,
+  FINISHED
+};
 
 inline std::string toString(const GameStatus &status) {
   switch (status) {
+  case GameStatus::CREATING:
+    return "CREATING";
   case GameStatus::WAITING:
     return "WAITING";
   case GameStatus::RUNNING:
@@ -32,7 +40,5 @@ inline std::ostream &operator<<(std::ostream &os, const GameStatus &status) {
   return (os << toString(status));
 }
 
-} // namespace GameLogic
-} // namespace PacMan
-
+} // namespace PacMan::GameLogic
 #endif // GAMESTATUS_H

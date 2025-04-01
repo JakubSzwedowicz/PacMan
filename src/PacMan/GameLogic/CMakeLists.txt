@@ -1,6 +1,7 @@
 set(GAME_LOGIC_SOURCES
     GameHandler.cpp
     GameRunner.cpp
+    GameSession.cpp
 )
 
 add_library(GameLogic
