@@ -10,5 +10,5 @@ else
   exit 1
 fi
 
-git submodule update --init --recursive
+git submodule update --init --recursive --remote
 cmake --workflow --preset configure-build-test-debug
