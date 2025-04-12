@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <set>
+#include <vector>
 
 #include "Entities/Ghost.h"
 #include "Entities/PacMan.h"
@@ -53,8 +55,22 @@ bool GameRunner::startGame() {
 
 void GameRunner::callback(const GameEvents::GameEvent &event) {
   switch (event.gameEventType) {
-    default:
+  case (GameEvents::GameEventType::GAME_STATUS_CHANGED):
+    const auto &gameStatusChangedEvent =
+        static_cast<const GameEvents::GameStatusChanged &>(event);
+    switch (gameStatusChangedEvent.gameStatus) {
+    case GameStatus::CREATING:
       break;
+    case GameStatus::WAITING:
+      break;
+    case GameStatus::RUNNING:
+      break;
+    case GameStatus::PAUSED:
+      break;
+    case GameStatus::FINISHED:
+      break;
+    }
+    break;
   }
 }
 
@@ -171,7 +187,8 @@ void GameRunner::gameLoop() {
     // if WAITING for players then wait for a signal to run the game
     // if for example PAUSED then wait till it's resumed
     m_gameLoopRunningLoopCV.wait(l, [this]() -> bool {
-      return (this->m_gameStatus == GameStatus::RUNNING);
+      return (m_gameStatus == GameStatus::FINISHED ||
+              m_gameStatus == GameStatus::RUNNING);
     });
 
     // If RUNNING then run the loop iteration.

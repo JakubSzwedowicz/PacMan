@@ -17,6 +17,7 @@ namespace Server {
 
 class Server {
 public:
+  Server(GameEvents::GameEventsManager &gameEventsManager);
   int main();
   void listenForPlayers();
   void startGame();
@@ -43,6 +44,7 @@ private:
   std::condition_variable m_startGameCondition;
 
   // Messages Handlers
+  GameEvents::GameEventsManager &m_gameEventsManager;
   GameMessagesHandlers::ReqRespHandler m_reqRespHandler = {this};
 };
 

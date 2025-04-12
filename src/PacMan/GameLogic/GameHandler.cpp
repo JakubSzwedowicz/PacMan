@@ -15,15 +15,15 @@
 namespace PacMan {
 namespace GameLogic {
 
-GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager)
+GameHandler::GameHandler(GameEvents::GameEventsManager &gameEventsManager, )
     : m_gameEventsManager(gameEventsManager) {}
 
 std::unique_ptr<pacMan::GameLogic::GameSession>
-GameHandler::loadGame(const std::string &boardName) {
+GameHandler::loadGame(const std::string &boardName, int numberOfPlayers) {
   m_logger.logInfo("Starting a game from board '" + boardName + "'");
 
-  GameObjects::LevelBuilderFromFile builder =
-      GameObjects::LevelBuilderFromFile(std::string(RESOURCES_DIR) + "/" + boardName, m_gameEventsManager);
+  GameObjects::LevelBuilderFromFile builder = GameObjects::LevelBuilderFromFile(
+      std::string(RESOURCES_DIR) + "/" + boardName, m_gameEventsManager);
   auto level = builder.release();
 
   if (level == nullptr) {
@@ -40,8 +40,8 @@ GameHandler::loadGame(const std::string &boardName) {
                       ghostStrategies[ghost->getGhostType()]);
                 });
 
-  return std::make_unique<pacMan::GameLogic::GameSession>((m_nextGameId++), std::move(level),
-                                      m_gameEventsManager);
+  return std::make_unique<pacMan::GameLogic::GameSession>(
+      (m_nextGameId++), std::move(level), m_gameEventsManager, numberOfPlayers);
 }
 
 GhostTypeToGhostStateToGhostStrategies_t
@@ -49,8 +49,7 @@ GameHandler::getGhostStrategies(const GameObjects::Level &level) const {
   GhostTypeToGhostStateToGhostStrategies_t strategies;
   for (const auto &ghost : level.getGhosts()) {
     auto scatterStrat = std::make_unique<Strategies::ScatterStrategy>();
-    auto frightenedStrat =
-        std::make_unique<Strategies::FrightenedStrategy>();
+    auto frightenedStrat = std::make_unique<Strategies::FrightenedStrategy>();
     auto eatenStrat = std::make_unique<Strategies::EatenStrategy>();
     std::unique_ptr<Strategies::IGhostStrategy> chaseStrat = nullptr;
     switch (ghost->getGhostType()) {
