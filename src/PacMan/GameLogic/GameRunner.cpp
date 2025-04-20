@@ -47,7 +47,6 @@ bool GameRunner::startGame() {
   const auto gameStatusRunning = GameStatus::WAITING;
   m_gameEventsManager.getGameEventPublisher().publish(
       GameEvents::GameStatusChanged(m_gameRunnerId, gameStatusRunning));
-  m_gameStatus = gameStatusRunning;
   m_gameThread = std::thread(&GameRunner::gameLoop, this);
 
   return true;
@@ -58,6 +57,7 @@ void GameRunner::callback(const GameEvents::GameEvent &event) {
   case (GameEvents::GameEventType::GAME_STATUS_CHANGED):
     const auto &gameStatusChangedEvent =
         static_cast<const GameEvents::GameStatusChanged &>(event);
+    m_gameStatus = gameStatusChangedEvent.gameStatus;
     switch (gameStatusChangedEvent.gameStatus) {
     case GameStatus::CREATING:
       break;
@@ -72,6 +72,7 @@ void GameRunner::callback(const GameEvents::GameEvent &event) {
     }
     break;
   }
+  m_gameLoopRunningLoopCV.notify_one();
 }
 
 void GameRunner::printToCLI() const {
@@ -114,7 +115,7 @@ void GameRunner::printToCLI() const {
 
   // --- Print Footer (Optional) ---
   const int footerOffset = 2;
-  buffer.push_back("----------------------------\n");
+  buffer.emplace_back("----------------------------\n");
   buffer.push_back("Status: " + toString(m_gameStatus.load()) + "\n");
 
   if (previousBuffer.empty()) {
@@ -193,9 +194,10 @@ void GameRunner::gameLoop() {
 
     // If RUNNING then run the loop iteration.
     while (m_gameStatus == GameStatus::RUNNING) {
-      auto currentTime = std::chrono::high_resolution_clock::now();
-      auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-          currentTime - lastUpdateTime);
+      const auto currentTime = std::chrono::high_resolution_clock::now();
+      const auto elapsedTime =
+          std::chrono::duration_cast<std::chrono::milliseconds>(currentTime -
+                                                                lastUpdateTime);
 
       if (elapsedTime >= targetUpdateTime) {
         const auto updateBegin = std::chrono::high_resolution_clock::now();

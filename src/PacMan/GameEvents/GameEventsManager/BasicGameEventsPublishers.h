@@ -17,6 +17,8 @@ class GameEventsPublisher final
 class GameSessionEventsPublisher final
     : public GameEventsManager::GameSessionEventPublisher_t {};
 
+GameEventsManager getDefaultGameEventsManager();
+
 } // namespace GameEvents
 } // namespace PacMan
 

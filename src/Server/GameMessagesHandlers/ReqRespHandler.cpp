@@ -32,7 +32,7 @@ zmq::message_t ReqRespHandler::handleClientReqRespGetGames(
     const GameLogic::GameMessages::ClientReqGetGames *clientReq) {
   GameLogic::GameMessages::ClientReplGetGames reply;
   reply.gameId =
-      (m_server->m_gameRunner ? m_server->m_gameRunner->getGameId() : -1);
+      (m_server->m_gameSession ? m_server->m_gameSession->getGameId() : -1);
 
   m_logger.logInfo(
       "Returning result from handleClientReqRespGetGames with Ids: " +

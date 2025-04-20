@@ -18,11 +18,14 @@ ILogger::ILogger(const std::string &scopeName, LogLevel logLevel)
 }
 
 ILogger::~ILogger() { s_loggers.erase(this); }
+
 void ILogger::shutdownAll() {
-  for (auto &logger : s_loggers) {
-    logger->shutdown();
+  if (!s_loggers.empty()) {
+    for (auto &logger : s_loggers) {
+      logger->shutdown();
+    }
+    s_loggers.clear();
   }
-  spdlog::shutdown();
 }
 
 void ILogger::setLogFileName(const std::string &logFileName) {

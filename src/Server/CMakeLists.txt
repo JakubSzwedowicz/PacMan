@@ -11,9 +11,9 @@ add_library(Server
         Server.cpp
 )
 
-add_subdirectory(GameMessagesHandlers)
+#add_subdirectory(GameMessagesHandlers)
 target_compile_features(Server PUBLIC cxx_std_17)
 target_include_directories(Server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Server PUBLIC cppzmq GameMessagesHandlers GameMessages GameLogic Utils)
+target_link_libraries(Server PUBLIC cppzmq GameLogic Utils)
 
 target_link_libraries(ServerApp PRIVATE Server)

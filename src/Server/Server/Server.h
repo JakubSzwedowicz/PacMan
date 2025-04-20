@@ -9,7 +9,8 @@
 
 #include "GameLogic/GameHandler.h"
 #include "GameLogic/GameRunner.h"
-#include "GameMessagesHandlers/ReqRespHandler.h"
+// #include "GameMessagesHandlers/ReqRespHandler.h"
+#include "Entities/PacMan.h"
 #include "Utils/Logger.h"
 
 namespace PacMan {
@@ -27,7 +28,7 @@ public:
   void shutdown();
 
 private:
-  friend GameMessagesHandlers::ReqRespHandler;
+  // friend GameMessagesHandlers::ReqRespHandler;
 
 private:
   Utils::Logger m_logger = Utils::Logger("Server", Utils::LogLevel::INFO);
@@ -35,7 +36,8 @@ private:
   const std::string m_clientServerReqReplSocketAddr =
       "tcp://" + m_hostIp + ":5555";
   PacMan::GameLogic::GameHandler m_gameHandler;
-  std::unique_ptr<PacMan::GameLogic::GameRunner> m_gameRunner = nullptr;
+  std::unique_ptr<PacMan::GameLogic::GameSession> m_gameSession = nullptr;
+  std::thread m_listenerThread;
 
   // synchronization primitives
   std::atomic_bool m_listenToPlayers = false;
@@ -45,7 +47,7 @@ private:
 
   // Messages Handlers
   GameEvents::GameEventsManager &m_gameEventsManager;
-  GameMessagesHandlers::ReqRespHandler m_reqRespHandler = {this};
+  // GameMessagesHandlers::ReqRespHandler m_reqRespHandler = {this};
 };
 
 } // namespace Server

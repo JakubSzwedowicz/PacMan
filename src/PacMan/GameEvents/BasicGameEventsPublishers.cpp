@@ -5,5 +5,15 @@
 #include "GameEventsManager/BasicGameEventsPublishers.h"
 
 namespace PacMan {
-namespace GameEvents {} // namespace GameEvents
+namespace GameEvents {
+
+GameEventsManager getDefaultGameEventsManager() {
+  return GameEventsManager{
+      std::make_unique<EntityEventsPublisher>(),
+      std::make_unique<GameEventsPublisher>(),
+      std::make_unique<GameSessionEventsPublisher>(),
+  };
+}
+
+} // namespace GameEvents
 } // namespace PacMan

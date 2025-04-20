@@ -9,6 +9,8 @@
 #include "Utils/Logger.h"
 #include "Utils/Signals.h"
 
+#include <GameEventsManager/BasicGameEventsPublishers.h>
+
 int main() {
   std::signal(SIGSEGV, PacMan::Utils::shutdownLoggers);
   std::signal(SIGTERM, PacMan::Utils::shutdownLoggers);
@@ -19,7 +21,9 @@ int main() {
       "main", PacMan::Utils::LogLevel::DEBUG);
 
   logger->logInfo("Launching Server");
-  PacMan::Server::Server server;
+  auto baseGameEventsManager =
+      PacMan::GameEvents::getDefaultGameEventsManager();
+  PacMan::Server::Server server(baseGameEventsManager);
   server.main();
   return 0;
 }
