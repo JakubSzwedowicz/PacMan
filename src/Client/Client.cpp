@@ -11,7 +11,7 @@
 namespace PacMan {
 namespace Client {
 
-Client::Client(GameEvents::GameEventsManager &gameEventsManager) : m_ {}
+Client::Client(GameEvents::GameEventsManager &gameEventsManager) : m_gameHandler(gameEventsManager), m_gameEventsManager(gameEventsManager) {}
 
 int Client::main() {}
 

@@ -1,0 +1,107 @@
+@startuml
+title Multiplayer Game Creation & Start (Client-Server via Events)
+
+actor Player2
+actor Player1
+participant UI
+participant ClientApp
+participant GameEventsManager as GEM
+participant ServerApp
+participant ServerGamesHandler
+participant ServerGameSession
+participant GameRunner
+participant ClientGamesHandler
+participant ClientGameSession
+
+== Player 1 Creates Game ==
+'Client requests creation of a ServerGameSession'
+Player1 --> UI ++ : Clicks "Start single player game"
+note right: Client initiates creation of a ServerGameSession
+UI -> ClientApp ++ : handleCreateGame("Board1.txt", numberOfPlayers)
+ClientApp --> GEM : publish(CreateServerGameSessionRequest("Board1.txt", numberOfPlayers))
+ClientApp -> UI --
+UI -> Player1 -- : CreateServerGameSessionRequest sent
+
+
+'Server receives a request to create a ServerGameSession'
+GEM --> ServerApp ++ : callback(CreateServerGameSessionRequest)
+note right: Server receives a request to create a ServerGameSession
+ServerApp -> ServerGamesHandler ++ : loadGame("Board1.txt", ServerGameSessionId, numberOfPlayers)
+' ServerGamesHandler creates Level internally '
+create ServerGameSession
+ServerGamesHandler -> ServerGameSession ++ : new ServerGameSession(ServerGameSessionId, isClient, level, GEM)
+note right: Session subscribes to ServerGameSessionEvents etc.
+create GameRunner
+ServerGameSession -> GameRunner ++ : new GameRunner(id, level, GEM)
+GameRunner -> GameRunner : m_gameStatus = CREATING
+GameRunner -> ServerGameSession --
+note right: GameRunner in state WAITING
+ServerGameSession -> ServerGamesHandler --
+note right: ServerGameSession in state WAITING. \n Waits for numberOfPlayers players to join
+ServerGamesHandler -> ServerApp -- : returns std::unique_ptr<ServerGameSession> // ServerApp stores sessions
+note left: Server created a ServerGameSession, now returning SessionInfo
+ServerApp --> GEM : publish(CreateServerGameSessionResponse(sessionId, sessionInfo))
+note left: SessionInfo contains information about the hostId
+
+'Client immediately joins the game they requested to create'
+alt Player1 initiated a game
+    'Client receives a response for ServerGameSession creation'
+    GEM --> ClientApp : callback(CreateServerGameSessionResponse)
+    note left: Client receives a response for ServerGameSession creation
+    ClientApp -> ClientApp : storeNewSession(sessionId, SessionInfo)
+else Players want to find some games
+    == Players search for ServerGameSessions ==
+    note over Player1, ServerApp : Players search for ServerGameSessions 'id'
+    Player2 -> UI ++ : Clicks in multiplayer lobby "Search games"
+    UI -> ClientApp ++ : handleSearchGame()
+    ClientApp --> GEM  : publish(FindServerGameSessionsRequest())
+    ClientApp -> UI --
+    UI -> Player2 -- : Searched for games
+
+    GEM --> ServerApp : callback(FindServerGameSessionsRequest)
+    ServerApp -> ServerApp : handleFindServerGameSessionsRequest()
+    ServerApp --> GEM : publish(FindServerGameSessionsResponse([{sessionId, SessionInfo}, {...}]))
+    GEM --> ClientApp : callback(FindServerGameSessionsResponse)
+    ClientApp -> ClientApp : storeNewSession([{sessionId, SessionInfo}, {...}])
+end
+
+
+== Players join game ==
+alt Did player start the game?
+    ClientApp -> ClientApp ++ : handleJoinTheGame(sessionId)
+else Players want to join a game
+    Player2 -> UI ++ : Clicks "Join Game(sessionId)"
+    UI -> ClientApp : handleJoinGame(sessionId)
+end
+ClientApp --> GEM ++ : publish(JoinGameRequest(sessionId))
+
+
+GEM --> ServerApp : callback(JoinGameRequest)
+ServerApp -> ServerGameSession ++ : connectPlayer()
+ServerGameSession -> ServerApp -- : returns PlayerId
+ServerApp --> GEM : publish(JoinGameResponse(sessionId, PlayerId))
+GEM --> ClientApp -- : callback(JoinGameResponse)
+note left: ClientApp is allowed to join the game, it creates its own ServerGameSession.
+
+'Players creates its own ServerGameSession without the GameRunner'
+ClientApp -> ClientGamesHandler ++ : loadGame(""Board1.txt", GameSessionId, numberOfPlayers) :
+create ClientGameSession
+ClientGamesHandler -> ClientGameSession ++ : new GameSession(GameSessionId, isClient, level, GEM)
+note right: ClientGameSession handles status updated from the ServerGameSession.\n It does not create the GameRunner! Logic is server side.
+ClientGameSession -> ClientGamesHandler --
+note right: ClientGameSession in state CREATED. It's not started yet.
+ClientGamesHandler -> ClientApp -- : returns std::unique_ptr<ClientGameSession>
+ClientApp -> ClientApp : //do some processing...
+ClientApp -> ClientGameSession ++ : startSession()
+note right: ClientGameSession in state READY. \n Waits for event from the Server to start
+ClientApp -> UI -- : // returns ClientGameSession in READY state
+UI -> Player2 -- : Joined game session
+
+== Game starts ==
+loop any ClientGameSessions not in READY
+    ClientGameSession --> GEM -- : publish(ClientGameSessionUpdateEvent(sessionId, playerId, GameSessionState))
+    GEM --> ServerGameSession : callback(ClientGameSessionUpdateEvent)
+end
+note across: all ClientGameSession are in READY state and ServerGameSession was notified about it
+
+@enduml

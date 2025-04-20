@@ -1,0 +1,37 @@
+@startuml
+top to bottom direction
+
+[*] --> MainMenu: Application start
+state MainMenu
+MainMenu --> GameSelectionMenu : StartGame
+MainMenu --> LobbyMenu : JoinGame
+MainMenu --> SettingsMenu : Settings
+MainMenu --> [*] : Exit
+
+state GameSelectionMenu
+GameSelectionMenu --> GameWindow : Singleplayer
+GameSelectionMenu --> GameWindow : Multiplayer
+note right of GameWindow: In the multiplayer session \nwaiting for the remaining players is done in the game window with Paused state
+GameSelectionMenu --> MainMenu : Back
+
+state LobbyMenu {
+    LobbyMenu: Games list
+}
+LobbyMenu --> GameWindow : Join
+LobbyMenu --> MainMenu : Back
+
+state SettingsMenu
+SettingsMenu --> MainMenu : Back
+
+state GameWindow {
+    GameWindow: Game level
+    GameWindow: Score
+    GameWindow: Health
+    GameWindow: Time
+}
+GameWindow --> GameFinishedPopup : GameFinished
+
+state GameFinishedPopup
+GameFinishedPopup --> MainMenu : Close
+
+@enduml

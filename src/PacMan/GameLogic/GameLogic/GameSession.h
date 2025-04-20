@@ -13,8 +13,7 @@
 #include "GameRunner.h"
 #include "GameSessionStatus.h"
 
-namespace pacMan {
-namespace GameLogic {
+namespace PacMan::GameLogic {
 
 /**
  * @brief This class manages game session which is tracking if players are ready
@@ -22,28 +21,27 @@ namespace GameLogic {
  * PAUSING it.
  */
 class GameSession
-    : public PacMan::Utils::ISubscriber<PacMan::GameEvents::GameSessionEvent> {
+    : public Utils::ISubscriber<GameEvents::GameSessionEvent> {
 public:
   GameSession(int gameSessionId, bool isClient,
-              std::unique_ptr<PacMan::GameObjects::Level> level,
-              PacMan::GameEvents::GameEventsManager &gameEventsManager);
+              std::unique_ptr<GameObjects::Level> level,
+              GameEvents::GameEventsManager &gameEventsManager);
   void startSession();
-  void callback(const PacMan::GameEvents::GameSessionEvent &event) override;
+  void callback(const GameEvents::GameSessionEvent &event) override;
 
   int getGameSessionId() const { return m_gameSessionId; }
-  [[nodiscard]] const PacMan::GameLogic::GameRunner &getGameRunner() const {
+  [[nodiscard]] const GameLogic::GameRunner &getGameRunner() const {
     return *m_gameRunner;
   }
 
 private:
   int m_gameSessionId;
   const bool m_isClient;
-  PacMan::GameLogic::GameSessionStatus m_gameSessionStatus;
-  std::unique_ptr<PacMan::GameLogic::GameRunner> m_gameRunner;
-  PacMan::GameEvents::GameEventsManager &m_gameEventsManager;
+  GameLogic::GameSessionStatus m_gameSessionStatus;
+  std::unique_ptr<GameLogic::GameRunner> m_gameRunner;
+  GameEvents::GameEventsManager &m_gameEventsManager;
 };
 
-} // namespace GameLogic
-} // namespace pacMan
+} // namespace PacMan::GameLogic
 
 #endif // GAMESESSION_H

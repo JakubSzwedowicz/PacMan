@@ -14,8 +14,8 @@
 #include "Utils/ILogger.h"
 #include "Entities/MovingEntity.h"
 
-namespace PacMan {
-namespace GameObjects {
+
+namespace PacMan::GameObjects {
 
 namespace Entities {
 class PacMan;
@@ -103,7 +103,7 @@ private:
   int m_numberOfFood = 0;
 };
 
-} // namespace GameObjects
-} // namespace PacMan
+} // namespace PacMan::GameObjects
+
 
 #endif // LEVEL_H

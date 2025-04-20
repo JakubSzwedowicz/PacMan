@@ -37,8 +37,7 @@ private:
   //      "tcp://" + m_hostIp + ":5555";
   PacMan::GameLogic::GameHandler m_gameHandler;
   std::unique_ptr<PacMan::GameLogic::GameRunner> m_gameRunner = nullptr;
-  GameEvents::GameEventsManager m_gameEventsManager =
-};
+  GameEvents::GameEventsManager& m_gameEventsManager;
 
 // synchronization primitives
 std::atomic_bool m_listenToPlayers = false;

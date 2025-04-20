@@ -1,0 +1,553 @@
+@startuml
+
+
+
+
+
+/' Objects '/
+
+namespace PacMan {
+	namespace Utils {
+		abstract class ILogger {
+			+ILogger(const std::string& scopeName, LogLevel logLevel)
+			+~ILogger()
+			+operator==(const ILogger& other) : bool {query}
+			#m_logLevel : const LogLevel
+			#m_scopeName : const std::string
+			#{static} s_logFileName : static std::string
+			-{static} s_loggers : static std::unordered_set<ILogger*>
+			+{abstract} logCritical(const std::string& message) : void
+			+{abstract} logDebug(const std::string& message) : void
+			+{abstract} logError(const std::string& message) : void
+			+{abstract} logInfo(const std::string& message) : void
+			+{abstract} logWarning(const std::string& message) : void
+			+{static} setLogFileName(const std::string& logFileName) : void
+			+{abstract} shutdown() : void
+			+{static} shutdownAll() : void
+		}
+
+		class IPublisher <template<class Event>> {
+			+~IPublisher()
+			+subscribe(ISubscriber<Event>* subscriber) : bool
+			-m_subscribers : std::vector<ISubscriber<Event>*>
+			#publish(const Event& event) : void
+			+unsubscribe(ISubscriber<Event>* subscriber) : void
+		}
+
+		abstract class ISubscriber <template<class Event>> {
+			+~ISubscriber()
+			-m_publisher : IPublisher<Event>*
+			+{abstract} callback() : void
+			-selfSubscribe(IPublisher<Event>* publisher) : void
+			+unsubscribe() : void
+		}
+
+		class Logger {
+			+Logger(const std::string& scopeName, LogLevel logLevel)
+			+~Logger()
+			-m_logger : std::shared_ptr<spdlog::logger>
+			-initLogger() : void
+			+logCritical(const std::string& message) : void
+			+logDebug(const std::string& message) : void
+			+logError(const std::string& message) : void
+			+logInfo(const std::string& message) : void
+			+logWarning(const std::string& message) : void
+			+shutdown() : void
+		}
+
+		enum LogLevel {
+			DEBUG
+			ERROR
+			INFO
+			WARNING
+		}
+	}
+
+	namespace Server {
+		class Server {
+			-m_reqRespHandler : GameMessagesHandlers::ReqRespHandler
+			-m_gameHandler : PacMan::GameLogic::GameHandler
+			-m_logger : Utils::Logger
+			-m_clientServerReqReplSocketAddr : const std::string
+			-m_hostIp : const std::string
+			- : friend GameMessagesHandlers::ReqRespHandler
+			+main() : int
+			-m_listenToPlayers : std::atomic_bool
+			-m_serverWorking : std::atomic_bool
+			-m_startGameCondition : std::condition_variable
+			-m_startGameMutex : std::mutex
+			-m_gameRunner : std::unique_ptr<PacMan::GameLogic::GameRunner>
+			+listenForPlayers() : void
+			+loadGame(const std::string& boardName) : void
+			+shutdown() : void
+			+startGame() : void
+		}
+
+		namespace GameMessagesHandlers {
+			class ReqRespHandler {
+				+ReqRespHandler(Server* server)
+				-m_server : Server*
+				-m_logger : Utils::Logger
+				+handleClientReqRespGetGames(const GameLogic::GameMessages::ClientReqGetGames* clientReq) : zmq::message_t
+				+handleReqRepl(const GameLogic::GameMessages::ConnectionMessageHeader* connHeader) : zmq::message_t
+			}
+		}
+	}
+
+	namespace GameObjects {
+		class ILevelBuilder {
+			+ILevelBuilder()
+			+~ILevelBuilder()
+			-m_level : std::unique_ptr<Level>
+			+release() : std::unique_ptr<Level>
+			#reset() : void
+			#setBoard(std::unique_ptr<Level::Board_t> board) : void
+		}
+
+		class Level {
+			+Level()
+			+getBoard() : Board_t&
+			-m_levelState : LevelState
+			+isReady() : bool {query}
+			+setBoard(std::unique_ptr<Board_t> board) : bool
+			+getHeight() : size_t {query}
+			+getWidth() : size_t {query}
+			-m_ghosts : std::vector<Entities::Ghost*>
+			+getGhosts() : std::vector<Entities::Ghost*>&
+			-m_pacMans : std::vector<Entities::PacMan*>
+			+getPacmans() : std::vector<Entities::PacMan*>&
+			-m_board : vector<std::vector<std::unique_ptr<Entities::IEntity>>>
+		}
+
+		class LevelBuilderFromFile {
+			+LevelBuilderFromFile(const std::string& boardPath)
+			-m_boardPath : const std::string&
+			-m_logger : mutable Utils::Logger
+			-createBoard() : std::unique_ptr<Level::Board_t> {query}
+		}
+
+		enum LevelState {
+			NOT_READY
+			READY
+		}
+
+		namespace Entities {
+			class Empty {
+				+Empty(uint32_t entityId)
+			}
+
+			class Entity <template<EntityType ENTITY_TYPE>> {
+				+Entity(uint32_t entityId)
+				+~Entity()
+				+getEntityType() : EntityType {query}
+				#m_entityType : const EntityType
+			}
+
+			class Food {
+				+Food(uint32_t entityId)
+			}
+
+			class Ghost {
+				+Ghost(uint32_t entityId)
+			}
+
+			abstract class IEntity {
+				+IEntity(uint32_t entityId)
+				+~IEntity()
+				+{abstract} getEntityType() : EntityType {query}
+				+getX() : float {query}
+				+getY() : float {query}
+				#m_x : float
+				#m_y : float
+				+operator<<(std::ostream& os, const IEntity& entity) : std :: ostream&
+				+getEntityId() : uint32_t {query}
+				#m_entityId : uint32_t
+				+setX(int x) : void
+				+setY(int y) : void
+			}
+
+			class MovingEntity <template<EntityType ENTITY_TYPE>> {
+				+MovingEntity(uint32_t entityId)
+				+getCurrDirection() : EntityDirection {query}
+				+getNextDirection() : EntityDirection {query}
+				#m_currDirection : EntityDirection
+				#m_nextDirection : EntityDirection
+				+getSpeedIn100Ms() : float {query}
+				#m_speedIn100Ms : float
+				+getHealth() : int {query}
+				+getScore() : int {query}
+				#m_health : int
+				#m_score : int
+				+setCurrDirection(EntityDirection direction) : void
+				+setHealth(int health) : void
+				+setNextDirection(EntityDirection direction) : void
+				+setScore(int score) : void
+			}
+
+			class PacMan {
+				+PacMan(uint32_t entityId)
+			}
+
+			class SuperFood {
+				+SuperFood(uint32_t entityId)
+			}
+
+			class Wall {
+				+Wall(uint32_t entityId)
+			}
+
+			enum EntityDirection {
+				DOWN
+				LEFT
+				NONE
+				RIGHT
+				UP
+			}
+
+			enum EntityType {
+				BRIDGE
+				EMPTY
+				FOOD
+				GHOST
+				PAC_MAN
+				SUPER_FOOD
+				WALL
+			}
+		}
+	}
+
+	namespace GameMessages {
+		namespace Controllers {
+			class RequestResponseHandler {
+				+RequestResponseHandler(Server* server)
+				-m_server : Server*
+				-m_logger : Utils::Logger
+				+handleClientReqRespGetGames(const GameLogic::GameMessages::ClientReqGetGames* clientReq) : zmq::message_t
+				+handleReqRepl(const GameLogic::GameMessages::ConnectionMessageHeader* connHeader) : zmq::message_t
+			}
+		}
+	}
+
+	namespace GameLogic {
+		class GameEventPublisher {
+			+~GameEventPublisher()
+			+subscribe(GameEventSubscriber* subscriber) : bool
+			+unsubscribe(GameEventSubscriber* subscriber) : bool
+			#m_subscribers : std::vector<GameEventSubscriber*>
+			#publish(GameEvent event) : void
+		}
+
+		class GameEventSubscriber {
+			#m_publisher : GameEventPublisher*
+			+unsubscribe() : bool
+		}
+
+		class GameHandler {
+			+GameHandler()
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_logger : Utils::Logger
+			-m_possibleBoards : const std::vector<std::string>
+			-m_nextGameId : int
+			+loadGame(const std::string& boardName) : std::unique_ptr<GameRunner>
+		}
+
+		class GameRunner {
+			+GameRunner(int gameId, std::unique_ptr<GameObjects::Level> level)
+			-canMove(int x, int y, GameObjects::Entities::EntityDirection direction, PacMan::GameObjects::Level::Board_t& board) : bool {query}
+			+startGame() : bool
+			-m_gameId : const int
+			+getGameId() : int {query}
+			-m_logger : mutable Utils::Logger
+			-m_gameStatus : std::atomic<GameStatus>
+			-m_gameThread : std::thread
+			-m_level : std::unique_ptr<GameObjects::Level>
+			-gameLoop() : void
+			-moveTowards(int& x, int& y, GameObjects::Entities::EntityDirection direction, float distance) : void {query}
+			-moveTowardsGrid(int& x, int& y, GameObjects::Entities::EntityDirection direction, float distance) : void {query}
+			-update(std::chrono::milliseconds deltaTime) : void
+			-updateGhost(GameObjects::Entities::Ghost& ghost, std::chrono::milliseconds deltaTime) : void
+			-updatePacMan(PacMan::GameObjects::Entities::PacMan& pacman, std::chrono::milliseconds deltaTime, PacMan::GameObjects::Level::Board_t& board) : void
+		}
+
+		enum GameStatus {
+			FINISHED
+			PAUSED
+			RUNNING
+			WAITING
+		}
+
+		class GameEvent {
+		}
+
+		namespace GameMessages {
+			enum ConnectionMessageType {
+				CONNECT_TO_GAME
+				GET_GAMES
+			}
+
+			enum GameMessageType {
+				ENTITY_COLLISION
+				ENTITY_DEATH
+				ENTITY_DIRECTION_CHANGE
+				ENTITY_SPAWN
+				ENTITY_STATE_CHANGE
+				FOOD_EATEN
+				GAME_CREATED
+				GAME_OVER
+				GAME_START
+			}
+
+			enum MessageType {
+				GAME_STATE
+			}
+
+			class ClientReplGetGames {
+				+ClientReplGetGames()
+				+gameId : int
+			}
+
+			class ClientReqGetGames {
+				+ClientReqGetGames()
+			}
+
+			class ConnectionMessageHeader {
+				+ConnectionMessageHeader(MessageSource source, MessageType type, ConnectionMessageType connType)
+				+event : ConnectionMessageType
+				+header : MessageHeader
+			}
+
+			class GameMessageHeader {
+				+event : GameMessageType
+				+source : MessageHeader
+			}
+
+			class PubSubGameStateMessage {
+				+status : GameStatus
+				+type : MessageType
+			}
+
+			class ServerMessageGameCreated {
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+level : GameObjects::Level
+			}
+
+			class ServerMessageGameCreated::ServerMessageGameStarted {
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+			}
+
+			class ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath {
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+				+header : GameMessageHeader
+			}
+
+			class ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath::PlayerMessage {
+				+header : GameMessageHeader
+			}
+		}
+	}
+
+	namespace Client {
+		class Client {
+			-m_gameHandler : PacMan::GameLogic::GameHandler
+			-m_logger : Utils::Logger
+			-m_hostIp : const std::string
+			+main() : int
+			-m_listenToPlayers : std::atomic_bool
+			-m_serverWorking : std::atomic_bool
+			-m_startGameCondition : std::condition_variable
+			-m_startGameMutex : std::mutex
+			-m_gameRunner : std::unique_ptr<PacMan::GameLogic::GameRunner>
+		}
+	}
+}
+
+
+
+
+
+/' Inheritance relationships '/
+
+PacMan.GameLogic.GameMessages.ConnectionMessageHeader <|-- PacMan.GameLogic.GameMessages.ClientReplGetGames
+
+
+PacMan.GameLogic.GameMessages.ConnectionMessageHeader <|-- PacMan.GameLogic.GameMessages.ClientReqGetGames
+
+
+PacMan.GameObjects.Entities.Entity <|-- PacMan.GameObjects.Entities.Empty
+
+
+PacMan.GameObjects.Entities.Entity <|-- PacMan.GameObjects.Entities.Food
+
+
+PacMan.GameObjects.Entities.Entity <|-- PacMan.GameObjects.Entities.MovingEntity
+
+
+PacMan.GameObjects.Entities.Entity <|-- PacMan.GameObjects.Entities.SuperFood
+
+
+PacMan.GameObjects.Entities.Entity <|-- PacMan.GameObjects.Entities.Wall
+
+
+PacMan.GameObjects.Entities.IEntity <|-- PacMan.GameObjects.Entities.Entity
+
+
+PacMan.GameObjects.ILevelBuilder <|-- PacMan.GameObjects.LevelBuilderFromFile
+
+
+PacMan.Utils.ILogger <|-- PacMan.Utils.Logger
+
+
+PacMan.GameObjects.Entities.MovingEntity <|-- PacMan.GameObjects.Entities.Ghost
+
+
+PacMan.GameObjects.Entities.MovingEntity <|-- PacMan.GameObjects.Entities.PacMan
+
+
+
+
+
+/' Aggregation relationships '/
+
+PacMan.GameLogic.GameMessages.ConnectionMessageHeader *-- PacMan.GameLogic.GameMessages.ConnectionMessageType
+
+
+PacMan.GameObjects.Entities.Entity *-- PacMan.GameObjects.Entities.EntityType
+
+
+PacMan.GameLogic.GameEventPublisher o-- PacMan.GameLogic.GameEventSubscriber
+
+
+PacMan.GameLogic.GameEventSubscriber o-- PacMan.GameLogic.GameEventPublisher
+
+
+PacMan.GameLogic.GameMessages.GameMessageHeader *-- PacMan.GameLogic.GameMessages.GameMessageType
+
+
+PacMan.GameLogic.GameRunner *-- PacMan.GameLogic.GameStatus
+
+
+PacMan.GameObjects.ILevelBuilder o-- PacMan.GameObjects.Level
+
+
+PacMan.Utils.ILogger o-- PacMan.Utils.ILogger
+
+
+PacMan.Utils.ILogger *-- PacMan.Utils.LogLevel
+
+
+PacMan.Utils.IPublisher *-- PacMan.Utils.ISubscriber
+
+
+PacMan.Utils.ISubscriber *-- PacMan.Utils.IPublisher
+
+
+PacMan.GameObjects.Level *-- PacMan.GameObjects.LevelState
+
+
+PacMan.GameObjects.Entities.MovingEntity "2" *-- PacMan.GameObjects.Entities.EntityDirection
+
+
+PacMan.GameLogic.GameMessages.PubSubGameStateMessage *-- PacMan.GameLogic.GameStatus
+
+
+PacMan.GameLogic.GameMessages.PubSubGameStateMessage *-- PacMan.GameLogic.GameMessages.MessageType
+
+
+PacMan.Server.GameMessagesHandlers.ReqRespHandler o-- PacMan.Server.Server
+
+
+PacMan.Server.Server *-- PacMan.Server.GameMessagesHandlers.ReqRespHandler
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath "6" *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated::ServerMessageGameStarted::ServerMessageGameEntityDeath::PlayerMessage *-- PacMan.GameLogic.GameMessages.GameMessageHeader
+
+
+
+
+
+
+/' Dependency relationships '/
+
+PacMan.GameLogic.GameMessages.ConnectionMessageType <.. PacMan.GameLogic.GameMessages.ConnectionMessageHeader
+
+
+PacMan.GameObjects.Entities.EntityDirection <.. PacMan.GameObjects.Entities.MovingEntity
+
+
+PacMan.GameObjects.Entities.EntityDirection <.. PacMan.GameObjects.Entities.MovingEntity
+
+
+PacMan.GameLogic.GameEvent <.. PacMan.GameLogic.GameEventPublisher
+
+
+PacMan.GameLogic.GameEventSubscriber <.. PacMan.GameLogic.GameEventPublisher
+
+
+PacMan.GameLogic.GameEventSubscriber <.. PacMan.GameLogic.GameEventPublisher
+
+
+PacMan.GameObjects.Entities.IEntity <.. PacMan.GameObjects.Entities.IEntity
+
+
+PacMan.Utils.ILogger <.. PacMan.Utils.ILogger
+
+
+PacMan.Utils.IPublisher <.. PacMan.Utils.ISubscriber
+
+
+PacMan.Utils.ISubscriber <.. PacMan.Utils.IPublisher
+
+
+PacMan.Utils.ISubscriber <.. PacMan.Utils.IPublisher
+
+
+PacMan.Utils.LogLevel <.. PacMan.Utils.ILogger
+
+
+PacMan.Utils.LogLevel <.. PacMan.Utils.Logger
+
+
+PacMan.GameLogic.GameMessages.MessageType <.. PacMan.GameLogic.GameMessages.ConnectionMessageHeader
+
+
+PacMan.Server.Server <.. PacMan.Server.GameMessagesHandlers.ReqRespHandler
+
+
+
+
+
+
+/' Nested objects '/
+
+PacMan.GameLogic.GameMessages.ServerMessageGameCreated +-- PacMan.GameLogic.GameMessages.ServerMessageGameCreated.ServerMessageGameStarted
+
+
+
+
+@enduml
