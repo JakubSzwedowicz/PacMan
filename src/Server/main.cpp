@@ -24,6 +24,6 @@ int main() {
   auto baseGameEventsManager =
       PacMan::GameEvents::getDefaultGameEventsManager();
   PacMan::Server::Server server(baseGameEventsManager);
-  server.main();
+  server.debugMain();
   return 0;
 }

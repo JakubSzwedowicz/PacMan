@@ -20,6 +20,7 @@ class Server {
 public:
   Server(GameEvents::GameEventsManager &gameEventsManager);
   int main();
+  int debugMain();
   void listenForPlayers();
   void startGame();
   void loadGame(const std::string &boardName);
@@ -28,6 +29,7 @@ public:
   void shutdown();
 
 private:
+  void debugListenForPlayers();
   // friend GameMessagesHandlers::ReqRespHandler;
 
 private:

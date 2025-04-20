@@ -47,30 +47,17 @@ int Server::main() {
 }
 
 void Server::listenForPlayers() {
-  // zmq::context_t context(1);
-  // zmq::socket_t socket(context, zmq::socket_type::rep);
-  // socket.bind(m_clientServerReqReplSocketAddr);
-  //
+  zmq::context_t context(1);
+  zmq::socket_t socket(context, zmq::socket_type::rep);
+  socket.bind(m_clientServerReqReplSocketAddr);
+
   m_listenToPlayers = true;
   int i = 10;
   while (m_listenToPlayers) {
-    if (i > 0) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(250));
-      i--;
-    }
-    if (i == 0) {
-      m_logger.logInfo("Mocking request to create a game from the player, "
-                       "loading Board1.txt");
-      loadGame("Board1.txt");
-      m_startGameCondition.notify_one();
-      i--;
-    } else {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-    //   // Receive request
-    //   zmq::message_t request;
-    //   zmq::recv_result_t res = socket.recv(request, zmq::recv_flags::none);
-    //
+    // Receive request
+    zmq::message_t request;
+    zmq::recv_result_t res = socket.recv(request, zmq::recv_flags::none);
+
     //   auto header =
     //       static_cast<GameLogic::GameMessages::MessageHeader
     //       *>(request.data());
@@ -86,8 +73,8 @@ void Server::listenForPlayers() {
     //             request.data());
     //     zmq::message_t reply = m_reqRespHandler.handleReqRepl(connHeader);
     //     socket.send(reply, zmq::send_flags::none);
+    // }
   }
-  // }
 }
 
 void Server::startGame() {
@@ -111,6 +98,52 @@ void Server::shutdown() {
   m_startGameCondition.notify_all();
   m_listenToPlayers = false;
   m_listenerThread.join();
+}
+
+int Server::debugMain() {
+  m_logger.logInfo("Starting debug server under ip '" + m_hostIp + "'");
+
+  m_listenerThread = std::thread([this]() { this->debugListenForPlayers(); });
+  m_serverWorking = true;
+  while (m_serverWorking) {
+    // Sleep if no game is running, separate thread is waiting for players
+    m_logger.logInfo("Waiting for connection...");
+    std::unique_lock<std::mutex> lock(m_startGameMutex);
+    m_startGameCondition.wait(lock, [this]() {
+      return (!m_serverWorking) || this->m_gameSession != nullptr;
+    });
+
+    m_logger.logInfo("Starting game session");
+    m_gameSession->startSession();
+    while (true) {
+      m_gameSession->getGameRunner().printToCLI();
+    }
+  }
+
+  m_logger.logDebug("Waiting for listener thread to join...");
+  shutdown();
+  m_logger.logDebug("Listener thread joined");
+
+  m_logger.logInfo("Debug Server under ip '" + m_hostIp + "' shutting down...");
+}
+void Server::debugListenForPlayers() {
+  m_listenToPlayers = true;
+  int i = 10;
+  while (m_listenToPlayers) {
+    if (i > 0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(250));
+      i--;
+    }
+    if (i == 0) {
+      m_logger.logInfo("Mocking request to create a game from the player, "
+                       "loading Board1.txt");
+      loadGame("Board1.txt");
+      m_startGameCondition.notify_one();
+      i--;
+    } else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+  }
 }
 
 } // namespace Server
