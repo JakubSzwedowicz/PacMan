@@ -1,6 +1,14 @@
 {
-    "dependencies": [
-        "fmt",
-        "gtest"
-    ]   
+  "name": "new-pacman",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "sfml",
+    "entt",
+    "flatbuffers",
+    "glaze",
+    "spdlog",
+    "enet",
+    "imgui-sfml",
+    "utils"
+  ]
 }
