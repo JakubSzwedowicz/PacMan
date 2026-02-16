@@ -1,0 +1,31 @@
+@startuml SequenceDiagram
+actor Player
+participant "Client App" as Client
+participant "Client Network" as CNet
+participant "Server Network" as SNet
+participant "Server App" as Server
+
+== Input Phase ==
+Player -> Client : Key Press
+Client -> Client : InputManager::pollInput()
+Client -> CNet : sendInput(InputPacket)
+CNet -> SNet : UDP Packet (Input)
+
+== Server Tick (60Hz) ==
+SNet -> Server : pollEvents()
+Server -> Server : Simulation::applyInput()
+Server -> Server : AuthoritativeLogic::validate()
+Server -> Server : Simulation::update(dt)
+Server -> SNet : broadcastSnapshot(Snapshot)
+SNet -> CNet : UDP Packet (Snapshot)
+
+== Client Tick (Prediction) ==
+Client -> Client : Simulation::applyInput() (Prediction)
+Client -> Client : Simulation::update(dt)
+
+== Client Render (Intersection) ==
+CNet -> Client : getInterpolatedState(now)
+Client -> Client : Renderer::draw(InterpolatedState)
+Client -> Player : Display Frame
+
+@enduml

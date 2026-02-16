@@ -1,0 +1,15 @@
+package "Server (src/server/)" as ServerPkg {
+    [ServerApp]
+    [ServerNetwork]
+    [AuthoritativeLogic]
+    [AISystem]
+
+    package "Phases (phases/)" {
+        [LobbyPhase]
+        [GamePhase]
+    }
+
+    [ServerApp] --> [LobbyPhase]
+    [ServerApp] --> [GamePhase]
+    [AuthoritativeLogic] *-- [AISystem]
+}

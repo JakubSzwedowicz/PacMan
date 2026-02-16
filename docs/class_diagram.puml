@@ -1,0 +1,170 @@
+@startuml ClassDiagram
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package Core <<Rectangle>> {
+    class Simulation {
+        +fixedUpdate(registry, dt)
+    }
+    class MapsManagement {
+        +loadMap(mapId) : Map
+    }
+    class ProtocolDefinitions <<FlatBuffers>>
+
+    package "ECS" {
+        class Components <<POD>> {
+            Position { x, y }
+            Velocity { speed }
+            Direction { current, next }
+            Collider { width, height }
+            PlayerState { score, lives, isPowered }
+            GhostState { mode }
+        }
+        class MarkerTags <<empty>> {
+            PacManTag
+            GhostTag
+            PelletTag
+            PowerPelletTag
+            WallTag
+        }
+        class MovementSystem {
+            +update(registry, dt)
+        }
+        class CollisionSystem {
+            +update(registry)
+        }
+    }
+
+    Simulation ..> Components
+    Simulation ..> MovementSystem
+    Simulation ..> CollisionSystem
+    Simulation ..> MapsManagement
+}
+
+package Client <<Rectangle>> {
+    class ClientApp {
+        -window : Window
+        -screenManager : ScreenManager
+        -inputManager : InputManager
+        -clientNetwork : ClientNetwork
+        -renderer : Renderer
+        -uiOverlay : UIOverlay
+        +run()
+    }
+    class Window {
+        -renderWindow : sf::RenderWindow
+        +pollEvents()
+        +display()
+    }
+    class ScreenManager {
+        -currentScreen : unique_ptr<Screen>
+        +setScreen(screen)
+    }
+    abstract class Screen {
+        +{abstract} onEnter()
+        +{abstract} onExit()
+        +{abstract} handleInput(input)
+        +{abstract} update(dt)
+        +{abstract} draw(renderer)
+    }
+    class Renderer {
+        +draw(registry, window)
+    }
+    class InputManager {
+        +poll() : InputState
+    }
+    class ClientNetwork {
+        -jitterBuffer : deque<Snapshot>
+        +connect(ip, port)
+        +send(packet)
+        +receive() : Packet
+    }
+    class UIOverlay {
+        +drawMenu()
+        +drawHUD()
+        +drawDebug()
+    }
+
+    package "Screens" {
+        class MenuScreen
+        class LobbyScreen
+        class LoadingScreen
+        class GameScreen
+    }
+
+    ' Client internal relations
+    ClientApp *-- Window
+    ClientApp *-- ScreenManager
+    ClientApp *-- InputManager
+    ClientApp *-- ClientNetwork
+    ClientApp *-- Renderer
+    ClientApp *-- UIOverlay
+
+    ScreenManager o-- Screen
+    Screen <|-- MenuScreen
+    Screen <|-- LobbyScreen
+    Screen <|-- LoadingScreen
+    Screen <|-- GameScreen
+
+    ClientApp ..> "Core::Simulation"
+
+    Renderer ..> "Core::Components"
+    Renderer ..> "Core::MapsManagement"
+    ClientNetwork ..> "Core::ProtocolDefinitions"
+
+    GameScreen ..> "Core::Simulation"
+    GameScreen ..> "Core::Components"
+}
+
+package Server <<Rectangle>> {
+    class ServerApp {
+        -serverNetwork : ServerNetwork
+        -authoritativeLogic : AuthoritativeLogic
+        -currentPhase : Phase
+        +run()
+    }
+    class ServerNetwork {
+        +host(port)
+        +broadcast(packet)
+        +receive() : Packet
+    }
+    class AuthoritativeLogic {
+        -aiSystem : AISystem
+        +validateInput(input) : bool
+        +resolveGameRules(registry)
+    }
+    class AISystem {
+        +updateGhosts(registry)
+    }
+
+    package "Phases" {
+        class LobbyPhase {
+            +onEnter()
+            +update()
+            +onExit()
+        }
+        class GamePhase {
+            +onEnter()
+            +update()
+            +onExit()
+        }
+    }
+
+    ' Server internal relations
+    ServerApp *-- ServerNetwork
+    ServerApp *-- AuthoritativeLogic
+    AuthoritativeLogic *-- AISystem
+
+    ServerApp o-- LobbyPhase
+    ServerApp o-- GamePhase
+
+    ServerApp ..> "Core::Simulation"
+    ServerNetwork ..> "Core::ProtocolDefinitions"
+    AuthoritativeLogic ..> "Core::Components"
+    AISystem ..> "Core::Components"
+
+    GamePhase ..> "Core::Simulation"
+    GamePhase ..> "Core::Components"
+}
+
+@enduml

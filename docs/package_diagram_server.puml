@@ -1,0 +1,33 @@
+@startuml PackageDiagramServer
+skinparam componentStyle uml2
+top to bottom direction
+
+!include package_parts/_server.iuml
+!include package_parts/_core.iuml
+
+package "External Libraries" as ExtPkg {
+    [ENet] #LightBlue
+    [EnTT] #LightGreen
+    [FlatBuffers] #LightGreen
+    [Glaze] #LightYellow
+}
+
+' --- Layout ---
+ServerPkg -[hidden]down-> CorePkg
+CorePkg -[hidden]down-> ExtPkg
+
+' --- Server → Core ---
+[ServerApp] --> [Simulation]
+[ServerNetwork] ..> [ProtocolDefinitions]
+[AuthoritativeLogic] ..> [Components]
+[AISystem] ..> [Components]
+
+' --- Core → External ---
+[Simulation] ..> [EnTT] : ECS
+[MapsManagement] ..> [Glaze] : Map JSON
+[ProtocolDefinitions] ..> [FlatBuffers] : Protocol
+
+' --- Server → External ---
+[ServerNetwork] ..> [ENet] : UDP
+
+@enduml

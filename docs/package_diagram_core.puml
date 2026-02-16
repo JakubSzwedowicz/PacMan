@@ -1,0 +1,23 @@
+@startuml PackageDiagramCore
+skinparam componentStyle uml2
+top to bottom direction
+
+!include package_parts/_core.iuml
+
+package "External Libraries" as ExtPkg {
+    [EnTT] #LightGreen
+    [FlatBuffers] #LightGreen
+    [Glaze] #LightYellow
+    [SpdLog] #LightGray
+}
+
+' --- Layout ---
+CorePkg -[hidden]down-> ExtPkg
+
+' --- Core → External ---
+[Simulation] ..> [EnTT] : ECS
+[MapsManagement] ..> [Glaze] : Map JSON
+[ProtocolDefinitions] ..> [FlatBuffers] : Protocol
+CorePkg ..> [SpdLog] : Logging
+
+@enduml

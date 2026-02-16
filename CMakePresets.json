@@ -55,24 +55,50 @@
   ],
   "buildPresets": [
     {
-      "name": "app-debug",
-      "displayName": "App Debug Build",
+      "name": "all-debug",
+      "displayName": "Build All (Debug)",
+      "configurePreset": "debug",
+      "configuration": "Debug",
+      "jobs": 8
+    },
+    {
+      "name": "all-release",
+      "displayName": "Build All (Release)",
+      "configurePreset": "release",
+      "configuration": "Release",
+      "jobs": 8
+    },
+    {
+      "name": "client-debug",
+      "displayName": "Client Debug Build",
       "configurePreset": "debug",
       "configuration": "Debug",
       "jobs": 8,
-      "targets": [
-        "App"
-      ]
+      "targets": ["PacManClient"]
     },
     {
-      "name": "app-release",
-      "displayName": "App Release Build",
+      "name": "client-release",
+      "displayName": "Client Release Build",
       "configurePreset": "release",
       "configuration": "Release",
       "jobs": 8,
-      "targets": [
-        "App"
-      ]
+      "targets": ["PacManClient"]
+    },
+    {
+      "name": "server-debug",
+      "displayName": "Server Debug Build",
+      "configurePreset": "debug",
+      "configuration": "Debug",
+      "jobs": 8,
+      "targets": ["PacManServer"]
+    },
+    {
+      "name": "server-release",
+      "displayName": "Server Release Build",
+      "configurePreset": "release",
+      "configuration": "Release",
+      "jobs": 8,
+      "targets": ["PacManServer"]
     }
   ],
   "testPresets": [
@@ -108,7 +134,7 @@
         },
         {
           "type": "build",
-          "name": "app-debug"
+          "name": "all-debug"
         },
         {
           "type": "test",

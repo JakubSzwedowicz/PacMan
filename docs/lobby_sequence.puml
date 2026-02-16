@@ -1,0 +1,48 @@
+@startuml LobbySequence
+actor HostPlayer
+actor ClientPlayer
+participant "Server (Host)" as Server
+participant "Client (Joiner)" as Client
+
+== Game Creation ==
+HostPlayer -> Server : Host Game()
+Server -> Server : ENetHost_create()
+Server -> Server : Enter LobbyPhase
+Server -> Server : LobbyPhase::onEnter()
+
+== Joining ==
+ClientPlayer -> Client : Join Game(IP)
+Client -> Client : ENetHost_create()
+Client -> Client : ENetHost_connect(IP)
+Client -> Server : ENet Packet (Connect Request)
+
+Server -> Server : OnConnect()
+Server -> Server : Assign Peer ID
+Server -> Client : Packet (Welcome + LobbyInfo)
+Client -> Client : ScreenManager::setScreen(LobbyScreen)
+Client -> Client : LobbyScreen::updateUI(LobbyInfo)
+
+== Prepare Game (Loading) ==
+HostPlayer -> Server : Start Game()
+Server -> Server : Locked Lobby
+Server -> Server : Load Level Data
+Server -> Server : Transition to GamePhase
+Server -> Server : Spawn Entities (Authoritative Registration)
+Server -> Client : Packet (GameInit + MapID + Seed + InitialSnapshot)
+
+Client -> Client : ScreenManager::setScreen(LoadingScreen)
+Client -> Client : MapsManagement::loadMap(MapID)
+Client -> Client : Create Entities (GameScreen::onEnter)
+Client -> Client : Apply InitialSnapshot
+Client -> Server : Packet (ClientReady)
+
+Server -> Server : Wait for all ClientReady
+
+== Start Game (Go!) ==
+Server -> Client : Packet (GameStart)
+Client -> Client : ScreenManager::setScreen(GameScreen)
+note right of Client : Start Game Loop Updates
+
+== Gameplay ==
+note right of Server : Both sides now run GameLoop Sequence
+@enduml

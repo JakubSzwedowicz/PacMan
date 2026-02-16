@@ -1,0 +1,22 @@
+package "Client (src/client/)" as ClientPkg {
+    [ClientApp]
+    [ScreenManager]
+    [Window]
+    [Renderer]
+    [InputManager]
+    [ClientNetwork]
+    [UIOverlay]
+
+    package "Screens (screens/)" {
+        [MenuScreen]
+        [LobbyScreen]
+        [LoadingScreen]
+        [GameScreen]
+    }
+
+    [ClientApp] --> [ScreenManager]
+    [ScreenManager] --> [MenuScreen]
+    [ScreenManager] --> [LobbyScreen]
+    [ScreenManager] --> [LoadingScreen]
+    [ScreenManager] --> [GameScreen]
+}

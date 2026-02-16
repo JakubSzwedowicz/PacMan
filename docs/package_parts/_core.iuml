@@ -1,0 +1,15 @@
+package "Core (src/core/)" as CorePkg {
+    [Simulation]
+    [MapsManagement]
+    [ProtocolDefinitions]
+
+    package "ECS (ecs/)" {
+        [Components]
+        [MovementSystem]
+        [CollisionSystem]
+    }
+
+    [Simulation] ..> [Components]
+    [Simulation] ..> [MovementSystem]
+    [Simulation] ..> [CollisionSystem]
+}

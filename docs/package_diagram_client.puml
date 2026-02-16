@@ -1,0 +1,38 @@
+@startuml PackageDiagramClient
+skinparam componentStyle uml2
+top to bottom direction
+
+!include package_parts/_client.iuml
+!include package_parts/_core.iuml
+
+package "External Libraries" as ExtPkg {
+    [SFML] #LightBlue
+    [ENet] #LightBlue
+    [EnTT] #LightGreen
+    [FlatBuffers] #LightGreen
+    [Glaze] #LightYellow
+    [ImGui-SFML] #LightYellow
+}
+
+' --- Layout ---
+ClientPkg -[hidden]down-> CorePkg
+CorePkg -[hidden]down-> ExtPkg
+
+' --- Client → Core ---
+[ClientApp] --> [Simulation]
+[Renderer] ..> [Components]
+[ClientNetwork] ..> [ProtocolDefinitions]
+
+' --- Core → External ---
+[Simulation] ..> [EnTT] : ECS
+[MapsManagement] ..> [Glaze] : Map JSON
+[ProtocolDefinitions] ..> [FlatBuffers] : Protocol
+
+' --- Client → External ---
+[Renderer] ..> [SFML] : Graphics
+[Window] ..> [SFML] : Window
+[InputManager] ..> [SFML] : Input
+[ClientNetwork] ..> [ENet] : UDP
+[UIOverlay] ..> [ImGui-SFML] : UI
+
+@enduml

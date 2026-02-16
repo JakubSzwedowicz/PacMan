@@ -1,0 +1,9 @@
+package "External Libraries (vcpkg)" as ExtPkg {
+    [SFML] #LightBlue
+    [ENet] #LightBlue
+    [EnTT] #LightGreen
+    [FlatBuffers] #LightGreen
+    [Glaze] #LightYellow
+    [ImGui-SFML] #LightYellow
+    [SpdLog] #LightGray
+}
