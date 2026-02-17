@@ -2,12 +2,31 @@
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 
+package "Utils (vcpkg)" <<Rectangle>> {
+    abstract class "IPublisher<M>" as IPublisher {
+        #publish(message)
+    }
+    abstract class "ISubscriber<M>" as ISubscriber {
+        +{abstract} onUpdate(message)
+    }
+}
+
 package Core <<Rectangle>> {
     class Simulation {
-        +fixedUpdate(registry, dt)
+        +applyInput(registry, entityId, input)
+        +update(registry, dt)
     }
-    class MapsManagement {
-        +loadMap(mapId) : Map
+    class MapsManager {
+        +loadFromFile(path) : Map
+        +loadFromJson(json) : Map
+    }
+    class Map <<Glaze>> {
+        name, width, height, tileSize
+        tiles, pacmanSpawns, ghostSpawns
+    }
+    class Input <<POD>> {
+        tick : uint32
+        dir : Direction
     }
     class ProtocolDefinitions <<FlatBuffers>>
 
@@ -38,7 +57,7 @@ package Core <<Rectangle>> {
     Simulation ..> Components
     Simulation ..> MovementSystem
     Simulation ..> CollisionSystem
-    Simulation ..> MapsManagement
+    MapsManager ..> Map
 }
 
 package Client <<Rectangle>> {
@@ -71,13 +90,13 @@ package Client <<Rectangle>> {
         +draw(registry, window)
     }
     class InputManager {
-        +poll() : InputState
+        +poll() : Input
     }
     class ClientNetwork {
         -jitterBuffer : deque<Snapshot>
         +connect(ip, port)
+        +poll()
         +send(packet)
-        +receive() : Packet
     }
     class UIOverlay {
         +drawMenu()
@@ -107,13 +126,20 @@ package Client <<Rectangle>> {
     Screen <|-- GameScreen
 
     ClientApp ..> "Core::Simulation"
+    InputManager ..> "Core::Input"
 
     Renderer ..> "Core::Components"
-    Renderer ..> "Core::MapsManagement"
+    Renderer ..> "Core::MapsManager"
     ClientNetwork ..> "Core::ProtocolDefinitions"
 
     GameScreen ..> "Core::Simulation"
     GameScreen ..> "Core::Components"
+
+    ' Pub-Sub: ClientNetwork publishes, Screens subscribe
+    ClientNetwork ..|> "IPublisher" : publishes\nLobbyUpdate,\nGameInit,\nSnapshot
+    LobbyScreen ..|> "ISubscriber" : subscribes\nLobbyUpdate
+    LoadingScreen ..|> "ISubscriber" : subscribes\nGameInit
+    GameScreen ..|> "ISubscriber" : subscribes\nSnapshot
 }
 
 package Server <<Rectangle>> {
@@ -125,8 +151,9 @@ package Server <<Rectangle>> {
     }
     class ServerNetwork {
         +host(port)
+        +poll()
         +broadcast(packet)
-        +receive() : Packet
+        +send(peerId, packet)
     }
     class AuthoritativeLogic {
         -aiSystem : AISystem
@@ -165,6 +192,11 @@ package Server <<Rectangle>> {
 
     GamePhase ..> "Core::Simulation"
     GamePhase ..> "Core::Components"
+
+    ' Pub-Sub: ServerNetwork publishes, Phases subscribe
+    ServerNetwork ..|> "IPublisher" : publishes\nincoming packets
+    LobbyPhase ..|> "ISubscriber" : subscribes\nconnection events
+    GamePhase ..|> "ISubscriber" : subscribes\nInputPacket
 }
 
 @enduml

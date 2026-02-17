@@ -1,6 +1,6 @@
 package "Core (src/core/)" as CorePkg {
     [Simulation]
-    [MapsManagement]
+    [MapsManager]
     [ProtocolDefinitions]
 
     package "ECS (ecs/)" {

@@ -24,7 +24,7 @@ CorePkg -[hidden]down-> ExtPkg
 
 ' --- Core → External ---
 [Simulation] ..> [EnTT] : ECS
-[MapsManagement] ..> [Glaze] : Map JSON
+[MapsManager] ..> [Glaze] : Map JSON
 [ProtocolDefinitions] ..> [FlatBuffers] : Protocol
 
 ' --- Server → External ---

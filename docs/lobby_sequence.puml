@@ -31,7 +31,7 @@ Server -> Server : Spawn Entities (Authoritative Registration)
 Server -> Client : Packet (GameInit + MapID + Seed + InitialSnapshot)
 
 Client -> Client : ScreenManager::setScreen(LoadingScreen)
-Client -> Client : MapsManagement::loadMap(MapID)
+Client -> Client : MapsManager::loadMap(MapID)
 Client -> Client : Create Entities (GameScreen::onEnter)
 Client -> Client : Apply InitialSnapshot
 Client -> Server : Packet (ClientReady)
