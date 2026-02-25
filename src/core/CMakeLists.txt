@@ -1,15 +1,5 @@
-add_library(PacManCore STATIC
-    Placeholder.cpp
-)
+add_library(pacman_core INTERFACE)
+add_library(Core::Core ALIAS pacman_core)
+target_include_directories(pacman_core INTERFACE ${CMAKE_SOURCE_DIR}/src)
 
-target_include_directories(PacManCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
-
-target_link_libraries(PacManCore
-    PUBLIC
-        EnTT::EnTT
-        spdlog::spdlog
-        Utils::Utils
-    PRIVATE
-        flatbuffers::flatbuffers
-        glaze::glaze
-)
+add_subdirectory(maps)
