@@ -4,8 +4,8 @@
 
 #include <entt/entt.hpp>
 
-namespace pacman::core::systems {
+namespace pacman::core::ecs::systems {
 
-void resolveWallCollisions(entt::registry &registry, const Map &map);
+void resolveWallCollisions(entt::registry &registry, const maps::Map &map);
 
-} // namespace pacman::core::systems
+} // namespace pacman::core::ecs::systems

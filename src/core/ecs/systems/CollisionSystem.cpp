@@ -3,9 +3,9 @@
 
 #include <algorithm>
 
-namespace pacman::core::systems {
+namespace pacman::core::ecs::systems {
 
-void resolveWallCollisions(entt::registry &registry, const Map &map) {
+void resolveWallCollisions(entt::registry &registry, const maps::Map &map) {
   auto view = registry.view<ecs::Position, const ecs::Collider>();
 
   float ts = map.tileSize;
@@ -20,9 +20,9 @@ void resolveWallCollisions(entt::registry &registry, const Map &map) {
     float bottom = pos.y + col.height;
 
     int colMin = std::max(0, static_cast<int>(left / ts));
-    int colMax = std::min(map.width - 1, static_cast<int>(right / ts));
+    int colMax = std::min(static_cast<int>(map.width) - 1, static_cast<int>(right / ts));
     int rowMin = std::max(0, static_cast<int>(top / ts));
-    int rowMax = std::min(map.height - 1, static_cast<int>(bottom / ts));
+    int rowMax = std::min(static_cast<int>(map.height) - 1, static_cast<int>(bottom / ts));
 
     for (int row = rowMin; row <= rowMax; ++row) {
       for (int c = colMin; c <= colMax; ++c) {
@@ -68,4 +68,4 @@ void resolveWallCollisions(entt::registry &registry, const Map &map) {
   }
 }
 
-} // namespace pacman::core::systems
+} // namespace pacman::core::ecs::systems

@@ -1,7 +1,7 @@
 #include "core/ecs/systems/MovementSystem.hpp"
 #include "core/ecs/Components.hpp"
 
-namespace pacman::core::systems {
+namespace pacman::core::ecs::systems {
 
 void updateMovement(entt::registry &registry, float dt) {
   auto view =
@@ -40,4 +40,4 @@ void updateMovement(entt::registry &registry, float dt) {
   }
 }
 
-} // namespace pacman::core::systems
+} // namespace pacman::core::ecs::systems
