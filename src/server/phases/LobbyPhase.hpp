@@ -4,7 +4,6 @@
 #include "server/phases/Phase.hpp"
 
 #include "core/Config.hpp"
-#include "core/protocol/Packets.hpp"
 
 #include <Utils/Logging/Logger.h>
 #include <Utils/Logging/LoggerConfig.h>
@@ -19,8 +18,7 @@ class ServerApp;
 
 namespace pacman::server::phases {
 
-class LobbyPhase : public Phase,
-                   public network::INetworkEventHandler {
+class LobbyPhase : public Phase, public network::INetworkEventHandler {
 public:
   LobbyPhase(
       app::ServerApp &app, network::ServerNetwork &network,
