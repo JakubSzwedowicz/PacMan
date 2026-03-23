@@ -1,5 +1,6 @@
 #include "core/Config.hpp"
-#include "server/ServerApp.hpp"
+#include "server/app/ServerApp.hpp"
+#include "server/phases/LobbyPhase.hpp"
 
 #include <Utils/Config/ConfigParser/JsonConfigParser.h>
 #include <Utils/Logging/LoggerConfig.h>
@@ -9,7 +10,7 @@
 #include <memory>
 
 namespace {
-pacman::server::ServerApp *globalServerApp = nullptr;
+pacman::server::app::ServerApp *globalServerApp = nullptr;
 
 void signalHandler(int /*sig*/) {
   if (globalServerApp) {
@@ -38,11 +39,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  pacman::server::ServerApp app(std::move(config), std::move(loggerConfig));
+  pacman::server::app::ServerApp app(std::move(config), loggerConfig);
   globalServerApp = &app;
 
   std::signal(SIGINT, signalHandler);
   std::signal(SIGTERM, signalHandler);
+
+  app.setPhase(std::make_unique<pacman::server::phases::LobbyPhase>(
+      app, app.network(), app.config(), std::move(loggerConfig)));
 
   app.run();
 
