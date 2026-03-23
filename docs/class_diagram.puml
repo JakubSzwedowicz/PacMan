@@ -1,202 +1,352 @@
-@startuml ClassDiagram
+@startuml Application
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
+skinparam shadowing false
+title PacMan — Full Application Overview
+legend right
+  <<planned>> = designed, not yet implemented
+  Arrows: --> uses/depends   *-- owns   ..|> implements
+endlegend
 
+' ── Utils ────────────────────────────────────────────────────────────────────
 package "Utils (vcpkg)" <<Rectangle>> {
-    abstract class "IPublisher<M>" as IPublisher {
-        #publish(message)
-    }
-    abstract class "ISubscriber<M>" as ISubscriber {
-        +{abstract} onUpdate(message)
-    }
+  class Logger {
+    - m_name : string
+    --
+    + info(msg)
+    + error(msg)
+    + debug(msg)
+  }
+  class LoggerConfig {
+    + level : LogLevel
+    + sinks  : vector<Sink>
+    --
+  }
+  abstract class "IPublisher<M>" as IPublisher {
+    --
+    # publish(message)
+  }
+  abstract class "ISubscriber<M>" as ISubscriber {
+    --
+    + {abstract} onUpdate(message)
+  }
+  Logger --> LoggerConfig
 }
 
-package Core <<Rectangle>> {
-    class Simulation {
-        +applyInput(registry, entityId, input)
-        +update(registry, dt)
-    }
-    class MapsManager {
-        +loadFromFile(path) : Map
-        +loadFromJson(json) : Map
-    }
-    class Map <<Glaze>> {
-        name, width, height, tileSize
-        tiles, pacmanSpawns, ghostSpawns
-    }
-    class Input <<POD>> {
-        tick : uint32
-        dir : Direction
-    }
-    class ProtocolDefinitions <<FlatBuffers>>
+' ── Core ─────────────────────────────────────────────────────────────────────
+package "Core (src/core/)" <<Rectangle>> {
 
-    package "ECS" {
-        class Components <<POD>> {
-            Position { x, y }
-            Velocity { speed }
-            Direction { current, next }
-            Collider { width, height }
-            PlayerState { score, lives, isPowered }
-            GhostState { mode }
-        }
-        class MarkerTags <<empty>> {
-            PacManTag
-            GhostTag
-            PelletTag
-            PowerPelletTag
-            WallTag
-        }
-        class MovementSystem {
-            +update(registry, dt)
-        }
-        class CollisionSystem {
-            +update(registry)
-        }
+  package "maps" {
+    class Tile <<struct>> {
+      + pos : array<size_t, 2>
+      --
+      + col() : size_t
+      + row() : size_t
     }
-
-    Simulation ..> Components
-    Simulation ..> MovementSystem
-    Simulation ..> CollisionSystem
+    class Map <<struct>> {
+      + name         : string
+      + width        : size_t
+      + height       : size_t
+      + tileSize     : float
+      + minPlayers   : int
+      + tiles        : vector<string>
+      + pacmanSpawns : vector<Tile>
+      + ghostSpawns  : GhostSpawns
+      --
+      + isValid()    : string
+      + tileAt(c, r) : char
+    }
+    class MapsManager <<utility>> {
+      - {static} m_logger : Logger
+      --
+      + {static} loadFromFile(path) : expected<Map, string>
+      + {static} loadFromJson(json) : expected<Map, string>
+    }
     MapsManager ..> Map
+  }
+
+  package "ecs" {
+    class Position <<component>> {
+      + x : float
+      + y : float
+      --
+    }
+    class Velocity <<component>> {
+      + speed : float
+      --
+    }
+    class DirectionState <<component>> {
+      + current : Direction
+      + next    : Direction
+      --
+    }
+    class Collider <<component>> {
+      + width  : float
+      + height : float
+      --
+    }
+    class PlayerState <<component>> {
+      + score     : int
+      + lives     : int
+      + isPowered : bool
+      --
+    }
+    class GhostState <<component>> {
+      + mode : Mode
+      --
+      enum Mode { Chase, Scatter, Frightened, Eaten }
+    }
+    class PacManTag      <<marker>>
+    class GhostTag       <<marker>>
+    class PelletTag      <<marker>>
+    class PowerPelletTag <<marker>>
+    class WallTag        <<marker>>
+  }
+
+  package "simulation" {
+    class Simulation {
+      - m_logger : Logger
+      --
+      + applyInput(registry, entity, input)
+      + update(registry, dt, map)
+    }
+    Simulation ..> Map
+  }
 }
 
-package Client <<Rectangle>> {
-    class ClientApp {
-        -window : Window
-        -screenManager : ScreenManager
-        -inputManager : InputManager
-        -clientNetwork : ClientNetwork
-        -renderer : Renderer
-        -uiOverlay : UIOverlay
-        +run()
-    }
-    class Window {
-        -renderWindow : sf::RenderWindow
-        +pollEvents()
-        +display()
-    }
-    class ScreenManager {
-        -currentScreen : unique_ptr<Screen>
-        +setScreen(screen)
-    }
-    abstract class Screen {
-        +{abstract} onEnter()
-        +{abstract} onExit()
-        +{abstract} handleInput(input)
-        +{abstract} update(dt)
-        +{abstract} draw(renderer)
-    }
-    class Renderer {
-        +draw(registry, window)
-    }
-    class InputManager {
-        +poll() : Input
-    }
-    class ClientNetwork {
-        -jitterBuffer : deque<Snapshot>
-        +connect(ip, port)
-        +poll()
-        +send(packet)
-    }
-    class UIOverlay {
-        +drawMenu()
-        +drawHUD()
-        +drawDebug()
-    }
+' ── Server ───────────────────────────────────────────────────────────────────
+package "Server (src/server/)" <<Rectangle>> {
 
-    package "Screens" {
-        class MenuScreen
-        class LobbyScreen
-        class LoadingScreen
-        class GameScreen
-    }
+  class ServerConfig <<struct>> {
+    + port             : int
+    + mapPath          : string
+    + maxPlayers       : int
+    + tickRate         : int
+    + renderAscii      : bool
+    + renderIntervalMs : int
+    --
+  }
 
-    ' Client internal relations
-    ClientApp *-- Window
-    ClientApp *-- ScreenManager
-    ClientApp *-- InputManager
-    ClientApp *-- ClientNetwork
-    ClientApp *-- Renderer
-    ClientApp *-- UIOverlay
+  class ServerApp {
+    - m_config       : ServerConfig
+    - m_network      : ServerNetwork
+    - m_currentPhase : unique_ptr<Phase>
+    - m_logger       : Logger
+    --
+    + run()
+    + stop()
+    + setPhase(phase)
+    + network() : ServerNetwork&
+    + config()  : ServerConfig&
+  }
 
-    ScreenManager o-- Screen
-    Screen <|-- MenuScreen
-    Screen <|-- LobbyScreen
-    Screen <|-- LoadingScreen
-    Screen <|-- GameScreen
+  interface INetworkEventHandler {
+    --
+    + onPlayerConnect(id)
+    + onPlayerDisconnect(id)
+    + onLobbyReady(id, ready)
+    + onReadyToPlay(id)
+    + onPlayerInput(packet)
+  }
 
-    ClientApp ..> "Core::Simulation"
-    InputManager ..> "Core::Input"
+  class ServerNetwork {
+    - m_impl    : Impl
+    - m_handler : INetworkEventHandler*
+    --
+    + start(port, maxClients) : bool
+    + stop()
+    + setHandler(h)
+    + clearHandler()
+    + broadcastSnapshot(pkt)
+    + poll()
+  }
 
-    Renderer ..> "Core::Components"
-    Renderer ..> "Core::MapsManager"
-    ClientNetwork ..> "Core::ProtocolDefinitions"
+  abstract class Phase {
+    --
+    + {abstract} onEnter()
+    + {abstract} onExit()
+    + {abstract} update(dt)
+  }
 
-    GameScreen ..> "Core::Simulation"
-    GameScreen ..> "Core::Components"
+  class LobbyPhase {
+    - m_slots       : PlayerSlot[4]
+    - m_playerCount : uint8_t
+    --
+    + onEnter()
+    + onExit()
+    + update(dt)
+  }
 
-    ' Pub-Sub: ClientNetwork publishes, Screens subscribe
-    ClientNetwork ..|> "IPublisher" : publishes\nLobbyUpdate,\nGameInit,\nSnapshot
-    LobbyScreen ..|> "ISubscriber" : subscribes\nLobbyUpdate
-    LoadingScreen ..|> "ISubscriber" : subscribes\nGameInit
-    GameScreen ..|> "ISubscriber" : subscribes\nSnapshot
+  class GamePhase {
+    - m_registry   : entt::registry
+    - m_simulation : Simulation
+    - m_aiSystem   : AISystem
+    - m_rules      : AuthoritativeLogic
+    --
+    + onEnter()
+    + onExit()
+    + update(dt)
+  }
+
+  class AISystem {
+    - m_phaseTimer : GhostPhaseTimer
+    --
+    + update(registry, map, dt)
+    + onPowerPelletEaten()
+  }
+
+  class AuthoritativeLogic <<planned>> {
+    --
+    + applyRules(registry, map, dt)
+  }
+
+  class AsciiRenderer <<planned>> {
+    --
+    + render(registry, map)
+  }
+
+  ServerApp     *-- ServerNetwork
+  ServerApp     *-- Phase
+  ServerNetwork --> INetworkEventHandler
+  LobbyPhase    ..|> Phase
+  LobbyPhase    ..|> INetworkEventHandler
+  GamePhase     ..|> Phase
+  GamePhase     ..|> INetworkEventHandler
+  GamePhase     *-- AISystem
+  GamePhase     *-- AuthoritativeLogic
+
+  ServerApp  --> ServerConfig : uses >
+  GamePhase  --> Simulation   : uses >
+  AISystem   --> Map          : uses >
+  AsciiRenderer --> Map       : uses >
 }
 
-package Server <<Rectangle>> {
-    class ServerApp {
-        -serverNetwork : ServerNetwork
-        -authoritativeLogic : AuthoritativeLogic
-        -currentPhase : Phase
-        +run()
-    }
-    class ServerNetwork {
-        +host(port)
-        +poll()
-        +broadcast(packet)
-        +send(peerId, packet)
-    }
-    class AuthoritativeLogic {
-        -aiSystem : AISystem
-        +validateInput(input) : bool
-        +resolveGameRules(registry)
-    }
-    class AISystem {
-        +updateGhosts(registry)
-    }
+' ── Client ───────────────────────────────────────────────────────────────────
+package "Client (src/client/)" <<Rectangle>> {
 
-    package "Phases" {
-        class LobbyPhase {
-            +onEnter()
-            +update()
-            +onExit()
-        }
-        class GamePhase {
-            +onEnter()
-            +update()
-            +onExit()
-        }
-    }
+  class ClientConfig <<struct>> {
+    + windowWidth   : int
+    + windowHeight  : int
+    + playerName    : string
+    + serverAddress : string
+    + serverPort    : int
+    --
+  }
 
-    ' Server internal relations
-    ServerApp *-- ServerNetwork
-    ServerApp *-- AuthoritativeLogic
-    AuthoritativeLogic *-- AISystem
+  class ClientApp {
+    - m_window        : Window
+    - m_screenManager : ScreenManager
+    - m_inputManager  : InputManager
+    - m_uiOverlay     : UIOverlay
+    --
+    + run()
+  }
 
-    ServerApp o-- LobbyPhase
-    ServerApp o-- GamePhase
+  interface Screen {
+    --
+    + {abstract} onEnter()
+    + {abstract} onExit()
+    + {abstract} handleEvent(event)
+    + {abstract} update(dt)
+    + {abstract} draw(window)
+  }
 
-    ServerApp ..> "Core::Simulation"
-    ServerNetwork ..> "Core::ProtocolDefinitions"
-    AuthoritativeLogic ..> "Core::Components"
-    AISystem ..> "Core::Components"
+  class ScreenManager {
+    - m_currentScreen : unique_ptr<Screen>
+    --
+    + setScreen(screen)
+    + applyPendingTransition()
+  }
 
-    GamePhase ..> "Core::Simulation"
-    GamePhase ..> "Core::Components"
+  class InputManager {
+    - m_currentDirection : Direction
+    --
+    + poll(tick) : Input
+  }
 
-    ' Pub-Sub: ServerNetwork publishes, Phases subscribe
-    ServerNetwork ..|> "IPublisher" : publishes\nincoming packets
-    LobbyPhase ..|> "ISubscriber" : subscribes\nconnection events
-    GamePhase ..|> "ISubscriber" : subscribes\nInputPacket
+  class Renderer {
+    --
+    + render(window, registry, map)
+  }
+
+  interface IClientNetworkListener {
+    --
+    + {abstract} onConnected(assignedId)
+    + {abstract} onDisconnected()
+    + {abstract} onLobbyState(packet)
+    + {abstract} onGameStart(packet)
+    + {abstract} onGameSnapshot(packet)
+    + {abstract} onRoundEnd(packet)
+    + {abstract} onServerShutdown(packet)
+  }
+
+  class ClientNetwork <<planned>> {
+    - m_impl     : Impl
+    - m_listener : IClientNetworkListener*
+    --
+    + connect(host, port) : bool
+    + setListener(listener)
+    + sendInput(packet)
+    + poll()
+  }
+
+  class MenuScreen {
+    - m_mapPath    : string
+    - m_shouldQuit : bool
+    --
+    + shouldQuit() : bool
+  }
+  class LobbyScreen {
+    - m_network       : ClientNetwork&
+    - m_localPlayerId : PlayerId
+    - m_isHost        : bool
+    --
+  }
+  class LoadingScreen {
+    - m_network       : ClientNetwork&
+    - m_mapParsed     : bool
+    --
+  }
+  class GameScreen {
+    - m_registry   : entt::registry
+    - m_map        : Map
+    - m_simulation : Simulation
+    - m_renderer   : Renderer
+    --
+  }
+  class ResultsScreen {
+    - m_network       : ClientNetwork*
+    - m_localPlayerId : PlayerId
+    --
+  }
+
+  class ProcessSpawner <<utility planned>> {
+    --
+    + {static} spawn(exe, args)
+    + {static} findServerBinary()
+  }
+
+  ClientApp     *-- ScreenManager
+  ClientApp     *-- InputManager
+  ScreenManager *-- Screen
+  ClientNetwork --> IClientNetworkListener
+
+  MenuScreen    ..|> Screen
+  LobbyScreen   ..|> Screen
+  LobbyScreen   ..|> IClientNetworkListener
+  LoadingScreen ..|> Screen
+  LoadingScreen ..|> IClientNetworkListener
+  GameScreen    ..|> Screen
+  ResultsScreen ..|> Screen
+  GameScreen    *-- Renderer
+
+  ClientApp     --> ClientConfig  : uses >
+  GameScreen    --> Simulation    : uses >
+  GameScreen    --> Map           : uses >
+  Renderer      --> Map           : uses >
+  LobbyScreen   --> ClientNetwork : uses >
+  LoadingScreen --> ClientNetwork : uses >
+  MenuScreen    ..> ProcessSpawner : spawns server >
 }
 
 @enduml

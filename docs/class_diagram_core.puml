@@ -1,0 +1,247 @@
+@startuml Core
+skinparam packageStyle rectangle
+skinparam classBackgroundColor #EEF3FF
+skinparam classBorderColor #5566AA
+skinparam arrowColor #334499
+skinparam shadowing false
+title Core — pacman::core
+note "ServerConfig / ClientConfig are defined in core/Config.hpp\nbut logically belong to their respective packages.\nSee class_diagram_server.puml and class_diagram_client.puml." as ConfigNote
+
+package "core" {
+
+  ' ── maps ────────────────────────────────────────────────────────────────
+  package "maps" {
+    class Tile <<struct>> {
+      + pos : array<size_t, 2>
+      --
+      + col()              : size_t
+      + row()              : size_t
+      + operator==(Tile)   : bool
+    }
+
+    class GhostSpawns <<struct>> {
+      + blinky : Tile
+      + pinky  : Tile
+      + inky   : Tile
+      + clyde  : Tile
+      --
+    }
+
+    class Map <<struct>> {
+      + name         : string
+      + width        : size_t
+      + height       : size_t
+      + tileSize     : float
+      + minPlayers   : int
+      + tiles        : vector<string>
+      + pacmanSpawns : vector<Tile>
+      + ghostSpawns  : GhostSpawns
+      --
+      + isValid()    : string
+      + tileAt(c, r) : char
+    }
+
+    class MapsManager <<utility>> {
+      - {static} m_logger : Logger
+      --
+      + {static} loadFromFile(path) : expected<Map, string>
+      + {static} loadFromJson(json) : expected<Map, string>
+      - {static} validate(map)      : expected<void, string>
+    }
+  }
+
+  ' ── ecs ─────────────────────────────────────────────────────────────────
+  package "ecs" {
+
+    enum Direction {
+      Up
+      Down
+      Left
+      Right
+      None
+    }
+
+    enum GhostType {
+      Blinky = 0
+      Pinky  = 1
+      Inky   = 2
+      Clyde  = 3
+    }
+
+    class Input <<struct>> {
+      + tick : Tick
+      + dir  : Direction
+      --
+    }
+
+    class Position <<component>> {
+      + x : float
+      + y : float
+      --
+    }
+
+    class Velocity <<component>> {
+      + speed : float
+      --
+    }
+
+    class DirectionState <<component>> {
+      + current : Direction
+      + next    : Direction
+      --
+    }
+
+    class Collider <<component>> {
+      + width  : float
+      + height : float
+      --
+    }
+
+    class PlayerState <<component>> {
+      + score     : int
+      + lives     : int
+      + isPowered : bool
+      --
+    }
+
+    class GhostState <<component>> {
+      + mode : Mode
+      --
+      enum Mode { Chase, Scatter, Frightened, Eaten }
+    }
+
+    class PacManTag      <<marker>>
+    class GhostTag       <<marker>>
+    class PelletTag      <<marker>>
+    class PowerPelletTag <<marker>>
+    class WallTag        <<marker>>
+
+    ' ── systems ───────────────────────────────────────────────────────────
+    package "systems" {
+      class MovementSystem <<utility>> {
+        --
+        + {static} updateMovement(registry, dt)
+      }
+
+      class CollisionSystem <<utility>> {
+        --
+        + {static} resolveWallCollisions(registry, map)
+      }
+    }
+  }
+
+  ' ── simulation ──────────────────────────────────────────────────────────
+  package "simulation" {
+    class Simulation {
+      - m_logger : Logger
+      --
+      + applyInput(registry, entity, input)
+      + update(registry, dt, map)
+    }
+  }
+
+  ' ── protocol ────────────────────────────────────────────────────────────
+  package "protocol" {
+
+    class PlayerInfo <<struct>> {
+      + id        : PlayerId
+      + name      : string
+      + connected : bool
+      + ready     : bool
+      --
+    }
+
+    class EntityState <<struct>> {
+      + id    : PlayerId
+      + x, y  : float
+      + dir   : Direction
+      + score : int
+      + lives : int
+      + alive : bool
+      --
+    }
+
+    ' Named "GhostStateSnapshot" in diagram to avoid clash with ecs::GhostState.
+    ' Actual C++ type: pacman::core::protocol::GhostState
+    class GhostStateSnapshot <<struct>> {
+      + type : GhostType
+      + x, y : float
+      + dir  : Direction
+      + mode : uint8_t
+      --
+    }
+
+    class LobbyStatePacket <<packet>> {
+      + players     : PlayerInfo[4]
+      + playerCount : uint8_t
+      --
+    }
+
+    class LobbyReadyPacket <<packet>> {
+      + playerId : PlayerId
+      + ready    : bool
+      --
+    }
+
+    class GameStartPacket <<packet>> {
+      + mapJson          : string
+      + spawnPositions   : Tile[4]
+      + playerIds        : PlayerId[4]
+      + playerCount      : uint8_t
+      + assignedPlayerId : PlayerId
+      --
+    }
+
+    class ReadyToPlayPacket <<packet>> {
+      + playerId : PlayerId
+      --
+    }
+
+    class PlayerInputPacket <<packet>> {
+      + tick     : Tick
+      + playerId : PlayerId
+      + dir      : Direction
+      --
+    }
+
+    class GameSnapshotPacket <<packet>> {
+      + tick        : Tick
+      + players     : EntityState[4]
+      + ghosts      : GhostStateSnapshot[4]
+      + playerCount : uint8_t
+      --
+    }
+
+    class RoundEndPacket <<packet>> {
+      + finalScores : EntityState[4]
+      + playerCount : uint8_t
+      + winnerId    : PlayerId
+      --
+    }
+
+    class ServerShutdownPacket <<packet>> {
+      + reason : string
+      --
+    }
+  }
+}
+
+' ── Relationships ────────────────────────────────────────────────────────────
+
+Map         *-- GhostSpawns
+Map         *-- "0..*" Tile
+GhostSpawns *-- "4"    Tile
+MapsManager ..>        Map                 : creates
+
+CollisionSystem ..> Map
+
+Simulation ..> MovementSystem
+Simulation ..> CollisionSystem
+
+LobbyStatePacket   *-- "0..4" PlayerInfo
+GameStartPacket    *-- "0..4" Tile
+GameSnapshotPacket *-- "0..4" EntityState
+GameSnapshotPacket *-- "4"    GhostStateSnapshot
+RoundEndPacket     *-- "0..4" EntityState
+
+@enduml

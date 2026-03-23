@@ -1,0 +1,226 @@
+@startuml Server
+skinparam packageStyle rectangle
+skinparam classBackgroundColor #FFF3EE
+skinparam classBorderColor #AA5522
+skinparam arrowColor #883311
+skinparam shadowing false
+title Server — pacman::server
+legend right
+  <<planned>> = designed, not yet implemented
+endlegend
+
+' ── Utils (external) ─────────────────────────────────────────────────────────
+package "utils" {
+  class Logger {
+    - m_name : string
+    --
+    + info(msg)
+    + error(msg)
+    + debug(msg)
+  }
+  class LoggerConfig {
+    + level : LogLevel
+    + sinks : vector<Sink>
+    --
+  }
+  Logger --> LoggerConfig
+}
+
+package "server" {
+
+  ' ── config ──────────────────────────────────────────────────────────────────
+  ' ServerConfig is defined in core/Config.hpp but logically belongs here.
+  class ServerConfig <<struct>> {
+    + port             : int
+    + mapPath          : string
+    + maxPlayers       : int
+    + tickRate         : int
+    + renderAscii      : bool
+    + renderIntervalMs : int
+    --
+  }
+
+  class ServerCliOverrides <<struct planned>> {
+    + mapPath          : optional<string>
+    + port             : optional<int>
+    + renderAscii      : optional<bool>
+    + renderIntervalMs : optional<int>
+    --
+  }
+
+  ' ── network ─────────────────────────────────────────────────────────────────
+  package "network" {
+    interface INetworkEventHandler {
+      + onPlayerConnect(id)      ' default: no-op
+      + onPlayerDisconnect(id)   ' default: no-op
+      + onLobbyReady(id, ready)  ' default: no-op
+      + onReadyToPlay(id)        ' default: no-op
+      + onPlayerInput(packet)    ' default: no-op
+    }
+    class NullNetworkEventHandler {
+      ' Null Object — absorbs all events silently
+      --
+    }
+    class ServerNetwork {
+      - m_impl    : Impl
+      - m_handler : INetworkEventHandler*
+      - m_logger  : Logger
+      --
+      + start(port, maxClients) : bool
+      + stop()
+      + isRunning() : bool
+      + setHandler(handler)
+      + clearHandler()
+      + sendLobbyState(packet)
+      + broadcastGameStart(pkt, ids, count)
+      + broadcastSnapshot(packet)
+      + broadcastRoundEnd(packet)
+      + broadcastShutdown(packet)
+      + poll()
+    }
+    NullNetworkEventHandler ..|> INetworkEventHandler
+    ServerNetwork --> INetworkEventHandler : dispatches to >
+    ServerNetwork *-- NullNetworkEventHandler : default handler
+  }
+
+  ' ── app ─────────────────────────────────────────────────────────────────────
+  package "app" {
+    class ServerApp {
+      - m_config       : ServerConfig
+      - m_network      : ServerNetwork
+      - m_currentPhase : unique_ptr<Phase>
+      - m_pendingPhase : unique_ptr<Phase>
+      - m_tick         : Tick
+      - m_running      : atomic<bool>
+      - m_logger       : Logger
+      --
+      + run()
+      + stop()
+      + setPhase(phase)
+      + network() : ServerNetwork&
+      + config()  : ServerConfig&
+    }
+    ServerApp *-- ServerNetwork : owns >
+  }
+
+  ' ── ai ──────────────────────────────────────────────────────────────────────
+  package "ai" {
+    class AISystem {
+      - m_phaseTimer : GhostPhaseTimer
+      - m_logger     : Logger
+      --
+      + update(registry, map, dt)
+      + onPowerPelletEaten()
+    }
+    class GhostPhaseTimer {
+      - m_phaseTimer      : float = 7.0
+      - m_inScatter       : bool  = true
+      - m_frightenedTimer : float = 0.0
+      - m_frightened      : bool  = false
+      --
+      + update(dt)
+      + onPowerPelletEaten()
+      + isScatter()    : bool
+      + isFrightened() : bool
+    }
+    class GhostBehavior <<utility>> {
+      --
+      + {static} nearestPacManTile(registry)                       : Tile
+      + {static} chooseDirection(registry, map, x, y, dir, target) : Direction
+      + {static} blinkyTarget(registry)                            : Tile
+      + {static} pinkyTarget(registry)                             : Tile
+      + {static} inkyTarget(registry, blinkyX, blinkyY)           : Tile
+      + {static} clydeTarget(registry, clydeX, clydeY)            : Tile
+    }
+    AISystem *-- GhostPhaseTimer
+    AISystem ..> GhostBehavior
+  }
+
+  ' ── render ──────────────────────────────────────────────────────────────────
+  package "render" {
+    class AsciiRenderer <<planned>> {
+      - m_logger : Logger
+      --
+      + render(registry, map)
+      - buildGrid(registry, map) : vector<string>
+      - printGrid(grid)
+    }
+  }
+
+  ' ── phases ──────────────────────────────────────────────────────────────────
+  package "phases" {
+    abstract class Phase {
+      --
+      + {abstract} onEnter()
+      + {abstract} onExit()
+      + {abstract} update(dt)
+    }
+
+    class AuthoritativeLogic <<planned>> {
+      - m_logger : Logger
+      --
+      + applyRules(registry, map, dt)
+      - checkPelletPickup(registry, map)
+      - checkPowerPellet(registry, map)
+      - checkGhostCollision(registry)
+      - checkWinCondition(registry) : bool
+    }
+
+    class LobbyPhase {
+      - m_slots       : PlayerSlot[4]
+      - m_playerCount : uint8_t
+      - m_app         : ServerApp&
+      - m_network     : ServerNetwork&
+      - m_config      : ServerConfig&
+      - m_logger      : Logger
+      --
+      + onEnter()
+      + onExit()
+      + update(dt)
+      - broadcastLobbyState()
+      - allPlayersReady() : bool
+      - startGame()
+    }
+
+    class GamePhase {
+      - m_registry            : entt::registry
+      - m_map                 : Map
+      - m_simulation          : Simulation
+      - m_aiSystem            : AISystem
+      - m_rules               : AuthoritativeLogic
+      - m_playerEntities      : map<PlayerId, entity>
+      - m_pendingInputs       : map<PlayerId, PlayerInputPacket>
+      - m_tick                : Tick
+      - m_snapshotAccumulator : float
+      - m_app                 : ServerApp&
+      - m_network             : ServerNetwork&
+      - m_logger              : Logger
+      --
+      + onEnter()
+      + onExit()
+      + update(dt)
+      - spawnEntities()
+      - applyPendingInputs()
+      - broadcastSnapshot()
+      - buildSnapshot()  : GameSnapshotPacket
+      - buildRoundEnd()  : RoundEndPacket
+      - isRoundOver()    : bool
+      - endRound()
+    }
+
+    LobbyPhase ..|> Phase
+    LobbyPhase ..|> INetworkEventHandler
+    GamePhase  ..|> Phase
+    GamePhase  ..|> INetworkEventHandler
+    GamePhase  *-- AISystem
+    GamePhase  *-- AuthoritativeLogic
+  }
+}
+
+' ── Cross-package relationships ───────────────────────────────────────────────
+ServerApp  *-- Phase        : owns (current + pending) >
+LobbyPhase --> ServerApp   : setPhase >
+GamePhase  --> ServerApp   : setPhase >
+ServerApp  --> ServerConfig : uses >
+
+@enduml

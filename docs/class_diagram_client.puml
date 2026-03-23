@@ -1,0 +1,280 @@
+@startuml Client
+skinparam packageStyle rectangle
+skinparam classBackgroundColor #EEFFEE
+skinparam classBorderColor #338833
+skinparam arrowColor #226622
+skinparam shadowing false
+title Client — pacman::client
+legend right
+  <<planned>> = designed, not yet implemented
+endlegend
+
+' ── Utils (external) ─────────────────────────────────────────────────────────
+package "utils" {
+  class Logger {
+    - m_name : string
+    --
+    + info(msg)
+    + error(msg)
+    + debug(msg)
+  }
+  class LoggerConfig {
+    + level : LogLevel
+    + sinks : vector<Sink>
+    --
+  }
+  Logger --> LoggerConfig
+}
+
+package "client" {
+
+  ' ── config ──────────────────────────────────────────────────────────────────
+  ' ClientConfig is defined in core/Config.hpp but logically belongs here.
+  class ClientConfig <<struct>> {
+    + windowWidth   : int
+    + windowHeight  : int
+    + playerName    : string
+    + serverAddress : string
+    + serverPort    : int
+    + mapPath       : string
+    --
+  }
+
+  ' ── ClientApp ──────────────────────────────────────────────────────────────
+  class ClientApp {
+    - m_config        : ClientConfig
+    - m_window        : Window
+    - m_screenManager : ScreenManager
+    - m_inputManager  : InputManager
+    - m_uiOverlay     : UIOverlay
+    - m_tick          : Tick
+    - m_shouldQuit    : bool
+    - m_logger        : Logger
+    --
+    + run()
+  }
+
+  ' ── screen ─────────────────────────────────────────────────────────────────
+  package "screen" {
+    interface Screen {
+      --
+      + {abstract} onEnter()
+      + {abstract} onExit()
+      + {abstract} handleEvent(event)
+      + {abstract} update(dt)
+      + {abstract} draw(window)
+    }
+    class ScreenManager {
+      - m_currentScreen : unique_ptr<Screen>
+      - m_pendingScreen : unique_ptr<Screen>
+      - m_logger        : Logger
+      --
+      + setScreen(screen)
+      + applyPendingTransition()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+      + hasScreen()        : bool
+      + getCurrentScreen() : Screen*
+    }
+    ScreenManager *-- Screen : owns (current) >
+  }
+
+  ' ── input ──────────────────────────────────────────────────────────────────
+  package "input" {
+    class InputManager {
+      - m_currentDirection : Direction
+      - m_logger           : Logger
+      --
+      + handleEvent(event)
+      + poll(tick) : Input
+    }
+  }
+
+  ' ── graphics ───────────────────────────────────────────────────────────────
+  package "graphics" {
+    class Window {
+      - m_renderWindow : sf::RenderWindow
+      --
+      + pollEvents(callback)
+      + getRenderWindow() : sf::RenderWindow&
+      + isOpen() : bool
+      + clear()
+      + display()
+    }
+    class Renderer {
+      - m_logger : Logger
+      --
+      + render(window, registry, map)
+    }
+  }
+
+  ' ── ui ─────────────────────────────────────────────────────────────────────
+  package "ui" {
+    class UIOverlay {
+      - m_logger : Logger
+      --
+      + init(window)
+      + processEvent(window, event)
+      + update(window, dt)
+      + render(window)
+      + shutdown()
+    }
+  }
+
+  ' ── network ────────────────────────────────────────────────────────────────
+  ' All methods are pure virtual — screens provide inline empty bodies
+  ' for unused callbacks. Consider default-empty virtuals (à la
+  ' INetworkEventHandler) if ISP friction increases in Phase 4.
+  package "network" {
+    interface IClientNetworkListener {
+      --
+      + {abstract} onConnected(assignedId)
+      + {abstract} onDisconnected()
+      + {abstract} onLobbyState(packet)
+      + {abstract} onGameStart(packet)
+      + {abstract} onGameSnapshot(packet)
+      + {abstract} onRoundEnd(packet)
+      + {abstract} onServerShutdown(packet)
+    }
+    class ClientNetwork <<planned>> {
+      - m_impl     : Impl
+      - m_listener : IClientNetworkListener*
+      - m_logger   : Logger
+      --
+      + connect(host, port) : bool
+      + disconnect()
+      + isConnected() : bool
+      + setListener(listener)
+      + sendLobbyReady(ready)
+      + sendReadyToPlay()
+      + sendInput(packet)
+      + poll()
+    }
+    ClientNetwork --> IClientNetworkListener : notifies >
+  }
+
+  ' ── ProcessSpawner ─────────────────────────────────────────────────────────
+  class ProcessSpawner <<utility planned>> {
+    --
+    + {static} spawn(exePath, args) : ProcessHandle
+    + {static} findServerBinary()   : filesystem::path
+  }
+
+  ' ── screens ────────────────────────────────────────────────────────────────
+  package "screens" {
+    class MenuScreen {
+      - m_mapPath    : string
+      - m_shouldQuit : bool
+      - m_logger     : Logger
+      --
+      + onEnter()
+      + onExit()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+      + shouldQuit() : bool
+    }
+
+    class LobbyScreen {
+      - m_network       : ClientNetwork&
+      - m_localPlayerId : PlayerId
+      - m_isHost        : bool
+      - m_lobbyState    : LobbyStatePacket
+      - m_localReady    : bool
+      - m_logger        : Logger
+      --
+      + onEnter()
+      + onExit()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+      + onConnected(assignedId)
+      + onDisconnected()
+      + onLobbyState(packet)
+      + onGameStart(packet)
+      + onGameSnapshot(packet)
+      + onRoundEnd(packet)
+      + onServerShutdown(packet)
+    }
+
+    class LoadingScreen {
+      - m_network         : ClientNetwork&
+      - m_gameStart       : GameStartPacket
+      - m_localPlayerId   : PlayerId
+      - m_mapParsed       : bool
+      - m_assetsLoaded    : bool
+      - m_simInitialized  : bool
+      - m_readyToPlaySent : bool
+      - m_logger          : Logger
+      --
+      + onEnter()
+      + onExit()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+      + onConnected(assignedId)
+      + onDisconnected()
+      + onLobbyState(packet)
+      + onGameStart(packet)
+      + onGameSnapshot(packet)
+      + onRoundEnd(packet)
+      + onServerShutdown(packet)
+    }
+
+    class GameScreen {
+      - m_registry    : entt::registry
+      - m_map         : Map
+      - m_simulation  : Simulation
+      - m_renderer    : Renderer
+      - m_localPlayer : entt::entity
+      - m_lastInput   : Input
+      - m_logger      : Logger
+      --
+      + onEnter()
+      + onExit()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+      + setLastInput(input)
+    }
+
+    class ResultsScreen {
+      - m_network       : ClientNetwork*
+      - m_results       : RoundEndPacket
+      - m_localPlayerId : PlayerId
+      - m_isHost        : bool
+      - m_logger        : Logger
+      --
+      + onEnter()
+      + onExit()
+      + handleEvent(event)
+      + update(dt)
+      + draw(window)
+    }
+  }
+}
+
+' ── Relationships (all after package blocks) ──────────────────────────────────
+ClientApp *-- Window
+ClientApp *-- ScreenManager
+ClientApp *-- InputManager
+ClientApp *-- UIOverlay
+ClientApp --> ClientConfig : uses >
+
+MenuScreen    ..|> Screen
+LobbyScreen   ..|> Screen
+LobbyScreen   ..|> IClientNetworkListener
+LoadingScreen ..|> Screen
+LoadingScreen ..|> IClientNetworkListener
+GameScreen    ..|> Screen
+ResultsScreen ..|> Screen
+
+LobbyScreen   --> ClientNetwork : uses >
+LoadingScreen --> ClientNetwork : uses >
+ResultsScreen --> ClientNetwork : uses (optional) >
+GameScreen    *-- Renderer
+
+MenuScreen ..> ProcessSpawner : spawns server >
+
+@enduml
