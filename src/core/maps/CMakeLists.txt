@@ -1,7 +1,7 @@
-add_library(pacman_maps STATIC)
-add_library(Core::Maps ALIAS pacman_maps)
-target_sources(pacman_maps PRIVATE MapsManager.cpp)
-target_link_libraries(pacman_maps
+add_library(Maps STATIC)
+add_library(Core::Maps ALIAS Maps)
+target_sources(Maps PRIVATE MapsManager.cpp)
+target_link_libraries(Maps
     PUBLIC Core::Core
     PRIVATE glaze::glaze Utils::Utils
 )
