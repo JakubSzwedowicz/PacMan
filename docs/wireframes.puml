@@ -1,0 +1,103 @@
+@startsalt MenuScreen
+title Menu Główne
+{
+  {^" PacMan "
+    .
+    [       Host Game        ]
+    .
+    [       Join Game        ]
+    Adres IP hosta: | "192.168.1.100    "
+    .
+    --
+    .
+    [         Quit           ]
+    .
+  }
+}
+@endsalt
+
+@startsalt LobbyScreen
+title Lobby
+{
+  {^" Lobby "
+    {#
+      Gracz              | Status
+      Gracz 1 (Host)     | [X] Gotowy
+      Gracz 2            | [X] Gotowy
+      Gracz 3            | [ ] Czeka
+      (wolne)            | —
+    }
+    .
+    [ Gotowy / Nie gotowy ]
+    .
+    --
+    .
+    Tylko gospodarz (aktywny gdy wszyscy gotowi):
+    [       Rozpocznij       ]
+    .
+  }
+}
+@endsalt
+
+@startsalt LoadingScreen
+title Ekran ładowania
+{
+  {^" Ładowanie... "
+    .
+    [X] Pobieranie danych mapy od serwera
+    [X] Ładowanie zasobów graficznych
+    [X] Inicjalizacja symulacji (ECS)
+    [ ] Oczekiwanie na gotowość graczy  (2 / 3)
+    .
+    --
+    .
+    Proszę czekać...
+    .
+  }
+}
+@endsalt
+
+@startsalt GameScreen
+title Rozgrywka
+{
+  FPS: 144 (lokalnie) | Ping: 12 ms (RTT serwera)
+  --
+  {^" Plansza "
+    #############################
+    <Renderowana plansza>
+    #############################
+  }
+  --
+  {#
+    P1: ♥♥♥ | Wynik: 1240
+    P2: ♥♥○ | Wynik:  870
+    P3: ♥○○ | Wynik:  340
+    P4: ○○○ | WYELIMINOWANY
+  }
+  .
+  [Escape] – rozlacz i wróc do menu
+}
+@endsalt
+
+@startsalt ResultsScreen
+title Ekran wyników (koniec rundy)
+{
+  {^" Koniec rundy "
+    {#
+      Miejsce | Gracz          | Wynik
+      1.      | Gracz 1 (Host) | 1240 pkt
+      2.      | Gracz 2        |  870 pkt
+      3.      | Gracz 3        |  340 pkt
+      4.      | Gracz 4        |    0 pkt
+    }
+    .
+    --
+    .
+    [      Wróc do lobby      ]
+    .
+    Tylko gospodarz:
+    [      Nastepna runda     ]
+    .
+  }
+}
+@endsalt

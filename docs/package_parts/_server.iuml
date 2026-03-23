@@ -1,15 +1,37 @@
 package "Server (src/server/)" as ServerPkg {
-    [ServerApp]
-    [ServerNetwork]
-    [AuthoritativeLogic]
-    [AISystem]
+    package "app/" {
+        [ServerApp]
+    }
 
-    package "Phases (phases/)" {
+    package "network/" {
+        [ServerNetwork]
+        [INetworkEventHandler]
+    }
+
+    package "ai/" {
+        [AISystem]
+        [GhostPhaseTimer]
+        [GhostBehavior]
+    }
+
+    package "phases/" {
+        [Phase]
         [LobbyPhase]
         [GamePhase]
     }
 
-    [ServerApp] --> [LobbyPhase]
-    [ServerApp] --> [GamePhase]
-    [AuthoritativeLogic] *-- [AISystem]
+    [ServerApp] --> [ServerNetwork] : owns
+    [ServerApp] --> [Phase] : owns (current/pending)
+
+    [LobbyPhase] ..|> [Phase]
+    [LobbyPhase] ..|> [INetworkEventHandler]
+    [GamePhase]  ..|> [Phase]
+    [GamePhase]  ..|> [INetworkEventHandler]
+
+    [LobbyPhase] --> [ServerApp] : setPhase
+    [GamePhase]  --> [ServerApp] : setPhase
+    [GamePhase]  *-- [AISystem]
+
+    [AISystem] *-- [GhostPhaseTimer]
+    [AISystem] ..> [GhostBehavior]
 }

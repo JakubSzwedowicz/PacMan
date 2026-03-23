@@ -19,8 +19,8 @@ CorePkg -[hidden]down-> ExtPkg
 ' --- Server → Core ---
 [ServerApp] --> [Simulation]
 [ServerNetwork] ..> [ProtocolDefinitions]
-[AuthoritativeLogic] ..> [Components]
 [AISystem] ..> [Components]
+[GamePhase] ..> [Simulation]
 
 ' --- Core → External ---
 [Simulation] ..> [EnTT] : ECS
