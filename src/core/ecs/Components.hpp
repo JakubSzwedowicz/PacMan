@@ -6,6 +6,15 @@
 
 namespace pacman::core::ecs {
 
+enum class Direction : uint8_t { Up, Down, Left, Right, None };
+
+enum class GhostType : uint8_t { Blinky = 0, Pinky = 1, Inky = 2, Clyde = 3 };
+
+struct Input {
+  core::Tick tick;
+  Direction dir;
+};
+
 struct Position {
   float x = 0.0f;
   float y = 0.0f;
