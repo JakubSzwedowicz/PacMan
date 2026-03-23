@@ -1,0 +1,20 @@
+{
+    "name": "Test Map",
+    "width": 5,
+    "height": 5,
+    "tileSize": 32.0,
+    "tiles": [
+        "#####",
+        "#...#",
+        "#.o.#",
+        "#...#",
+        "#####"
+    ],
+    "pacmanSpawns": [{"data": [1, 1]}],
+    "ghostSpawns": {
+        "blinky": {"data": [3, 1]},
+        "pinky": {"data": [3, 3]},
+        "inky": {"data": [1, 3]},
+        "clyde": {"data": [0, 0]}
+    }
+}

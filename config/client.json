@@ -1,0 +1,8 @@
+{
+    "windowWidth": 800,
+    "windowHeight": 600,
+    "playerName": "Player",
+    "serverAddress": "127.0.0.1",
+    "serverPort": 7777,
+    "mapPath": "assets/maps/test.json"
+}

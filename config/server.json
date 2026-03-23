@@ -1,0 +1,6 @@
+{
+    "port": 7777,
+    "mapPath": "assets/maps/test.json",
+    "maxPlayers": 4,
+    "tickRate": 60.0
+}
