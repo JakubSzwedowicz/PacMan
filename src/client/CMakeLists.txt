@@ -1,13 +1,18 @@
+find_package(glaze CONFIG REQUIRED)
+find_package(Utils CONFIG REQUIRED)
+
 add_subdirectory(input)
 add_subdirectory(screen)
 add_subdirectory(graphics)
 add_subdirectory(ui)
+add_subdirectory(network)
 add_subdirectory(screens)
 
 add_executable(PacManClient)
 target_sources(PacManClient PRIVATE main.cpp ClientApp.cpp)
 target_link_libraries(PacManClient PRIVATE
     Client::Input
+    Client::Network
     Client::Screens
     Client::UI
     Core::Simulation
