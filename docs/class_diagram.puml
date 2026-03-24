@@ -1,4 +1,5 @@
 @startuml Application
+top to bottom direction
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam shadowing false
@@ -9,29 +10,8 @@ legend right
 endlegend
 
 ' ── Utils ────────────────────────────────────────────────────────────────────
-package "Utils (vcpkg)" <<Rectangle>> {
-  class Logger {
-    - m_name : string
-    --
-    + info(msg)
-    + error(msg)
-    + debug(msg)
-  }
-  class LoggerConfig {
-    + level : LogLevel
-    + sinks  : vector<Sink>
-    --
-  }
-  abstract class "IPublisher<M>" as IPublisher {
-    --
-    # publish(message)
-  }
-  abstract class "ISubscriber<M>" as ISubscriber {
-    --
-    + {abstract} onUpdate(message)
-  }
-  Logger --> LoggerConfig
-}
+' Utils package removed for brevity. See class_diagram_core.puml / class_diagram_server.puml
+' / class_diagram_client.puml for Logger, LoggerConfig, IPublisher<M>, ISubscriber<M>.
 
 ' ── Core ─────────────────────────────────────────────────────────────────────
 package "Core (src/core/)" <<Rectangle>> {
@@ -348,5 +328,9 @@ package "Client (src/client/)" <<Rectangle>> {
   LoadingScreen --> ClientNetwork : uses >
   MenuScreen    ..> ProcessSpawner : spawns server >
 }
+
+' ── Layout hints ─────────────────────────────────────────────────────────────
+"Server (src/server/)" -[hidden]-> "Core (src/core/)"
+"Core (src/core/)" -[hidden]-> "Client (src/client/)"
 
 @enduml
