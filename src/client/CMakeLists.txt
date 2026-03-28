@@ -1,5 +1,8 @@
 find_package(glaze CONFIG REQUIRED)
 find_package(Utils CONFIG REQUIRED)
+find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG REQUIRED)
+find_package(unofficial-enet CONFIG REQUIRED)
+find_package(ImGui-SFML CONFIG REQUIRED)
 
 add_subdirectory(input)
 add_subdirectory(screen)

@@ -1,5 +1,6 @@
 find_package(glaze CONFIG REQUIRED)
 find_package(Utils CONFIG REQUIRED)
+find_package(unofficial-enet CONFIG REQUIRED)
 
 add_subdirectory(network)
 add_subdirectory(app)
