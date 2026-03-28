@@ -8,10 +8,8 @@ struct ClientNetwork::Impl {
   // TODO: ENet host + peer
 };
 
-ClientNetwork::ClientNetwork(
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_impl(std::make_unique<Impl>()),
-      m_logger("ClientNetwork", std::move(loggerConfig)) {
+ClientNetwork::ClientNetwork()
+    : m_impl(std::make_unique<Impl>()) {
   LOG_I("ClientNetwork created");
 }
 

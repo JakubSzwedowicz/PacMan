@@ -8,12 +8,9 @@
 
 namespace pacman::client::screens {
 
-MenuScreen::MenuScreen(
-    screen::ScreenManager &screenManager,
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig,
-    std::string mapPath)
-    : m_screenManager(screenManager), m_loggerConfig(std::move(loggerConfig)),
-      m_mapPath(std::move(mapPath)), m_logger("MenuScreen", m_loggerConfig) {}
+MenuScreen::MenuScreen(screen::ScreenManager &screenManager,
+                       std::string mapPath)
+    : m_screenManager(screenManager), m_mapPath(std::move(mapPath)) {}
 
 void MenuScreen::onEnter() { LOG_I("MenuScreen entered"); }
 
@@ -48,7 +45,7 @@ void MenuScreen::draw(sf::RenderWindow & /*window*/) {
   if (ImGui::Button("Host Game", ImVec2(buttonWidth, 40))) {
     LOG_I("Host Game clicked");
     m_screenManager.setScreen(std::make_unique<GameScreen>(
-        m_screenManager, m_loggerConfig, m_mapPath));
+        m_screenManager, m_mapPath));
   }
 
   ImGui::Spacing();
@@ -56,7 +53,7 @@ void MenuScreen::draw(sf::RenderWindow & /*window*/) {
   if (ImGui::Button("Join Game", ImVec2(buttonWidth, 40))) {
     LOG_I("Join Game clicked");
     m_screenManager.setScreen(std::make_unique<GameScreen>(
-        m_screenManager, m_loggerConfig, m_mapPath));
+        m_screenManager, m_mapPath));
   }
 
   ImGui::Spacing();

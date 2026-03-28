@@ -2,7 +2,7 @@
 
 #include "core/maps/Map.hpp"
 
-#include <Utils/Logging/Logger.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <expected>
 #include <filesystem>
@@ -21,7 +21,7 @@ public:
 private:
   static std::expected<void, std::string> validate(const Map &map);
 
-  static inline Utils::Logging::Logger m_logger{"MapsManager"};
+  static inline Utils::Logging::LoggerSubscribed m_logger{"MapsManager"};
 };
 
 } // namespace pacman::core::maps

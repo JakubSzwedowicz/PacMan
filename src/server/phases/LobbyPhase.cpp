@@ -1,20 +1,33 @@
 #include "server/phases/LobbyPhase.hpp"
 #include "server/app/ServerApp.hpp"
+#include "server/phases/GamePhase.hpp"
+
+#include "core/maps/MapsManager.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
 
 namespace pacman::server::phases {
 
-LobbyPhase::LobbyPhase(
-    app::ServerApp &app, network::ServerNetwork &network,
-    const core::ServerConfig &config,
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_app(app), m_network(network), m_config(config),
-      m_logger("LobbyPhase", std::move(loggerConfig)) {}
+LobbyPhase::LobbyPhase(app::ServerApp &app, network::ServerNetwork &network)
+    : m_app(app), m_network(network) {}
 
 void LobbyPhase::onEnter() {
   LOG_I("LobbyPhase entered");
   m_network.setHandler(*this);
+
+  auto result = core::maps::MapsManager::loadFromFile(
+      m_app.config().mapPath.get());
+  if (!result) {
+    LOG_E("Failed to load map '{}': {}", m_app.config().mapPath.get(),
+          result.error());
+    return;
+  }
+  m_map = std::move(*result);
+
+  if (m_map->minPlayers == 0) {
+    LOG_I("minPlayers=0 — starting game immediately (server solo mode)");
+    startGame();
+  }
 }
 
 void LobbyPhase::onExit() {
@@ -60,7 +73,6 @@ void LobbyPhase::onLobbyReady(core::PlayerId id, bool ready) {
     }
   }
   // Convention: id==1 is the host (first peer to connect in the listen-server model).
-  // TODO: track host ID explicitly once ServerNetwork assigns peer IDs.
   if (id == 1 && allPlayersReady() && m_playerCount > 0) {
     startGame();
   }
@@ -78,16 +90,27 @@ void LobbyPhase::broadcastLobbyState() {
 
 bool LobbyPhase::allPlayersReady() const {
   for (int i = 0; i < m_playerCount; ++i) {
-    if (m_slots[i].connected && !m_slots[i].ready) {
-      return false;
-    }
+    if (m_slots[i].connected && !m_slots[i].ready) return false;
   }
   return true;
 }
 
 void LobbyPhase::startGame() {
-  LOG_I("All players ready — starting game");
-  // TODO: build player array, load map, create GamePhase, m_app.setPhase(...)
+  LOG_I("Starting game (playerCount={})", m_playerCount);
+
+  if (!m_map) {
+    LOG_E("Cannot start game: map not loaded");
+    return;
+  }
+
+  std::array<core::protocol::PlayerInfo, core::maxPlayers> players{};
+  for (int i = 0; i < m_playerCount; ++i) {
+    players[i] = {m_slots[i].id, m_slots[i].name, true, false};
+  }
+
+  m_app.setPhase(std::make_unique<GamePhase>(m_app, m_network, std::move(*m_map),
+                                              players, m_playerCount));
+  m_map.reset();
 }
 
 } // namespace pacman::server::phases

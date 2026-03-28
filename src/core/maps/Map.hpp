@@ -31,6 +31,7 @@ struct Map {
   Tile::Unit width = 0;
   Tile::Unit height = 0;
   float tileSize = 16.0f;
+  int minPlayers = 0;
   std::vector<TileRow> tiles;
   std::vector<Tile> pacmanSpawns;
   GhostSpawns ghostSpawns;
@@ -57,7 +58,7 @@ struct Map {
       return c < width && r < height;
     };
     auto emptyField = [&](Tile::Unit c, Tile::Unit r) {
-      return tileAt(c, r) == ' ';
+      return tileAt(c, r) != '#';
     };
 
     for (const auto &spawn : pacmanSpawns) {

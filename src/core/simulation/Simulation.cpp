@@ -7,7 +7,7 @@
 
 namespace pacman::core::simulation {
 
-Simulation::Simulation() : m_logger("Simulation") {
+Simulation::Simulation() {
   LOG_I("Simulation created");
 }
 

@@ -2,15 +2,15 @@
 
 #include "server/ai/AISystem.hpp"
 #include "server/network/ServerNetwork.hpp"
+#include "server/phases/AuthoritativeLogic.hpp"
 #include "server/phases/Phase.hpp"
+#include "server/render/AsciiRenderer.hpp"
 
-#include "core/Config.hpp"
 #include "core/maps/Map.hpp"
 #include "core/protocol/Packets.hpp"
 #include "core/simulation/Simulation.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <entt/entt.hpp>
 
@@ -24,14 +24,12 @@ class ServerApp;
 
 namespace pacman::server::phases {
 
-class GamePhase : public Phase,
-                  public network::INetworkEventHandler {
+class GamePhase : public Phase, public network::INetworkEventHandler {
 public:
-  GamePhase(
-      app::ServerApp &app, network::ServerNetwork &network, core::maps::Map map,
-      std::array<core::protocol::PlayerInfo, core::maxPlayers> players,
-      uint8_t playerCount,
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  GamePhase(app::ServerApp &app, network::ServerNetwork &network,
+            core::maps::Map map,
+            std::array<core::protocol::PlayerInfo, core::maxPlayers> players,
+            uint8_t playerCount);
 
   // Phase
   void onEnter() override;
@@ -58,6 +56,8 @@ private:
   entt::registry m_registry;
   core::simulation::Simulation m_simulation;
   ai::AISystem m_aiSystem;
+  AuthoritativeLogic m_rules;
+  render::AsciiRenderer m_asciiRenderer;
 
   std::array<core::protocol::PlayerInfo, core::maxPlayers> m_players{};
   uint8_t m_playerCount = 0;
@@ -69,7 +69,11 @@ private:
   float m_snapshotAccumulator = 0.0f;
   static constexpr float snapshotRate = 1.0f / 20.0f;
 
-  Utils::Logging::Logger m_logger;
+  bool m_renderAscii = false;
+  float m_renderInterval = 0.5f;
+  float m_renderAccumulator = 0.0f;
+
+  Utils::Logging::LoggerSubscribed m_logger{"GamePhase"};
 };
 
 } // namespace pacman::server::phases

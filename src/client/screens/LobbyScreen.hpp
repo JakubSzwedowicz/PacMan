@@ -6,10 +6,8 @@
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
-#include <memory>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -30,10 +28,9 @@ namespace pacman::client::screens {
 class LobbyScreen : public screen::Screen,
                     public network::IClientNetworkListener {
 public:
-  LobbyScreen(
-      screen::ScreenManager &screenManager, network::ClientNetwork &network,
-      core::PlayerId localPlayerId, bool isHost,
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  LobbyScreen(screen::ScreenManager &screenManager,
+              network::ClientNetwork &network, core::PlayerId localPlayerId,
+              bool isHost);
 
   // Screen
   void onEnter() override;
@@ -58,12 +55,11 @@ private:
   network::ClientNetwork &m_network;
   core::PlayerId m_localPlayerId;
   bool m_isHost;
-  std::shared_ptr<Utils::Logging::LoggerConfig> m_loggerConfig;
 
   core::protocol::LobbyStatePacket m_lobbyState{};
   bool m_localReady = false;
 
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"LobbyScreen"};
 };
 
 } // namespace pacman::client::screens

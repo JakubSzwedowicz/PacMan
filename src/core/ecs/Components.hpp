@@ -42,7 +42,8 @@ struct PlayerState {
 
 struct GhostState {
   enum class Mode : uint8_t { Chase, Scatter, Frightened, Eaten };
-  Mode mode = Mode::Chase;
+  Mode mode = Mode::Scatter;
+  GhostType type = GhostType::Blinky;
 };
 
 struct PacManTag {};

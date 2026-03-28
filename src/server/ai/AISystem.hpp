@@ -4,12 +4,9 @@
 
 #include "core/maps/Map.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <entt/entt.hpp>
-
-#include <memory>
 
 namespace pacman::server::ai {
 
@@ -19,8 +16,7 @@ namespace pacman::server::ai {
 // and writes back DirectionState::next for each ghost.
 class AISystem {
 public:
-  explicit AISystem(
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  AISystem();
 
   // Call once per server tick after MovementSystem has run.
   void update(entt::registry &registry, const core::maps::Map &map, float dt);
@@ -30,7 +26,7 @@ public:
 
 private:
   GhostPhaseTimer m_phaseTimer;
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"AISystem"};
 };
 
 } // namespace pacman::server::ai

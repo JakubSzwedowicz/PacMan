@@ -2,10 +2,9 @@
 
 #include "client/screen/Screen.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
-#include <memory>
+#include <string>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -15,9 +14,7 @@ namespace pacman::client::screens {
 
 class MenuScreen : public screen::Screen {
 public:
-  MenuScreen(screen::ScreenManager &screenManager,
-             std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig,
-             std::string mapPath);
+  MenuScreen(screen::ScreenManager &screenManager, std::string mapPath);
 
   void onEnter() override;
   void onExit() override;
@@ -29,10 +26,9 @@ public:
 
 private:
   screen::ScreenManager &m_screenManager;
-  std::shared_ptr<Utils::Logging::LoggerConfig> m_loggerConfig;
   std::string m_mapPath;
   bool m_shouldQuit = false;
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"MenuScreen"};
 };
 
 } // namespace pacman::client::screens

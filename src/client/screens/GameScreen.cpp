@@ -10,13 +10,10 @@
 
 namespace pacman::client::screens {
 
-GameScreen::GameScreen(
-    screen::ScreenManager &screenManager,
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig,
-    std::string mapPath)
-    : m_screenManager(screenManager), m_loggerConfig(std::move(loggerConfig)),
-      m_mapPath(std::move(mapPath)), m_simulation(), m_renderer(m_loggerConfig),
-      m_logger("GameScreen", m_loggerConfig) {}
+GameScreen::GameScreen(screen::ScreenManager &screenManager,
+                       std::string mapPath)
+    : m_screenManager(screenManager), m_mapPath(std::move(mapPath)),
+      m_simulation(), m_renderer() {}
 
 void GameScreen::onEnter() {
   LOG_I("GameScreen entered, loading map: {}", m_mapPath);
@@ -24,8 +21,8 @@ void GameScreen::onEnter() {
   auto result = core::maps::MapsManager::loadFromFile(m_mapPath);
   if (!result) {
     LOG_E("Failed to load map: {}", result.error());
-    m_screenManager.setScreen(std::make_unique<MenuScreen>(
-        m_screenManager, m_loggerConfig, m_mapPath));
+    m_screenManager.setScreen(
+        std::make_unique<MenuScreen>(m_screenManager, m_mapPath));
     return;
   }
 
@@ -45,8 +42,8 @@ void GameScreen::handleEvent(const sf::Event &event) {
   if (event.is<sf::Event::KeyPressed>()) {
     const auto *key = event.getIf<sf::Event::KeyPressed>();
     if (key && key->code == sf::Keyboard::Key::Escape) {
-      m_screenManager.setScreen(std::make_unique<MenuScreen>(
-          m_screenManager, m_loggerConfig, m_mapPath));
+      m_screenManager.setScreen(
+          std::make_unique<MenuScreen>(m_screenManager, m_mapPath));
     }
   }
 }

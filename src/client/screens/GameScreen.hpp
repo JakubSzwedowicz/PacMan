@@ -5,12 +5,10 @@
 #include "core/maps/Map.hpp"
 #include "core/simulation/Simulation.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <entt/entt.hpp>
 
-#include <memory>
 #include <string>
 
 namespace pacman::client::screen {
@@ -21,9 +19,7 @@ namespace pacman::client::screens {
 
 class GameScreen : public screen::Screen {
 public:
-  GameScreen(screen::ScreenManager &screenManager,
-             std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig,
-             std::string mapPath);
+  GameScreen(screen::ScreenManager &screenManager, std::string mapPath);
 
   void onEnter() override;
   void onExit() override;
@@ -37,7 +33,6 @@ private:
   void spawnEntitiesFromMap();
 
   screen::ScreenManager &m_screenManager;
-  std::shared_ptr<Utils::Logging::LoggerConfig> m_loggerConfig;
   std::string m_mapPath;
 
   entt::registry m_registry;
@@ -47,7 +42,7 @@ private:
   entt::entity m_localPlayer = entt::null;
   core::ecs::Input m_lastInput{0, core::ecs::Direction::None};
 
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"GameScreen"};
 };
 
 } // namespace pacman::client::screens

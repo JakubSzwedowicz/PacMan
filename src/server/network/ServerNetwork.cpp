@@ -16,10 +16,8 @@ struct ServerNetwork::Impl {
   // TODO: ENet host + peer map (PlayerId → ENetPeer*)
 };
 
-ServerNetwork::ServerNetwork(
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_impl(std::make_unique<Impl>()),
-      m_logger("ServerNetwork", std::move(loggerConfig)) {
+ServerNetwork::ServerNetwork()
+    : m_impl(std::make_unique<Impl>()) {
   clearHandler();
   LOG_I("ServerNetwork created");
 }
@@ -28,8 +26,11 @@ ServerNetwork::~ServerNetwork() { stop(); }
 
 bool ServerNetwork::start(uint16_t port, int maxClients) {
   LOG_I("Starting on port {} (maxClients={})", port, maxClients);
-  // TODO: enet_host_create
-  return false;
+  // TODO (Phase 4): enet_host_create — ENet not yet wired up.
+  // Return true so the game loop proceeds in server-solo mode (Phase 3).
+  (void)port;
+  (void)maxClients;
+  return true;
 }
 
 void ServerNetwork::stop() {

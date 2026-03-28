@@ -5,10 +5,8 @@
 namespace pacman::client::graphics {
 
 Window::Window(const std::string &title, unsigned int width,
-               unsigned int height,
-               std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_window(sf::VideoMode({width, height}), title),
-      m_logger("Window", std::move(loggerConfig)) {
+               unsigned int height)
+    : m_window(sf::VideoMode({width, height}), title) {
   LOG_I("Window created: {}x{}", width, height);
 }
 

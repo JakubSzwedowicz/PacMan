@@ -3,7 +3,7 @@
 #include "core/ecs/Components.hpp"
 #include "core/maps/Map.hpp"
 
-#include <Utils/Logging/Logger.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 #include <entt/entt.hpp>
 
 namespace pacman::core::simulation {
@@ -17,7 +17,7 @@ public:
   void update(entt::registry &registry, float dt, const maps::Map &map);
 
 private:
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"Simulation"};
 };
 
 } // namespace pacman::core::simulation

@@ -6,8 +6,7 @@
 
 namespace pacman::client::ui {
 
-UIOverlay::UIOverlay(std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_logger("UIOverlay", std::move(loggerConfig)) {
+UIOverlay::UIOverlay() {
   LOG_I("UIOverlay created");
 }
 

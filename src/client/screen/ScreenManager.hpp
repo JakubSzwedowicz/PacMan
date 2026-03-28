@@ -2,8 +2,7 @@
 
 #include "client/screen/Screen.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <memory>
 
@@ -11,8 +10,7 @@ namespace pacman::client::screen {
 
 class ScreenManager {
 public:
-  explicit ScreenManager(
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  ScreenManager();
 
   void setScreen(std::unique_ptr<Screen> screen);
   void applyPendingTransition();
@@ -27,7 +25,7 @@ public:
 private:
   std::unique_ptr<Screen> m_currentScreen;
   std::unique_ptr<Screen> m_pendingScreen;
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"ScreenManager"};
 };
 
 } // namespace pacman::client::screen

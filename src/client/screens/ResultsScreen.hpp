@@ -6,10 +6,8 @@
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
-#include <memory>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -24,12 +22,10 @@ namespace pacman::client::screens {
 // The connection stays alive so the host can restart from lobby.
 class ResultsScreen : public screen::Screen {
 public:
-  ResultsScreen(
-      screen::ScreenManager &screenManager,
-      network::ClientNetwork *network, // nullptr if offline
-      core::protocol::RoundEndPacket results, core::PlayerId localPlayerId,
-      bool isHost,
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  ResultsScreen(screen::ScreenManager &screenManager,
+                network::ClientNetwork *network, // nullptr if offline
+                core::protocol::RoundEndPacket results,
+                core::PlayerId localPlayerId, bool isHost);
 
   // Screen
   void onEnter() override;
@@ -44,9 +40,8 @@ private:
   core::protocol::RoundEndPacket m_results;
   core::PlayerId m_localPlayerId;
   bool m_isHost;
-  std::shared_ptr<Utils::Logging::LoggerConfig> m_loggerConfig;
 
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"ResultsScreen"};
 };
 
 } // namespace pacman::client::screens

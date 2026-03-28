@@ -6,10 +6,8 @@
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
-#include <memory>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -32,10 +30,10 @@ namespace pacman::client::screens {
 class LoadingScreen : public screen::Screen,
                       public network::IClientNetworkListener {
 public:
-  LoadingScreen(
-      screen::ScreenManager &screenManager, network::ClientNetwork &network,
-      core::protocol::GameStartPacket gameStart, core::PlayerId localPlayerId,
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  LoadingScreen(screen::ScreenManager &screenManager,
+                network::ClientNetwork &network,
+                core::protocol::GameStartPacket gameStart,
+                core::PlayerId localPlayerId);
 
   // Screen
   void onEnter() override;
@@ -60,7 +58,6 @@ private:
   network::ClientNetwork &m_network;
   core::protocol::GameStartPacket m_gameStart;
   core::PlayerId m_localPlayerId;
-  std::shared_ptr<Utils::Logging::LoggerConfig> m_loggerConfig;
 
   // Loading steps, ticked off in order during update()
   bool m_mapParsed = false;
@@ -68,7 +65,7 @@ private:
   bool m_simInitialized = false;
   bool m_readyToPlaySent = false;
 
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"LoadingScreen"};
 };
 
 } // namespace pacman::client::screens

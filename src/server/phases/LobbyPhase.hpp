@@ -3,13 +3,13 @@
 #include "server/network/ServerNetwork.hpp"
 #include "server/phases/Phase.hpp"
 
-#include "core/Config.hpp"
+#include "core/maps/Map.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace pacman::server::app {
@@ -20,10 +20,7 @@ namespace pacman::server::phases {
 
 class LobbyPhase : public Phase, public network::INetworkEventHandler {
 public:
-  LobbyPhase(
-      app::ServerApp &app, network::ServerNetwork &network,
-      const core::ServerConfig &config,
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  LobbyPhase(app::ServerApp &app, network::ServerNetwork &network);
 
   // Phase
   void onEnter() override;
@@ -42,7 +39,8 @@ private:
 
   app::ServerApp &m_app;
   network::ServerNetwork &m_network;
-  const core::ServerConfig &m_config;
+
+  std::optional<core::maps::Map> m_map; // loaded in onEnter()
 
   struct PlayerSlot {
     core::PlayerId id = 0;
@@ -53,7 +51,7 @@ private:
   std::array<PlayerSlot, core::maxPlayers> m_slots{};
   uint8_t m_playerCount = 0;
 
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"LobbyPhase"};
 };
 
 } // namespace pacman::server::phases

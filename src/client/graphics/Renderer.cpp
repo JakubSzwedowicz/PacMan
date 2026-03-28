@@ -8,8 +8,7 @@
 
 namespace pacman::client::graphics {
 
-Renderer::Renderer(std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_logger("Renderer", std::move(loggerConfig)) {
+Renderer::Renderer() {
   LOG_I("Renderer created");
 }
 

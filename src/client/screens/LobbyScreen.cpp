@@ -9,14 +9,11 @@
 
 namespace pacman::client::screens {
 
-LobbyScreen::LobbyScreen(
-    screen::ScreenManager &screenManager, network::ClientNetwork &network,
-    core::PlayerId localPlayerId, bool isHost,
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
+LobbyScreen::LobbyScreen(screen::ScreenManager &screenManager,
+                         network::ClientNetwork &network,
+                         core::PlayerId localPlayerId, bool isHost)
     : m_screenManager(screenManager), m_network(network),
-      m_localPlayerId(localPlayerId), m_isHost(isHost),
-      m_loggerConfig(std::move(loggerConfig)),
-      m_logger("LobbyScreen", m_loggerConfig) {}
+      m_localPlayerId(localPlayerId), m_isHost(isHost) {}
 
 void LobbyScreen::onEnter() {
   LOG_I("LobbyScreen entered");
@@ -86,7 +83,7 @@ void LobbyScreen::onLobbyState(const core::protocol::LobbyStatePacket &pkt) {
 void LobbyScreen::onGameStart(const core::protocol::GameStartPacket &pkt) {
   LOG_I("GameStart received — transitioning to LoadingScreen");
   m_screenManager.setScreen(std::make_unique<LoadingScreen>(
-      m_screenManager, m_network, pkt, m_localPlayerId, m_loggerConfig));
+      m_screenManager, m_network, pkt, m_localPlayerId));
 }
 void LobbyScreen::onGameSnapshot(const core::protocol::GameSnapshotPacket &) {}
 void LobbyScreen::onRoundEnd(const core::protocol::RoundEndPacket &) {}

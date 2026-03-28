@@ -3,11 +3,9 @@
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <cstdint>
-#include <memory>
 #include <string>
 
 namespace pacman::client::network {
@@ -42,8 +40,7 @@ public:
 // ---------------------------------------------------------------------------
 class ClientNetwork {
 public:
-  explicit ClientNetwork(
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  ClientNetwork();
   ~ClientNetwork();
 
   ClientNetwork(const ClientNetwork &) = delete;
@@ -72,7 +69,7 @@ private:
   struct Impl;
   std::unique_ptr<Impl> m_impl; // hides ENet headers from consumers
   IClientNetworkListener *m_listener = nullptr;
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"ClientNetwork"};
 };
 
 } // namespace pacman::client::network

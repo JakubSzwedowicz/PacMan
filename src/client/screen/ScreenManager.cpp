@@ -4,9 +4,7 @@
 
 namespace pacman::client::screen {
 
-ScreenManager::ScreenManager(
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_logger("ScreenManager", std::move(loggerConfig)) {
+ScreenManager::ScreenManager() {
   LOG_I("ScreenManager created");
 }
 

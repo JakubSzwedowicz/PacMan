@@ -9,14 +9,13 @@
 
 namespace pacman::client::screens {
 
-ResultsScreen::ResultsScreen(
-    screen::ScreenManager &screenManager, network::ClientNetwork *network,
-    core::protocol::RoundEndPacket results, core::PlayerId localPlayerId,
-    bool isHost, std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
+ResultsScreen::ResultsScreen(screen::ScreenManager &screenManager,
+                             network::ClientNetwork *network,
+                             core::protocol::RoundEndPacket results,
+                             core::PlayerId localPlayerId, bool isHost)
     : m_screenManager(screenManager), m_network(network),
       m_results(std::move(results)), m_localPlayerId(localPlayerId),
-      m_isHost(isHost), m_loggerConfig(std::move(loggerConfig)),
-      m_logger("ResultsScreen", m_loggerConfig) {}
+      m_isHost(isHost) {}
 
 void ResultsScreen::onEnter() { LOG_I("ResultsScreen entered"); }
 void ResultsScreen::onExit() { LOG_I("ResultsScreen exited"); }

@@ -6,9 +6,7 @@
 
 namespace pacman::client::input {
 
-InputManager::InputManager(
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
-    : m_logger("InputManager", std::move(loggerConfig)) {
+InputManager::InputManager() {
   LOG_I("InputManager created");
 }
 

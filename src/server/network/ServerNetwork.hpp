@@ -3,8 +3,7 @@
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
-#include <Utils/Logging/Logger.h>
-#include <Utils/Logging/LoggerConfig.h>
+#include <Utils/Logging/LoggerSubscribed.h>
 
 #include <cstdint>
 #include <memory>
@@ -35,8 +34,7 @@ public:
 // ---------------------------------------------------------------------------
 class ServerNetwork {
 public:
-  explicit ServerNetwork(
-      std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig = nullptr);
+  ServerNetwork();
   ~ServerNetwork();
 
   ServerNetwork(const ServerNetwork &) = delete;
@@ -70,7 +68,7 @@ private:
   struct Impl;
   std::unique_ptr<Impl> m_impl; // hides ENet headers from consumers
   INetworkEventHandler *m_handler = nullptr; // always points to valid handler
-  Utils::Logging::Logger m_logger;
+  Utils::Logging::LoggerSubscribed m_logger{"ServerNetwork"};
 };
 
 } // namespace pacman::server::network

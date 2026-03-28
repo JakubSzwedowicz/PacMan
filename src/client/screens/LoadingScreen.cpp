@@ -8,14 +8,12 @@
 
 namespace pacman::client::screens {
 
-LoadingScreen::LoadingScreen(
-    screen::ScreenManager &screenManager, network::ClientNetwork &network,
-    core::protocol::GameStartPacket gameStart, core::PlayerId localPlayerId,
-    std::shared_ptr<Utils::Logging::LoggerConfig> loggerConfig)
+LoadingScreen::LoadingScreen(screen::ScreenManager &screenManager,
+                             network::ClientNetwork &network,
+                             core::protocol::GameStartPacket gameStart,
+                             core::PlayerId localPlayerId)
     : m_screenManager(screenManager), m_network(network),
-      m_gameStart(std::move(gameStart)), m_localPlayerId(localPlayerId),
-      m_loggerConfig(std::move(loggerConfig)),
-      m_logger("LoadingScreen", m_loggerConfig) {}
+      m_gameStart(std::move(gameStart)), m_localPlayerId(localPlayerId) {}
 
 void LoadingScreen::onEnter() {
   LOG_I("LoadingScreen entered");
