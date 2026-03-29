@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/JakubSzwedowicz/vcpkg-registry",
-      "baseline": "46085f43738df400566629cd727a8c346874bdba",
+      "baseline": "f7e2b91bd5aeac68bd652020336b519de641c6dd",
       "packages": [
         "utils"
       ]

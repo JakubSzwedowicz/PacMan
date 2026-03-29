@@ -1,74 +1,71 @@
 #pragma once
 
 #include "core/Common.hpp"
+#include "core/network/ENetSourceProvider.hpp"
+#include "core/network/RawNetworkMessage.hpp"
 #include "core/protocol/Packets.hpp"
+#include "server/network/NetworkEvents.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Providers/QueuedResourceProvider.h>
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
+#include <Utils/Runnables/IRunnable.h>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 
 namespace pacman::server::network {
 
-// ---------------------------------------------------------------------------
-// INetworkEventHandler
-// Implemented by whichever Phase is currently active. All methods have
-// default empty bodies — phases only override what they care about.
-// ---------------------------------------------------------------------------
-class INetworkEventHandler {
+// Bridges ENet ↔ pub/sub.
+//
+// Receive path (IRunnable::run(), once per tick):
+//   ENetSourceProvider (ISourceProvider) → NetworkEventParser (IParser)
+//   → QueuedResourceProvider drains all events per tick
+//   → ServerNetwork publishes each to ISubscriber<ServerNetworkEvent>
+//
+// Send path: sendTo / broadcast delegate directly to ENetSourceProvider.
+//
+// Active phases subscribe via ISubscriber<ServerNetworkEvent> RAII.
+// In a future multithreaded phase, run() can be moved to its own thread.
+class ServerNetwork
+    : public Utils::PublishSubscribe::IPublisher<events::ServerNetworkEvent>,
+      public Utils::Runnables::IRunnable {
 public:
-  virtual ~INetworkEventHandler() = default;
+    ServerNetwork();
+    ~ServerNetwork();
 
-  virtual void onPlayerConnect(core::PlayerId /*id*/) {}
-  virtual void onPlayerDisconnect(core::PlayerId /*id*/) {}
-  virtual void onLobbyReady(core::PlayerId /*id*/, bool /*ready*/) {}
-  virtual void onReadyToPlay(core::PlayerId /*id*/) {}
-  virtual void onPlayerInput(const core::protocol::PlayerInputPacket &) {}
-};
+    ServerNetwork(const ServerNetwork &) = delete;
+    ServerNetwork &operator=(const ServerNetwork &) = delete;
+    ServerNetwork(ServerNetwork &&) = delete;
+    ServerNetwork &operator=(ServerNetwork &&) = delete;
 
-// ---------------------------------------------------------------------------
-// ServerNetwork
-// Wraps an ENet host. Owned by ServerApp; phases receive a reference.
-// Call poll() once per server tick to pump incoming ENet events.
-// Uses the Null Object pattern internally — m_handler is never null.
-// ---------------------------------------------------------------------------
-class ServerNetwork {
-public:
-  ServerNetwork();
-  ~ServerNetwork();
+    [[nodiscard]] bool start(uint16_t port, int maxClients);
+    void stop();
+    [[nodiscard]] bool isRunning() const;
 
-  ServerNetwork(const ServerNetwork &) = delete;
-  ServerNetwork &operator=(const ServerNetwork &) = delete;
-  ServerNetwork(ServerNetwork &&) = delete;
-  ServerNetwork &operator=(ServerNetwork &&) = delete;
+    // Outgoing (implementations added in Phase 4)
+    void sendLobbyState(const core::protocol::LobbyStatePacket &packet);
+    void broadcastGameStart(const core::protocol::GameStartPacket &templatePkt,
+                            const std::array<core::PlayerId, core::maxPlayers> &playerIds,
+                            uint8_t count);
+    void broadcastSnapshot(const core::protocol::GameSnapshotPacket &packet);
+    void broadcastRoundEnd(const core::protocol::RoundEndPacket &packet);
+    void broadcastShutdown(const core::protocol::ServerShutdownPacket &packet);
 
-  [[nodiscard]] bool start(uint16_t port, int maxClients);
-  void stop();
-  [[nodiscard]] bool isRunning() const;
-
-  // Register the active phase as the event handler.
-  void setHandler(INetworkEventHandler &handler);
-  // Reset to the internal no-op Null Object.
-  void clearHandler();
-
-  // Outgoing messages
-  void sendLobbyState(const core::protocol::LobbyStatePacket &packet);
-  void broadcastGameStart(
-      const core::protocol::GameStartPacket &templatePkt,
-      const std::array<core::PlayerId, core::maxPlayers> &playerIds,
-      uint8_t count);
-  void broadcastSnapshot(const core::protocol::GameSnapshotPacket &packet);
-  void broadcastRoundEnd(const core::protocol::RoundEndPacket &packet);
-  void broadcastShutdown(const core::protocol::ServerShutdownPacket &packet);
-
-  // Must be called once per server tick.
-  void poll();
+    // IRunnable — drains ENet, parses events, publishes to subscribers.
+    // Called once per server tick from ServerApp.
+    void run() override;
 
 private:
-  struct Impl;
-  std::unique_ptr<Impl> m_impl; // hides ENet headers from consumers
-  INetworkEventHandler *m_handler = nullptr; // always points to valid handler
-  Utils::Logging::LoggerSubscribed m_logger{"ServerNetwork"};
+    using EventProvider = Utils::Providers::QueuedResourceProvider<
+        events::ServerNetworkEvent,
+        core::network::RawNetworkMessage>;
+
+    std::unique_ptr<EventProvider> m_eventProvider;
+    core::network::ENetSourceProvider *m_enetSource = nullptr; // non-owning; owned by m_eventProvider
+
+    Utils::Logging::LoggerSubscribed m_logger{"ServerNetwork"};
 };
 
 } // namespace pacman::server::network

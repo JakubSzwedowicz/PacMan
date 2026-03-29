@@ -1,57 +1,64 @@
 #pragma once
 
+#include "server/network/NetworkEvents.hpp"
 #include "server/network/ServerNetwork.hpp"
 #include "server/phases/Phase.hpp"
 
 #include "core/maps/Map.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <array>
-#include <memory>
 #include <optional>
 #include <string>
 
-namespace pacman::server::app {
-class ServerApp;
-}
-
 namespace pacman::server::phases {
 
-class LobbyPhase : public Phase, public network::INetworkEventHandler {
+class LobbyPhase
+    : public Phase,
+      public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
 public:
-  LobbyPhase(app::ServerApp &app, network::ServerNetwork &network);
+    LobbyPhase(network::ServerNetwork &network, std::string mapPath, int maxPlayers);
 
-  // Phase
-  void onEnter() override;
-  void onExit() override;
-  void update(float dt) override;
+    // Phase
+    void onEnter() override;
+    void onExit() override;
 
-  // INetworkEventHandler — only lobby-relevant events
-  void onPlayerConnect(core::PlayerId id) override;
-  void onPlayerDisconnect(core::PlayerId id) override;
-  void onLobbyReady(core::PlayerId id, bool ready) override;
+    // Returns PhaseRunning until all players ready; then StartGameRequest.
+    PhaseRequest update(float dt) override;
+
+    // ISubscriber<ServerNetworkEvent>
+    void onUpdate(const network::events::ServerNetworkEvent &event) override;
 
 private:
-  void broadcastLobbyState();
-  [[nodiscard]] bool allPlayersReady() const;
-  void startGame();
+    void handleConnect(core::PlayerId id);
+    void handleDisconnect(core::PlayerId id);
+    void handleLobbyReady(core::PlayerId id, bool ready);
 
-  app::ServerApp &m_app;
-  network::ServerNetwork &m_network;
+    void broadcastLobbyState();
+    [[nodiscard]] bool allPlayersReady() const;
+    void requestStartGame(); // sets m_pendingRequest
 
-  std::optional<core::maps::Map> m_map; // loaded in onEnter()
+    network::ServerNetwork &m_network;
+    std::string m_mapPath;
+    int m_maxPlayers;
 
-  struct PlayerSlot {
-    core::PlayerId id = 0;
-    std::string name;
-    bool connected = false;
-    bool ready = false;
-  };
-  std::array<PlayerSlot, core::maxPlayers> m_slots{};
-  uint8_t m_playerCount = 0;
+    std::optional<core::maps::Map> m_map;
 
-  Utils::Logging::LoggerSubscribed m_logger{"LobbyPhase"};
+    // Set by subscriber callbacks; drained by update().
+    std::optional<PhaseRequest> m_pendingRequest;
+
+    struct PlayerSlot {
+        core::PlayerId id = 0;
+        std::string name;
+        bool connected = false;
+        bool ready = false;
+    };
+    std::array<PlayerSlot, core::maxPlayers> m_slots{};
+    uint8_t m_playerCount = 0;
+
+    Utils::Logging::LoggerSubscribed m_logger{"LobbyPhase"};
 };
 
 } // namespace pacman::server::phases

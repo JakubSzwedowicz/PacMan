@@ -1,13 +1,14 @@
 #pragma once
 
 #include "client/network/ClientNetwork.hpp"
+#include "client/network/ClientNetworkEvents.hpp"
 #include "client/screen/Screen.hpp"
 
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
-
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -20,15 +21,16 @@ namespace pacman::client::screens {
 // confirm all players are ready.
 //
 // Lifecycle:
-//   onEnter → registers as ClientNetwork listener, starts loading
+//   onEnter → RAII subscription to ClientNetwork events begins at construction
 //   update  → advances through loading steps; sends ReadyToPlay when done
-//   onExit  → deregisters listener
+//   onExit  → subscription ends at destruction
 //
 // Transitions:
-//   onGameSnapshot received → all players ready → setScreen<GameScreen>
-//   onServerShutdown / onDisconnected → setScreen<MenuScreen>
-class LoadingScreen : public screen::Screen,
-                      public network::IClientNetworkListener {
+//   GameSnapshotEvent received → all players ready → setScreen<GameScreen>
+//   ServerShutdownEvent / DisconnectedEvent → setScreen<MenuScreen>
+class LoadingScreen
+    : public screen::Screen,
+      public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
 public:
   LoadingScreen(screen::ScreenManager &screenManager,
                 network::ClientNetwork &network,
@@ -42,24 +44,15 @@ public:
   void update(float dt) override;
   void draw(sf::RenderWindow &window) override;
 
-  // IClientNetworkListener — only the relevant callbacks are non-trivial
-  void onConnected(core::PlayerId) override {}
-  void onDisconnected() override;
-  void onLobbyState(const core::protocol::LobbyStatePacket &) override {}
-  void onGameStart(const core::protocol::GameStartPacket &) override {}
-  void
-  onGameSnapshot(const core::protocol::GameSnapshotPacket &packet) override;
-  void onRoundEnd(const core::protocol::RoundEndPacket &) override {}
-  void
-  onServerShutdown(const core::protocol::ServerShutdownPacket &packet) override;
+  // ISubscriber<ClientNetworkEvent>
+  void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
 private:
-  screen::ScreenManager &m_screenManager;
+  [[maybe_unused]] screen::ScreenManager &m_screenManager;
   network::ClientNetwork &m_network;
   core::protocol::GameStartPacket m_gameStart;
-  core::PlayerId m_localPlayerId;
+  [[maybe_unused]] core::PlayerId m_localPlayerId;
 
-  // Loading steps, ticked off in order during update()
   bool m_mapParsed = false;
   bool m_assetsLoaded = false;
   bool m_simInitialized = false;

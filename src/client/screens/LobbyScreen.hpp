@@ -1,13 +1,14 @@
 #pragma once
 
 #include "client/network/ClientNetwork.hpp"
+#include "client/network/ClientNetworkEvents.hpp"
 #include "client/screen/Screen.hpp"
 
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
-
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -19,17 +20,19 @@ namespace pacman::client::screens {
 // only).
 //
 // Lifecycle:
-//   onEnter → registers as ClientNetwork listener
-//   onExit  → deregisters listener
+//   onEnter → RAII subscription to ClientNetwork events begins at construction
+//   onExit  → subscription ends at destruction
 //
 // Transitions:
-//   onGameStart received → setScreen<LoadingScreen>
-//   onServerShutdown / onDisconnected → setScreen<MenuScreen>
-class LobbyScreen : public screen::Screen,
-                    public network::IClientNetworkListener {
+//   GameStartEvent received → setScreen<LoadingScreen>
+//   ServerShutdownEvent / DisconnectedEvent → setScreen<MenuScreen>
+class LobbyScreen
+    : public screen::Screen,
+      public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
 public:
   LobbyScreen(screen::ScreenManager &screenManager,
-              network::ClientNetwork &network, core::PlayerId localPlayerId,
+              network::ClientNetwork &network,
+              core::PlayerId localPlayerId,
               bool isHost);
 
   // Screen
@@ -39,16 +42,8 @@ public:
   void update(float dt) override;
   void draw(sf::RenderWindow &window) override;
 
-  // IClientNetworkListener
-  void onConnected(core::PlayerId assignedId) override;
-  void onDisconnected() override;
-  void onLobbyState(const core::protocol::LobbyStatePacket &packet) override;
-  void onGameStart(const core::protocol::GameStartPacket &packet) override;
-  void
-  onGameSnapshot(const core::protocol::GameSnapshotPacket &packet) override;
-  void onRoundEnd(const core::protocol::RoundEndPacket &packet) override;
-  void
-  onServerShutdown(const core::protocol::ServerShutdownPacket &packet) override;
+  // ISubscriber<ClientNetworkEvent>
+  void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
 private:
   screen::ScreenManager &m_screenManager;

@@ -1,75 +1,67 @@
 #pragma once
 
-#include "core/Common.hpp"
+#include "client/network/ClientNetworkEvents.hpp"
+#include "core/network/ENetSourceProvider.hpp"
+#include "core/network/RawNetworkMessage.hpp"
 #include "core/protocol/Packets.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Providers/QueuedResourceProvider.h>
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
+#include <Utils/Runnables/IRunnable.h>
 
-#include <cstdint>
+#include <memory>
 #include <string>
 
 namespace pacman::client::network {
 
-// ---------------------------------------------------------------------------
-// IClientNetworkListener
-// Implement this on any screen that needs to react to server messages.
-// Register via ClientNetwork::setListener() in Screen::onEnter(),
-// and deregister (pass nullptr) in Screen::onExit().
-// ---------------------------------------------------------------------------
-class IClientNetworkListener {
+// Bridges ENet ↔ pub/sub, mirroring ServerNetwork on the client side.
+//
+// Receive path (IRunnable::run(), once per frame):
+//   ENetSourceProvider (ISourceProvider) → ClientNetworkEventParser (IParser)
+//   → QueuedResourceProvider drains all events per frame
+//   → ClientNetwork publishes each to ISubscriber<ClientNetworkEvent>
+//
+// Send path: sendLobbyReady / sendReadyToPlay / sendInput delegate to
+// ENetSourceProvider::sendTo(serverPeerId, ...).
+//
+// Active screens subscribe via ISubscriber<ClientNetworkEvent> RAII.
+// In a future multithreaded phase, run() can be moved to its own thread.
+class ClientNetwork
+    : public Utils::PublishSubscribe::IPublisher<events::ClientNetworkEvent>,
+      public Utils::Runnables::IRunnable {
 public:
-  virtual ~IClientNetworkListener() = default;
+    ClientNetwork();
+    ~ClientNetwork();
 
-  virtual void onConnected(core::PlayerId assignedId) = 0;
-  virtual void onDisconnected() = 0;
+    ClientNetwork(const ClientNetwork &) = delete;
+    ClientNetwork &operator=(const ClientNetwork &) = delete;
+    ClientNetwork(ClientNetwork &&) = delete;
+    ClientNetwork &operator=(ClientNetwork &&) = delete;
 
-  virtual void onLobbyState(const core::protocol::LobbyStatePacket &packet) = 0;
-  virtual void onGameStart(const core::protocol::GameStartPacket &packet) = 0;
-  virtual void
-  onGameSnapshot(const core::protocol::GameSnapshotPacket &packet) = 0;
-  virtual void onRoundEnd(const core::protocol::RoundEndPacket &packet) = 0;
-  virtual void
-  onServerShutdown(const core::protocol::ServerShutdownPacket &packet) = 0;
-};
+    // Blocks briefly to wait for the connect event (~5 s timeout).
+    [[nodiscard]] bool connect(const std::string &host, uint16_t port);
+    void disconnect();
+    [[nodiscard]] bool isConnected() const;
 
-// ---------------------------------------------------------------------------
-// ClientNetwork
-// Wraps an ENet peer. Owned by ClientApp; screens receive a reference.
-// Call poll() once per frame (inside the ClientApp event loop) to pump
-// incoming ENet events and invoke the registered listener.
-// ---------------------------------------------------------------------------
-class ClientNetwork {
-public:
-  ClientNetwork();
-  ~ClientNetwork();
+    // Outgoing messages (implementations added in Phase 4)
+    void sendLobbyReady(bool ready);
+    void sendReadyToPlay();
+    void sendInput(const core::protocol::PlayerInputPacket &packet);
 
-  ClientNetwork(const ClientNetwork &) = delete;
-  ClientNetwork &operator=(const ClientNetwork &) = delete;
-  ClientNetwork(ClientNetwork &&) = delete;
-  ClientNetwork &operator=(ClientNetwork &&) = delete;
-
-  // Blocks until connection succeeds or times out (~5 s).
-  [[nodiscard]] bool connect(const std::string &host, uint16_t port);
-  void disconnect();
-  [[nodiscard]] bool isConnected() const;
-
-  // Register the active screen as the event sink.
-  // Only one listener is active at a time; pass nullptr to deregister.
-  void setListener(IClientNetworkListener *listener);
-
-  // Outgoing messages
-  void sendLobbyReady(bool ready);
-  void sendReadyToPlay();
-  void sendInput(const core::protocol::PlayerInputPacket &packet);
-
-  // Must be called once per frame to pump ENet events.
-  void poll();
+    // IRunnable — drains ENet, parses events, publishes to subscribers.
+    // Called once per frame from ClientApp.
+    void run() override;
 
 private:
-  struct Impl;
-  std::unique_ptr<Impl> m_impl; // hides ENet headers from consumers
-  IClientNetworkListener *m_listener = nullptr;
-  Utils::Logging::LoggerSubscribed m_logger{"ClientNetwork"};
+    using EventProvider = Utils::Providers::QueuedResourceProvider<
+        events::ClientNetworkEvent,
+        core::network::RawNetworkMessage>;
+
+    std::unique_ptr<EventProvider> m_eventProvider;
+    core::network::ENetSourceProvider *m_enetSource = nullptr; // non-owning; owned by m_eventProvider
+
+    Utils::Logging::LoggerSubscribed m_logger{"ClientNetwork"};
 };
 
 } // namespace pacman::client::network

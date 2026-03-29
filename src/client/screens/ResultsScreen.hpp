@@ -35,10 +35,10 @@ public:
   void draw(sf::RenderWindow &window) override;
 
 private:
-  screen::ScreenManager &m_screenManager;
+  [[maybe_unused]] screen::ScreenManager &m_screenManager;
   network::ClientNetwork *m_network; // non-owning, may be nullptr
   core::protocol::RoundEndPacket m_results;
-  core::PlayerId m_localPlayerId;
+  [[maybe_unused]] core::PlayerId m_localPlayerId;
   bool m_isHost;
 
   Utils::Logging::LoggerSubscribed m_logger{"ResultsScreen"};

@@ -81,6 +81,7 @@ void ClientApp::run() {
     accumulator += dt;
 
     m_configManager->run();
+    m_network.run();
 
     m_window->pollEvents([this](const sf::Event &event) {
       if (event.is<sf::Event::Closed>()) {

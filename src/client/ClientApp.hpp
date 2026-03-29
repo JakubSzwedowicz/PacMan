@@ -2,6 +2,7 @@
 
 #include "client/graphics/Window.hpp"
 #include "client/input/InputManager.hpp"
+#include "client/network/ClientNetwork.hpp"
 #include "client/screen/ScreenManager.hpp"
 #include "client/ui/UIOverlay.hpp"
 #include "client/Config.hpp"
@@ -39,6 +40,7 @@ private:
   // std::optional keeps it as a direct (non-heap) member of ClientApp.
   std::optional<graphics::Window> m_window;
 
+  network::ClientNetwork m_network;
   screen::ScreenManager m_screenManager;
   input::InputManager m_inputManager;
   ui::UIOverlay m_uiOverlay;

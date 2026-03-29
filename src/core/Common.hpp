@@ -2,6 +2,19 @@
 
 #include <cstdint>
 
+namespace pacman {
+
+// Overloaded-visitor helper for std::visit.
+// Usage: std::visit(overloaded{ [](TypeA&){...}, [](TypeB&){...} }, variant);
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+} // namespace pacman
+
 namespace pacman::core {
 
 using Tick = uint32_t;

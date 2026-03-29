@@ -3,11 +3,15 @@
 #include "client/screens/LoadingScreen.hpp"
 #include "client/screens/MenuScreen.hpp"
 
+#include "core/Common.hpp"
+
 #include <Utils/Logging/LoggerMacros.h>
 
 #include <imgui.h>
 
 namespace pacman::client::screens {
+
+using namespace network::events;
 
 LobbyScreen::LobbyScreen(screen::ScreenManager &screenManager,
                          network::ClientNetwork &network,
@@ -15,15 +19,8 @@ LobbyScreen::LobbyScreen(screen::ScreenManager &screenManager,
     : m_screenManager(screenManager), m_network(network),
       m_localPlayerId(localPlayerId), m_isHost(isHost) {}
 
-void LobbyScreen::onEnter() {
-  LOG_I("LobbyScreen entered");
-  m_network.setListener(this);
-}
-
-void LobbyScreen::onExit() {
-  LOG_I("LobbyScreen exited");
-  m_network.setListener(nullptr);
-}
+void LobbyScreen::onEnter() { LOG_I("LobbyScreen entered"); }
+void LobbyScreen::onExit()  { LOG_I("LobbyScreen exited"); }
 
 void LobbyScreen::handleEvent(const sf::Event &event) {
   if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
@@ -34,7 +31,7 @@ void LobbyScreen::handleEvent(const sf::Event &event) {
   }
 }
 
-void LobbyScreen::update(float /*dt*/) { m_network.poll(); }
+void LobbyScreen::update(float /*dt*/) {}
 
 void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
   ImGui::SetNextWindowPos(ImVec2(150, 100), ImGuiCond_FirstUseEver);
@@ -64,7 +61,6 @@ void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
 
   if (m_isHost) {
     ImGui::SameLine();
-    // Host sends ready=true as the start signal (LobbyPhase triggers game)
     if (ImGui::Button("Rozpocznij") && m_localReady) {
       m_network.sendLobbyReady(true);
     }
@@ -73,24 +69,26 @@ void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
   ImGui::End();
 }
 
-void LobbyScreen::onConnected(core::PlayerId /*assignedId*/) {}
-void LobbyScreen::onDisconnected() {
-  // TODO: m_screenManager.setScreen<MenuScreen>(...)
-}
-void LobbyScreen::onLobbyState(const core::protocol::LobbyStatePacket &pkt) {
-  m_lobbyState = pkt;
-}
-void LobbyScreen::onGameStart(const core::protocol::GameStartPacket &pkt) {
-  LOG_I("GameStart received — transitioning to LoadingScreen");
-  m_screenManager.setScreen(std::make_unique<LoadingScreen>(
-      m_screenManager, m_network, pkt, m_localPlayerId));
-}
-void LobbyScreen::onGameSnapshot(const core::protocol::GameSnapshotPacket &) {}
-void LobbyScreen::onRoundEnd(const core::protocol::RoundEndPacket &) {}
-void LobbyScreen::onServerShutdown(
-    const core::protocol::ServerShutdownPacket &pkt) {
-  LOG_I("Server shutdown: {}", pkt.reason);
-  // TODO: setScreen<MenuScreen>
+void LobbyScreen::onUpdate(const ClientNetworkEvent &event) {
+  std::visit(pacman::overloaded{
+    [this](const LobbyStateEvent &e) {
+        m_lobbyState = e.packet;
+    },
+    [this](const GameStartEvent &e) {
+        LOG_I("GameStart received — transitioning to LoadingScreen");
+        m_screenManager.setScreen(std::make_unique<LoadingScreen>(
+            m_screenManager, m_network, e.packet, m_localPlayerId));
+    },
+    [this](const DisconnectedEvent &) {
+        LOG_I("Disconnected — returning to MenuScreen");
+        // TODO: m_screenManager.setScreen<MenuScreen>(...)
+    },
+    [this](const ServerShutdownEvent &e) {
+        LOG_I("Server shutdown: {}", e.packet.reason);
+        // TODO: m_screenManager.setScreen<MenuScreen>(...)
+    },
+    [](const auto &) {}
+  }, event);
 }
 
 } // namespace pacman::client::screens

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "server/ai/AISystem.hpp"
+#include "server/network/NetworkEvents.hpp"
 #include "server/network/ServerNetwork.hpp"
 #include "server/phases/AuthoritativeLogic.hpp"
 #include "server/phases/Phase.hpp"
@@ -11,69 +12,73 @@
 #include "core/simulation/Simulation.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <entt/entt.hpp>
 
 #include <array>
-#include <memory>
+#include <optional>
 #include <unordered_map>
-
-namespace pacman::server::app {
-class ServerApp;
-}
 
 namespace pacman::server::phases {
 
-class GamePhase : public Phase, public network::INetworkEventHandler {
+class GamePhase
+    : public Phase,
+      public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
 public:
-  GamePhase(app::ServerApp &app, network::ServerNetwork &network,
-            core::maps::Map map,
-            std::array<core::protocol::PlayerInfo, core::maxPlayers> players,
-            uint8_t playerCount);
+    GamePhase(network::ServerNetwork &network,
+              core::maps::Map map,
+              std::array<core::protocol::PlayerInfo, core::maxPlayers> players,
+              uint8_t playerCount,
+              bool renderAscii,
+              int renderIntervalMs);
 
-  // Phase
-  void onEnter() override;
-  void onExit() override;
-  void update(float dt) override;
+    // Phase
+    void onEnter() override;
+    void onExit() override;
+    PhaseRequest update(float dt) override;
 
-  // INetworkEventHandler — only game-relevant events
-  void onPlayerDisconnect(core::PlayerId id) override;
-  void onPlayerInput(const core::protocol::PlayerInputPacket &packet) override;
+    // ISubscriber<ServerNetworkEvent>
+    void onUpdate(const network::events::ServerNetworkEvent &event) override;
 
 private:
-  void spawnEntities();
-  void applyPendingInputs();
-  void broadcastSnapshot();
-  [[nodiscard]] bool isRoundOver() const;
-  void endRound();
-  [[nodiscard]] core::protocol::GameSnapshotPacket buildSnapshot() const;
-  [[nodiscard]] core::protocol::RoundEndPacket buildRoundEnd() const;
+    void handleDisconnect(core::PlayerId id);
+    void handleInput(const core::protocol::PlayerInputPacket &packet);
 
-  app::ServerApp &m_app;
-  network::ServerNetwork &m_network;
-  core::maps::Map m_map;
+    void spawnEntities();
+    void applyPendingInputs();
+    void broadcastSnapshot();
+    [[nodiscard]] bool isRoundOver() const;
+    void endRound();
+    [[nodiscard]] core::protocol::GameSnapshotPacket buildSnapshot() const;
+    [[nodiscard]] core::protocol::RoundEndPacket buildRoundEnd() const;
 
-  entt::registry m_registry;
-  core::simulation::Simulation m_simulation;
-  ai::AISystem m_aiSystem;
-  AuthoritativeLogic m_rules;
-  render::AsciiRenderer m_asciiRenderer;
+    network::ServerNetwork &m_network;
+    core::maps::Map m_map;
 
-  std::array<core::protocol::PlayerInfo, core::maxPlayers> m_players{};
-  uint8_t m_playerCount = 0;
-  std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
-  std::unordered_map<core::PlayerId, core::protocol::PlayerInputPacket>
-      m_pendingInputs;
+    // Set by endRound(); drained by update().
+    std::optional<PhaseRequest> m_pendingRequest;
 
-  core::Tick m_tick = 0;
-  float m_snapshotAccumulator = 0.0f;
-  static constexpr float snapshotRate = 1.0f / 20.0f;
+    entt::registry m_registry;
+    core::simulation::Simulation m_simulation;
+    ai::AISystem m_aiSystem;
+    AuthoritativeLogic m_rules;
+    render::AsciiRenderer m_asciiRenderer;
 
-  bool m_renderAscii = false;
-  float m_renderInterval = 0.5f;
-  float m_renderAccumulator = 0.0f;
+    std::array<core::protocol::PlayerInfo, core::maxPlayers> m_players{};
+    uint8_t m_playerCount = 0;
+    std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
+    std::unordered_map<core::PlayerId, core::protocol::PlayerInputPacket> m_pendingInputs;
 
-  Utils::Logging::LoggerSubscribed m_logger{"GamePhase"};
+    core::Tick m_tick = 0;
+    float m_snapshotAccumulator = 0.0f;
+    static constexpr float snapshotRate = 1.0f / 20.0f;
+
+    bool m_renderAscii = false;
+    float m_renderInterval = 0.5f;
+    float m_renderAccumulator = 0.0f;
+
+    Utils::Logging::LoggerSubscribed m_logger{"GamePhase"};
 };
 
 } // namespace pacman::server::phases

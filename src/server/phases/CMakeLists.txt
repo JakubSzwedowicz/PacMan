@@ -8,6 +8,6 @@ target_sources(Phases PRIVATE
     AuthoritativeLogic.cpp
 )
 target_link_libraries(Phases
-    PUBLIC Server::App Server::Network Server::AI Core::Simulation Server::Render
+    PUBLIC Server::Network Server::AI Core::Simulation Server::Render
     PRIVATE Utils::Utils
 )
