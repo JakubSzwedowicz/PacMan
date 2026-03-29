@@ -2,6 +2,7 @@
 
 #include <Utils/Logging/LoggerMacros.h>
 
+#include "core/protocol/PacketCodec.hpp"
 #include "server/network/NetworkEventParser.hpp"
 
 namespace pacman::server::network {
@@ -34,21 +35,40 @@ void ServerNetwork::run() {
 }
 
 // ---------------------------------------------------------------------------
-// Outgoing — stubbed until Phase 4 wires ENetSourceProvider::sendTo/broadcast
+// Outgoing
 // ---------------------------------------------------------------------------
 
-void ServerNetwork::sendLobbyState(const core::protocol::LobbyStatePacket& /*p*/) {
-    // TODO (Phase 4): serialize p to JSON, m_enetSource->sendTo(hostPeerId, ...)
+void ServerNetwork::sendLobbyState(const core::protocol::LobbyStatePacket &p) {
+    auto data = core::protocol::PacketCodec::serialize(p);
+    m_enetSource->broadcast({data.data(), data.size()}, true);
 }
 
-void ServerNetwork::broadcastGameStart(const core::protocol::GameStartPacket& /*templatePkt*/,
-                                       const std::array<core::PlayerId, core::maxPlayers>& /*playerIds*/,
-                                       uint8_t /*count*/) {
-    // TODO (Phase 4): per-peer copy with assignedPlayerId filled in
+void ServerNetwork::broadcastGameStart(const core::protocol::GameStartPacket &templatePkt,
+                                       const std::array<core::PlayerId, core::maxPlayers> &playerIds,
+                                       uint8_t count) {
+    // Send each peer a copy with their assigned PlayerId filled in.
+    // PlayerId == peerId in this implementation (see NetworkEventParser::parse).
+    for (int i = 0; i < count; ++i) {
+        auto pkt = templatePkt;
+        pkt.assignedPlayerId = playerIds[i];
+        auto data = core::protocol::PacketCodec::serialize(pkt);
+        m_enetSource->sendTo(playerIds[i], {data.data(), data.size()}, true);
+    }
 }
 
-void ServerNetwork::broadcastSnapshot(const core::protocol::GameSnapshotPacket& /*p*/) {}
-void ServerNetwork::broadcastRoundEnd(const core::protocol::RoundEndPacket& /*p*/) {}
-void ServerNetwork::broadcastShutdown(const core::protocol::ServerShutdownPacket& /*p*/) {}
+void ServerNetwork::broadcastSnapshot(const core::protocol::GameSnapshotPacket &p) {
+    auto data = core::protocol::PacketCodec::serialize(p);
+    m_enetSource->broadcast({data.data(), data.size()}, false);
+}
+
+void ServerNetwork::broadcastRoundEnd(const core::protocol::RoundEndPacket &p) {
+    auto data = core::protocol::PacketCodec::serialize(p);
+    m_enetSource->broadcast({data.data(), data.size()}, true);
+}
+
+void ServerNetwork::broadcastShutdown(const core::protocol::ServerShutdownPacket &p) {
+    auto data = core::protocol::PacketCodec::serialize(p);
+    m_enetSource->broadcast({data.data(), data.size()}, true);
+}
 
 }  // namespace pacman::server::network

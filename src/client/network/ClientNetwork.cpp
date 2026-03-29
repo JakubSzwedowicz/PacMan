@@ -3,6 +3,7 @@
 #include <Utils/Logging/LoggerMacros.h>
 
 #include "client/network/ClientNetworkEventParser.hpp"
+#include "core/protocol/PacketCodec.hpp"
 
 namespace pacman::client::network {
 
@@ -35,19 +36,24 @@ void ClientNetwork::run() {
 }
 
 // ---------------------------------------------------------------------------
-// Outgoing — stubbed until Phase 4 wires ENetSourceProvider::sendTo
+// Outgoing
 // ---------------------------------------------------------------------------
 
-void ClientNetwork::sendLobbyReady(bool /*ready*/) {
-    // TODO (Phase 4): serialize LobbyReadyPacket via FlatBuffers + m_enetSource->sendTo(serverPeerId, ...)
+void ClientNetwork::sendLobbyReady(bool ready) {
+    core::protocol::LobbyReadyPacket pkt{0, ready};  // peerId filled by server from connection
+    auto data = core::protocol::PacketCodec::serialize(pkt);
+    m_enetSource->sendTo(1, {data.data(), data.size()}, true);  // peerId 1 = server
 }
 
 void ClientNetwork::sendReadyToPlay() {
-    // TODO (Phase 4): serialize ReadyToPlayPacket + m_enetSource->sendTo(serverPeerId, ...)
+    core::protocol::ReadyToPlayPacket pkt{0};
+    auto data = core::protocol::PacketCodec::serialize(pkt);
+    m_enetSource->sendTo(1, {data.data(), data.size()}, true);
 }
 
-void ClientNetwork::sendInput(const core::protocol::PlayerInputPacket & /*packet*/) {
-    // TODO (Phase 4): serialize PlayerInputPacket + m_enetSource->sendTo (unreliable channel)
+void ClientNetwork::sendInput(const core::protocol::PlayerInputPacket &packet) {
+    auto data = core::protocol::PacketCodec::serialize(packet);
+    m_enetSource->sendTo(1, {data.data(), data.size()}, false);  // unreliable — inputs are time-sensitive
 }
 
 }  // namespace pacman::client::network

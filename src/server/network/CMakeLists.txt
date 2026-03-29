@@ -8,5 +8,5 @@ target_sources(ServerNetwork PRIVATE
 )
 target_link_libraries(ServerNetwork
     PUBLIC  Core::Core Core::Network
-    PRIVATE Utils::Utils
+    PRIVATE Core::Protocol Utils::Utils
 )
