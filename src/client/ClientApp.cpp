@@ -3,16 +3,12 @@
 #include "client/screens/MenuScreen.hpp"
 
 #include <Utils/Config/ConfigManagerWithLogger.h>
-#include <Utils/Config/ConfigPublisher.h>
 #include <Utils/Config/Providers/CLIConfigProvider.h>
 #include <Utils/Config/Providers/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
+#include <Utils/Providers/FileSourceProvider.h>
 
 #include <SFML/System/Clock.hpp>
-
-#include <fstream>
-#include <string>
-#include <string_view>
 
 namespace pacman::client {
 
@@ -32,32 +28,27 @@ int ClientApp::main(int argc, char *argv[]) {
 
 void ClientApp::init(int argc, char *argv[]) {
   using CLIProvider =
-      Utils::Config::Providers::CLIConfigProvider<core::ClientConfig>;
+      Utils::Config::Providers::CLIConfigProvider<ClientConfig>;
   using JsonProvider =
-      Utils::Config::Providers::JsonConfigProvider<core::ClientConfig>;
+      Utils::Config::Providers::JsonConfigProvider<ClientConfig>;
+  using Manager =
+      Utils::Config::ConfigManagerWithLogger<ClientConfig, CLIProvider,
+                                             JsonProvider>;
 
-  Utils::Config::ConfigManagerWithLogger<core::ClientConfig, CLIProvider,
-                                         JsonProvider>
-      manager;
+  auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>(
+      "config/client.json");
+  auto *fileSourcePtr = fileSource.get();
 
-  std::string configPath = "config/client.json";
-  for (int i = 1; i + 1 < argc; ++i) {
-    if (std::string_view(argv[i]) == "--config") {
-      configPath = argv[i + 1];
-      break;
-    }
-  }
+  auto manager = std::make_unique<Manager>(
+      std::make_unique<CLIProvider>(),
+      std::make_unique<JsonProvider>(std::move(fileSource)));
 
-  std::ifstream file(configPath);
-  if (file.is_open()) {
-    manager.update<JsonProvider>(file);
-  }
+  manager->update<CLIProvider>(argc, argv);
 
-  manager.update<CLIProvider>(argc, argv);
+  fileSourcePtr->setPath(m_config->configPath.get());
+  manager->run();
 
-  m_config =
-      static_cast<Utils::Config::ConfigPublisher<core::ClientConfig> &>(manager)
-          .getConfig();
+  m_configManager = std::move(manager);
 
   // Window depends on config — constructed here, stored as optional member.
   m_window.emplace("PacMan",
@@ -69,9 +60,6 @@ void ClientApp::init(int argc, char *argv[]) {
   m_screenManager.setScreen(std::make_unique<screens::MenuScreen>(
       m_screenManager, m_config->mapPath.get()));
   m_screenManager.applyPendingTransition();
-
-  // Re-publish logger config to all LoggerSubscribed instances created so far.
-  manager.resolve();
 
   LOG_I("ClientApp initialised");
 }
@@ -91,6 +79,8 @@ void ClientApp::run() {
     float dt = frameTime.asSeconds();
     if (dt > 0.1f) dt = 0.1f;
     accumulator += dt;
+
+    m_configManager->run();
 
     m_window->pollEvents([this](const sf::Event &event) {
       if (event.is<sf::Event::Closed>()) {

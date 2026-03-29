@@ -13,6 +13,9 @@ add_subdirectory(screens)
 
 add_executable(PacManClient)
 target_sources(PacManClient PRIVATE main.cpp ClientApp.cpp)
+# ConfigParametersContainer.h uses a relative include that requires Utils/Config/ on the path.
+get_target_property(_utils_inc Utils::Utils INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(PacManClient PRIVATE ${_utils_inc}/Config)
 target_link_libraries(PacManClient PRIVATE
     Client::Input
     Client::Network

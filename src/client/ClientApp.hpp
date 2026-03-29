@@ -4,18 +4,23 @@
 #include "client/input/InputManager.hpp"
 #include "client/screen/ScreenManager.hpp"
 #include "client/ui/UIOverlay.hpp"
+#include "client/Config.hpp"
 #include "core/Common.hpp"
-#include "core/Config.hpp"
 
 #include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Runnables/IRunnable.h>
 
 #include <memory>
 #include <optional>
 
 namespace pacman::client {
 
-class ClientApp {
+class ClientApp
+    : public Utils::PublishSubscribe::ISubscriber<std::shared_ptr<const ClientConfig>> {
 public:
+  void onUpdate(const std::shared_ptr<const ClientConfig> &config) override {
+    m_config = config;
+  }
   // Full client lifecycle: init (config + window) → run.
   // Call from int main() — never call run() or init() directly.
   int main(int argc, char *argv[]);
@@ -27,7 +32,8 @@ private:
   // Event/render loop — blocks until the window is closed.
   void run();
 
-  std::shared_ptr<core::ClientConfig> m_config; // set in init()
+  std::shared_ptr<const ClientConfig> m_config;
+  std::unique_ptr<Utils::Runnables::IRunnable> m_configManager;
 
   // Window depends on config (dimensions) so it is constructed in init().
   // std::optional keeps it as a direct (non-heap) member of ClientApp.
