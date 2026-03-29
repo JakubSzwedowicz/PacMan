@@ -1,13 +1,12 @@
 #pragma once
 
-#include "core/maps/Map.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 
 #include <entt/entt.hpp>
-
 #include <string>
 #include <vector>
+
+#include "core/maps/Map.hpp"
 
 namespace pacman::server::render {
 
@@ -23,19 +22,17 @@ namespace pacman::server::render {
 //   F  frightened ghost
 //   E  eaten ghost (returning to spawn)
 class AsciiRenderer {
-public:
-  AsciiRenderer();
+   public:
+    AsciiRenderer();
 
-  void render(const entt::registry &registry, const core::maps::Map &map);
+    void render(const entt::registry &registry, const core::maps::Map &map);
 
-private:
-  [[nodiscard]] std::vector<std::string>
-  buildGrid(const entt::registry &registry, const core::maps::Map &map) const;
+   private:
+    [[nodiscard]] std::vector<std::string> buildGrid(const entt::registry &registry, const core::maps::Map &map) const;
 
-  void printGrid(const std::vector<std::string> &grid,
-                 const core::maps::Map &map) const;
+    void printGrid(const std::vector<std::string> &grid, const core::maps::Map &map) const;
 
-  Utils::Logging::LoggerSubscribed m_logger{"AsciiRenderer"};
+    Utils::Logging::LoggerSubscribed m_logger{"AsciiRenderer"};
 };
 
-} // namespace pacman::server::render
+}  // namespace pacman::server::render

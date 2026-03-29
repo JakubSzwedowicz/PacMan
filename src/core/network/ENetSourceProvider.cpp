@@ -24,7 +24,8 @@ bool ENetSourceProvider::startServer(uint16_t port, int maxClients) {
     //   m_impl->host = enet_host_create(&addr, maxClients, 2, 0, 0);
     //   if (!m_impl->host) { LOG_E(...); enet_deinitialize(); return false; }
     LOG_I("ENetSourceProvider stub startServer (port={}, maxClients={})", port, maxClients);
-    (void)port; (void)maxClients;
+    (void)port;
+    (void)maxClients;
     m_impl->active = true;
     return true;
 }
@@ -43,7 +44,8 @@ bool ENetSourceProvider::connectToServer(const std::string &host, uint16_t port)
     //   }
     //   enet_peer_reset(m_impl->serverPeer); return false;
     LOG_I("ENetSourceProvider stub connectToServer ({}:{})", host, port);
-    (void)host; (void)port;
+    (void)host;
+    (void)port;
     m_impl->active = true;
     return true;
 }
@@ -96,17 +98,19 @@ std::optional<RawNetworkMessage> ENetSourceProvider::poll() {
     return msg;
 }
 
-void ENetSourceProvider::sendTo(uint32_t peerId, std::span<const std::byte> data,
-                                 bool reliable) {
+void ENetSourceProvider::sendTo(uint32_t peerId, std::span<const std::byte> data, bool reliable) {
     if (!m_impl->active) return;
     // TODO (Phase 4): enet_peer_send + enet_host_flush
-    (void)peerId; (void)data; (void)reliable;
+    (void)peerId;
+    (void)data;
+    (void)reliable;
 }
 
 void ENetSourceProvider::broadcast(std::span<const std::byte> data, bool reliable) {
     if (!m_impl->active) return;
     // TODO (Phase 4): enet_host_broadcast + enet_host_flush
-    (void)data; (void)reliable;
+    (void)data;
+    (void)reliable;
 }
 
-} // namespace pacman::core::network
+}  // namespace pacman::core::network

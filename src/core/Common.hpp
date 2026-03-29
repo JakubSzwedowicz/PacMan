@@ -13,7 +13,7 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-} // namespace pacman
+}  // namespace pacman
 
 namespace pacman::core {
 
@@ -27,4 +27,4 @@ inline constexpr float defaultSpeed = 80.0f;
 inline constexpr int maxPlayers = 4;
 inline constexpr int ghostCount = 4;
 
-} // namespace pacman::core
+}  // namespace pacman::core

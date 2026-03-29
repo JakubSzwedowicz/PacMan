@@ -5,7 +5,7 @@
 namespace pacman::server::phases {
 
 class Phase {
-public:
+   public:
     virtual ~Phase() = default;
 
     virtual void onEnter() = 0;
@@ -16,4 +16,4 @@ public:
     virtual PhaseRequest update(float dt) = 0;
 };
 
-} // namespace pacman::server::phases
+}  // namespace pacman::server::phases

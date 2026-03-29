@@ -1,11 +1,5 @@
 #pragma once
 
-#include "core/Common.hpp"
-#include "core/network/ENetSourceProvider.hpp"
-#include "core/network/RawNetworkMessage.hpp"
-#include "core/protocol/Packets.hpp"
-#include "server/network/NetworkEvents.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 #include <Utils/Providers/QueuedResourceProvider.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
@@ -14,6 +8,12 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+
+#include "core/Common.hpp"
+#include "core/network/ENetSourceProvider.hpp"
+#include "core/network/RawNetworkMessage.hpp"
+#include "core/protocol/Packets.hpp"
+#include "server/network/NetworkEvents.hpp"
 
 namespace pacman::server::network {
 
@@ -28,10 +28,9 @@ namespace pacman::server::network {
 //
 // Active phases subscribe via ISubscriber<ServerNetworkEvent> RAII.
 // In a future multithreaded phase, run() can be moved to its own thread.
-class ServerNetwork
-    : public Utils::PublishSubscribe::IPublisher<events::ServerNetworkEvent>,
-      public Utils::Runnables::IRunnable {
-public:
+class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerNetworkEvent>,
+                      public Utils::Runnables::IRunnable {
+   public:
     ServerNetwork();
     ~ServerNetwork();
 
@@ -47,8 +46,7 @@ public:
     // Outgoing (implementations added in Phase 4)
     void sendLobbyState(const core::protocol::LobbyStatePacket &packet);
     void broadcastGameStart(const core::protocol::GameStartPacket &templatePkt,
-                            const std::array<core::PlayerId, core::maxPlayers> &playerIds,
-                            uint8_t count);
+                            const std::array<core::PlayerId, core::maxPlayers> &playerIds, uint8_t count);
     void broadcastSnapshot(const core::protocol::GameSnapshotPacket &packet);
     void broadcastRoundEnd(const core::protocol::RoundEndPacket &packet);
     void broadcastShutdown(const core::protocol::ServerShutdownPacket &packet);
@@ -57,15 +55,14 @@ public:
     // Called once per server tick from ServerApp.
     void run() override;
 
-private:
-    using EventProvider = Utils::Providers::QueuedResourceProvider<
-        events::ServerNetworkEvent,
-        core::network::RawNetworkMessage>;
+   private:
+    using EventProvider =
+        Utils::Providers::QueuedResourceProvider<events::ServerNetworkEvent, core::network::RawNetworkMessage>;
 
     std::unique_ptr<EventProvider> m_eventProvider;
-    core::network::ENetSourceProvider *m_enetSource = nullptr; // non-owning; owned by m_eventProvider
+    core::network::ENetSourceProvider *m_enetSource = nullptr;  // non-owning; owned by m_eventProvider
 
     Utils::Logging::LoggerSubscribed m_logger{"ServerNetwork"};
 };
 
-} // namespace pacman::server::network
+}  // namespace pacman::server::network

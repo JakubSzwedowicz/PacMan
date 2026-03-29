@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/network/RawNetworkMessage.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 #include <Utils/Providers/ISourceProvider.h>
 
@@ -12,6 +10,8 @@
 #include <span>
 #include <string>
 
+#include "core/network/RawNetworkMessage.hpp"
+
 namespace pacman::core::network {
 
 // Wraps an ENet host as an ISourceProvider<RawNetworkMessage>:
@@ -21,9 +21,8 @@ namespace pacman::core::network {
 // Supports both server mode (startServer) and client mode (connectToServer).
 // Outgoing traffic (sendTo / broadcast) is separate from the source-provider
 // interface since ISourceProvider models the receive direction only.
-class ENetSourceProvider
-    : public Utils::Providers::ISourceProvider<RawNetworkMessage> {
-public:
+class ENetSourceProvider : public Utils::Providers::ISourceProvider<RawNetworkMessage> {
+   public:
     ENetSourceProvider();
     ~ENetSourceProvider() override;
 
@@ -50,11 +49,11 @@ public:
     void sendTo(uint32_t peerId, std::span<const std::byte> data, bool reliable);
     void broadcast(std::span<const std::byte> data, bool reliable);
 
-private:
+   private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;
     std::queue<RawNetworkMessage> m_queue;
     Utils::Logging::LoggerSubscribed m_logger{"ENetSourceProvider"};
 };
 
-} // namespace pacman::core::network
+}  // namespace pacman::core::network

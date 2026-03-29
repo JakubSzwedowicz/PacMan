@@ -14,4 +14,4 @@ struct GameSettings {
     int renderIntervalMs = 500;
 };
 
-} // namespace pacman::server::game
+}  // namespace pacman::server::game

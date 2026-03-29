@@ -1,10 +1,10 @@
 #include "server/phases/LobbyPhase.hpp"
 
-#include "core/maps/MapsManager.hpp"
-
 #include <Utils/Logging/LoggerMacros.h>
 
 #include <algorithm>
+
+#include "core/maps/MapsManager.hpp"
 
 namespace pacman::server::phases {
 
@@ -27,9 +27,7 @@ void LobbyPhase::onEnter() {
     }
 }
 
-void LobbyPhase::onExit() {
-    LOG_I("LobbyPhase exited");
-}
+void LobbyPhase::onExit() { LOG_I("LobbyPhase exited"); }
 
 PhaseRequest LobbyPhase::update(float /*dt*/) {
     if (m_pendingRequest) {
@@ -41,18 +39,16 @@ PhaseRequest LobbyPhase::update(float /*dt*/) {
 }
 
 void LobbyPhase::onUpdate(const network::events::ServerNetworkEvent &event) {
-    std::visit(overloaded{
-        [this](const network::events::PlayerConnectedEvent &e)    { handleConnect(e.playerId); },
-        [this](const network::events::PlayerDisconnectedEvent &e) { handleDisconnect(e.playerId); },
-        [this](const network::events::LobbyReadyEvent &e)         { handleLobbyReady(e.playerId, e.ready); },
-        [](const auto &) {}
-    }, event);
+    std::visit(overloaded{[this](const network::events::PlayerConnectedEvent &e) { handleConnect(e.playerId); },
+                          [this](const network::events::PlayerDisconnectedEvent &e) { handleDisconnect(e.playerId); },
+                          [this](const network::events::LobbyReadyEvent &e) { handleLobbyReady(e.playerId, e.ready); },
+                          [](const auto &) {}},
+               event);
 }
 
 void LobbyPhase::handleConnect(core::PlayerId id) {
-    const int effectiveMax = m_map
-        ? std::min(m_maxPlayers, static_cast<int>(m_map->pacmanSpawns.size()))
-        : m_maxPlayers;
+    const int effectiveMax =
+        m_map ? std::min(m_maxPlayers, static_cast<int>(m_map->pacmanSpawns.size())) : m_maxPlayers;
 
     if (m_playerCount >= effectiveMax) {
         LOG_W("Lobby full ({}/{}), rejecting player {}", m_playerCount, effectiveMax, id);
@@ -129,9 +125,8 @@ void LobbyPhase::requestStartGame() {
         players[i] = {m_slots[i].id, m_slots[i].name, true, false};
     }
 
-    m_pendingRequest = StartGameRequest{std::move(*m_map), players,
-                                        static_cast<uint8_t>(m_playerCount)};
+    m_pendingRequest = StartGameRequest{std::move(*m_map), players, static_cast<uint8_t>(m_playerCount)};
     m_map.reset();
 }
 
-} // namespace pacman::server::phases
+}  // namespace pacman::server::phases

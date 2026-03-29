@@ -1,15 +1,14 @@
 #pragma once
 
+#include <Utils/Logging/LoggerSubscribed.h>
+
+#include <entt/entt.hpp>
+#include <string>
+
 #include "client/graphics/Renderer.hpp"
 #include "client/screen/Screen.hpp"
 #include "core/maps/Map.hpp"
 #include "core/simulation/Simulation.hpp"
-
-#include <Utils/Logging/LoggerSubscribed.h>
-
-#include <entt/entt.hpp>
-
-#include <string>
 
 namespace pacman::client::screen {
 class ScreenManager;
@@ -18,31 +17,31 @@ class ScreenManager;
 namespace pacman::client::screens {
 
 class GameScreen : public screen::Screen {
-public:
-  GameScreen(screen::ScreenManager &screenManager, std::string mapPath);
+   public:
+    GameScreen(screen::ScreenManager &screenManager, std::string mapPath);
 
-  void onEnter() override;
-  void onExit() override;
-  void handleEvent(const sf::Event &event) override;
-  void update(float dt) override;
-  void draw(sf::RenderWindow &window) override;
+    void onEnter() override;
+    void onExit() override;
+    void handleEvent(const sf::Event &event) override;
+    void update(float dt) override;
+    void draw(sf::RenderWindow &window) override;
 
-  void setLastInput(const core::ecs::Input &input);
+    void setLastInput(const core::ecs::Input &input);
 
-private:
-  void spawnEntitiesFromMap();
+   private:
+    void spawnEntitiesFromMap();
 
-  screen::ScreenManager &m_screenManager;
-  std::string m_mapPath;
+    screen::ScreenManager &m_screenManager;
+    std::string m_mapPath;
 
-  entt::registry m_registry;
-  core::maps::Map m_map;
-  core::simulation::Simulation m_simulation;
-  graphics::Renderer m_renderer;
-  entt::entity m_localPlayer = entt::null;
-  core::ecs::Input m_lastInput{0, core::ecs::Direction::None};
+    entt::registry m_registry;
+    core::maps::Map m_map;
+    core::simulation::Simulation m_simulation;
+    graphics::Renderer m_renderer;
+    entt::entity m_localPlayer = entt::null;
+    core::ecs::Input m_lastInput{0, core::ecs::Direction::None};
 
-  Utils::Logging::LoggerSubscribed m_logger{"GameScreen"};
+    Utils::Logging::LoggerSubscribed m_logger{"GameScreen"};
 };
 
-} // namespace pacman::client::screens
+}  // namespace pacman::client::screens

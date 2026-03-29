@@ -1,11 +1,5 @@
 #pragma once
 
-#include "server/network/NetworkEvents.hpp"
-#include "server/network/ServerNetwork.hpp"
-#include "server/phases/Phase.hpp"
-
-#include "core/maps/Map.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
@@ -13,12 +7,15 @@
 #include <optional>
 #include <string>
 
+#include "core/maps/Map.hpp"
+#include "server/network/NetworkEvents.hpp"
+#include "server/network/ServerNetwork.hpp"
+#include "server/phases/Phase.hpp"
+
 namespace pacman::server::phases {
 
-class LobbyPhase
-    : public Phase,
-      public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
-public:
+class LobbyPhase : public Phase, public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
+   public:
     LobbyPhase(network::ServerNetwork &network, std::string mapPath, int maxPlayers);
 
     // Phase
@@ -31,14 +28,14 @@ public:
     // ISubscriber<ServerNetworkEvent>
     void onUpdate(const network::events::ServerNetworkEvent &event) override;
 
-private:
+   private:
     void handleConnect(core::PlayerId id);
     void handleDisconnect(core::PlayerId id);
     void handleLobbyReady(core::PlayerId id, bool ready);
 
     void broadcastLobbyState();
     [[nodiscard]] bool allPlayersReady() const;
-    void requestStartGame(); // sets m_pendingRequest
+    void requestStartGame();  // sets m_pendingRequest
 
     network::ServerNetwork &m_network;
     std::string m_mapPath;
@@ -61,4 +58,4 @@ private:
     Utils::Logging::LoggerSubscribed m_logger{"LobbyPhase"};
 };
 
-} // namespace pacman::server::phases
+}  // namespace pacman::server::phases

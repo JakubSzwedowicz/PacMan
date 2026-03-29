@@ -1,13 +1,13 @@
 #pragma once
 
+#include <Utils/Logging/LoggerSubscribed.h>
+
+#include <memory>
+
 #include "server/game/GameSettings.hpp"
 #include "server/network/ServerNetwork.hpp"
 #include "server/phases/Phase.hpp"
 #include "server/phases/PhaseRequest.hpp"
-
-#include <Utils/Logging/LoggerSubscribed.h>
-
-#include <memory>
 
 namespace pacman::server::game {
 
@@ -15,7 +15,7 @@ namespace pacman::server::game {
 // Settings are frozen at construction — config hot-reload does not affect a
 // running session. Long-term, multiple GameRunner instances can run in parallel.
 class GameRunner {
-public:
+   public:
     GameRunner(GameSettings settings, network::ServerNetwork &network);
 
     // Called each server tick. Runs the active phase; handles phase transitions.
@@ -24,7 +24,7 @@ public:
     // Cleanly exits the current phase. Call before destroying the runner.
     void shutdown();
 
-private:
+   private:
     void handleRequest(phases::PhaseRequest req);
     void transition(std::unique_ptr<phases::Phase> newPhase);
 
@@ -36,4 +36,4 @@ private:
     Utils::Logging::LoggerSubscribed m_logger{"GameRunner"};
 };
 
-} // namespace pacman::server::game
+}  // namespace pacman::server::game

@@ -14,7 +14,7 @@ struct RawNetworkMessage {
     Type type;
     uint32_t peerId = 0;
     uint8_t channel = 0;
-    std::vector<std::byte> data; // populated only for Type::Packet
+    std::vector<std::byte> data;  // populated only for Type::Packet
 };
 
-} // namespace pacman::core::network
+}  // namespace pacman::core::network

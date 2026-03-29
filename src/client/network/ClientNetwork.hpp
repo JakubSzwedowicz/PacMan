@@ -1,10 +1,5 @@
 #pragma once
 
-#include "client/network/ClientNetworkEvents.hpp"
-#include "core/network/ENetSourceProvider.hpp"
-#include "core/network/RawNetworkMessage.hpp"
-#include "core/protocol/Packets.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 #include <Utils/Providers/QueuedResourceProvider.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
@@ -12,6 +7,11 @@
 
 #include <memory>
 #include <string>
+
+#include "client/network/ClientNetworkEvents.hpp"
+#include "core/network/ENetSourceProvider.hpp"
+#include "core/network/RawNetworkMessage.hpp"
+#include "core/protocol/Packets.hpp"
 
 namespace pacman::client::network {
 
@@ -27,10 +27,9 @@ namespace pacman::client::network {
 //
 // Active screens subscribe via ISubscriber<ClientNetworkEvent> RAII.
 // In a future multithreaded phase, run() can be moved to its own thread.
-class ClientNetwork
-    : public Utils::PublishSubscribe::IPublisher<events::ClientNetworkEvent>,
-      public Utils::Runnables::IRunnable {
-public:
+class ClientNetwork : public Utils::PublishSubscribe::IPublisher<events::ClientNetworkEvent>,
+                      public Utils::Runnables::IRunnable {
+   public:
     ClientNetwork();
     ~ClientNetwork();
 
@@ -53,15 +52,14 @@ public:
     // Called once per frame from ClientApp.
     void run() override;
 
-private:
-    using EventProvider = Utils::Providers::QueuedResourceProvider<
-        events::ClientNetworkEvent,
-        core::network::RawNetworkMessage>;
+   private:
+    using EventProvider =
+        Utils::Providers::QueuedResourceProvider<events::ClientNetworkEvent, core::network::RawNetworkMessage>;
 
     std::unique_ptr<EventProvider> m_eventProvider;
-    core::network::ENetSourceProvider *m_enetSource = nullptr; // non-owning; owned by m_eventProvider
+    core::network::ENetSourceProvider *m_enetSource = nullptr;  // non-owning; owned by m_eventProvider
 
     Utils::Logging::LoggerSubscribed m_logger{"ClientNetwork"};
 };
 
-} // namespace pacman::client::network
+}  // namespace pacman::client::network

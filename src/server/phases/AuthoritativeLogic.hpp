@@ -1,15 +1,15 @@
 #pragma once
 
-#include "core/maps/Map.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 
 #include <entt/entt.hpp>
 
+#include "core/maps/Map.hpp"
+
 namespace pacman::server::phases {
 
 struct RuleEvents {
-  bool powerPelletEaten = false;
+    bool powerPelletEaten = false;
 };
 
 // Applies game rules each server tick: pellet and power-pellet pickup, ghost
@@ -17,18 +17,17 @@ struct RuleEvents {
 // scores updated). RuleEvents is returned so GamePhase can notify systems that
 // need to react (e.g. AISystem::onPowerPelletEaten).
 class AuthoritativeLogic {
-public:
-  AuthoritativeLogic();
+   public:
+    AuthoritativeLogic();
 
-  RuleEvents applyRules(entt::registry &registry, const core::maps::Map &map);
+    RuleEvents applyRules(entt::registry &registry, const core::maps::Map &map);
 
-private:
-  void checkPelletPickup(entt::registry &registry, const core::maps::Map &map);
-  bool checkPowerPellet(entt::registry &registry, const core::maps::Map &map);
-  void checkGhostCollision(entt::registry &registry,
-                           const core::maps::Map &map);
+   private:
+    void checkPelletPickup(entt::registry &registry, const core::maps::Map &map);
+    bool checkPowerPellet(entt::registry &registry, const core::maps::Map &map);
+    void checkGhostCollision(entt::registry &registry, const core::maps::Map &map);
 
-  Utils::Logging::LoggerSubscribed m_logger{"AuthoritativeLogic"};
+    Utils::Logging::LoggerSubscribed m_logger{"AuthoritativeLogic"};
 };
 
-} // namespace pacman::server::phases
+}  // namespace pacman::server::phases

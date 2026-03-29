@@ -1,10 +1,5 @@
 #pragma once
 
-#include "core/Common.hpp"
-#include "server/Config.hpp"
-#include "server/game/GameRunner.hpp"
-#include "server/network/ServerNetwork.hpp"
-
 #include <Utils/Logging/LoggerSubscribed.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
@@ -13,6 +8,11 @@
 #include <chrono>
 #include <memory>
 
+#include "core/Common.hpp"
+#include "server/Config.hpp"
+#include "server/game/GameRunner.hpp"
+#include "server/network/ServerNetwork.hpp"
+
 namespace pacman::server::app {
 
 // Settings derived from ServerConfig that the game loop reads every tick.
@@ -20,13 +20,11 @@ namespace pacman::server::app {
 // In a future multithreaded phase, wrap in std::atomic<std::shared_ptr<const LoopSettings>>.
 struct LoopSettings {
     float tickDt = core::tickDt;
-    std::chrono::nanoseconds tickDuration{
-        static_cast<long long>(core::tickDt * 1'000'000'000LL)};
+    std::chrono::nanoseconds tickDuration{static_cast<long long>(core::tickDt * 1'000'000'000LL)};
 };
 
-class ServerApp
-    : public Utils::PublishSubscribe::ISubscriber<std::shared_ptr<const ServerConfig>> {
-public:
+class ServerApp : public Utils::PublishSubscribe::ISubscriber<std::shared_ptr<const ServerConfig>> {
+   public:
     void onUpdate(const std::shared_ptr<const ServerConfig> &config) override;
 
     // Full server lifecycle: signal setup → init → run.
@@ -38,7 +36,7 @@ public:
     [[nodiscard]] network::ServerNetwork &network() { return m_network; }
     [[nodiscard]] const ServerConfig &config() const { return *m_config; }
 
-private:
+   private:
     void init(int argc, char *argv[]);
     void run();
 
@@ -62,4 +60,4 @@ private:
     Utils::Logging::LoggerSubscribed m_logger{"ServerApp"};
 };
 
-} // namespace pacman::server::app
+}  // namespace pacman::server::app

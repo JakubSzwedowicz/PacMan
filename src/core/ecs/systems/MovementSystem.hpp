@@ -6,4 +6,4 @@ namespace pacman::core::ecs::systems {
 
 void updateMovement(entt::registry &registry, float dt);
 
-} // namespace pacman::core::ecs::systems
+}  // namespace pacman::core::ecs::systems

@@ -1,5 +1,16 @@
 #pragma once
 
+#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
+
+#include <array>
+#include <entt/entt.hpp>
+#include <optional>
+#include <unordered_map>
+
+#include "core/maps/Map.hpp"
+#include "core/protocol/Packets.hpp"
+#include "core/simulation/Simulation.hpp"
 #include "server/ai/AISystem.hpp"
 #include "server/network/NetworkEvents.hpp"
 #include "server/network/ServerNetwork.hpp"
@@ -7,30 +18,12 @@
 #include "server/phases/Phase.hpp"
 #include "server/render/AsciiRenderer.hpp"
 
-#include "core/maps/Map.hpp"
-#include "core/protocol/Packets.hpp"
-#include "core/simulation/Simulation.hpp"
-
-#include <Utils/Logging/LoggerSubscribed.h>
-#include <Utils/PublishSubscribe/IPublisherSubscriber.h>
-
-#include <entt/entt.hpp>
-
-#include <array>
-#include <optional>
-#include <unordered_map>
-
 namespace pacman::server::phases {
 
-class GamePhase
-    : public Phase,
-      public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
-public:
-    GamePhase(network::ServerNetwork &network,
-              core::maps::Map map,
-              std::array<core::protocol::PlayerInfo, core::maxPlayers> players,
-              uint8_t playerCount,
-              bool renderAscii,
+class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
+   public:
+    GamePhase(network::ServerNetwork &network, core::maps::Map map,
+              std::array<core::protocol::PlayerInfo, core::maxPlayers> players, uint8_t playerCount, bool renderAscii,
               int renderIntervalMs);
 
     // Phase
@@ -41,7 +34,7 @@ public:
     // ISubscriber<ServerNetworkEvent>
     void onUpdate(const network::events::ServerNetworkEvent &event) override;
 
-private:
+   private:
     void handleDisconnect(core::PlayerId id);
     void handleInput(const core::protocol::PlayerInputPacket &packet);
 
@@ -81,4 +74,4 @@ private:
     Utils::Logging::LoggerSubscribed m_logger{"GamePhase"};
 };
 
-} // namespace pacman::server::phases
+}  // namespace pacman::server::phases
