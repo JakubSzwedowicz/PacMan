@@ -220,20 +220,19 @@ void GameScreen::spawnEntitiesFromMap() {
 
     for (int row = 0; row < static_cast<int>(m_map.height); ++row) {
         for (int col = 0; col < static_cast<int>(m_map.width); ++col) {
-            char tile = m_map.tileAt(col, row);
-            float x = static_cast<float>(col) * ts;
-            float y = static_cast<float>(row) * ts;
-
-            if (tile == '#') {
+            const auto tileType = m_map.tileTypeAt(col, row);
+            const float x = static_cast<float>(col) * ts;
+            const float y = static_cast<float>(row) * ts;
+            if (tileType == core::maps::TileType::Wall) {
                 auto wall = m_registry.create();
                 m_registry.emplace<core::ecs::Position>(wall, x, y);
                 m_registry.emplace<core::ecs::Collider>(wall, ts, ts);
                 m_registry.emplace<core::ecs::WallTag>(wall);
-            } else if (tile == '.') {
+            } else if (tileType == core::maps::TileType::Pellet) {
                 auto pellet = m_registry.create();
                 m_registry.emplace<core::ecs::Position>(pellet, x, y);
                 m_registry.emplace<core::ecs::PelletTag>(pellet);
-            } else if (tile == 'o') {
+            } else if (tileType == core::maps::TileType::PowerPellet) {
                 auto powerPellet = m_registry.create();
                 m_registry.emplace<core::ecs::Position>(powerPellet, x, y);
                 m_registry.emplace<core::ecs::PowerPelletTag>(powerPellet);

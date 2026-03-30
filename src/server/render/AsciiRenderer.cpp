@@ -21,7 +21,7 @@ std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry
     std::vector<std::string> grid(map.height, std::string(map.width, ' '));
     for (size_t r = 0; r < map.height; ++r) {
         for (size_t c = 0; c < map.width; ++c) {
-            if (map.tileAt(c, r) == '#') grid[r][c] = '#';
+            if (map.tileTypeAt(c, r) == core::maps::TileType::Wall) grid[r][c] = '#';
         }
     }
 

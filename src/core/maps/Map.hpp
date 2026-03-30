@@ -10,6 +10,35 @@ namespace pacman::core::maps {
 
 using TileRow = std::string;
 
+// Strongly-typed representation of a single map tile.
+// The JSON format still stores tiles as a string of chars; this enum is the
+// runtime representation used by all gameplay/rendering code.
+enum class TileType : uint8_t {
+    Wall,        // '#'
+    Empty,       // ' ' or any unrecognised character
+    Pellet,      // '.'
+    PowerPellet, // 'o'
+};
+
+[[nodiscard]] inline TileType charToTileType(char c) noexcept {
+    switch (c) {
+        case '#': return TileType::Wall;
+        case '.': return TileType::Pellet;
+        case 'o': return TileType::PowerPellet;
+        default:  return TileType::Empty;
+    }
+}
+
+[[nodiscard]] inline char tileTypeToChar(TileType t) noexcept {
+    switch (t) {
+        case TileType::Wall:        return '#';
+        case TileType::Pellet:      return '.';
+        case TileType::PowerPellet: return 'o';
+        case TileType::Empty:       return ' ';
+    }
+    return ' '; // unreachable, satisfies compiler
+}
+
 struct Tile {
     using Unit = size_t;
 
@@ -56,7 +85,7 @@ struct Map {
         }
 
         auto inBounds = [&](Tile::Unit c, Tile::Unit r) { return c < width && r < height; };
-        auto emptyField = [&](Tile::Unit c, Tile::Unit r) { return tileAt(c, r) != '#'; };
+        auto emptyField = [&](Tile::Unit c, Tile::Unit r) { return tileTypeAt(c, r) != TileType::Wall; };
 
         for (const auto &spawn : pacmanSpawns) {
             const auto isInBounds = inBounds(spawn.col(), spawn.row());
@@ -89,10 +118,15 @@ struct Map {
         return {};
     }
 
-    [[nodiscard]] char tileAt(Tile::Unit c, Tile::Unit r) const {
-        if (r >= height || c >= width) {
-            return '#';
-        }
+    // Preferred API — returns a strongly-typed TileType.
+    [[nodiscard]] TileType tileTypeAt(Tile::Unit c, Tile::Unit r) const noexcept {
+        if (r >= height || c >= width) return TileType::Wall;
+        return charToTileType(tiles[r][c]);
+    }
+
+    // Raw char access — kept for AsciiRenderer display output only.
+    [[nodiscard]] char tileAt(Tile::Unit c, Tile::Unit r) const noexcept {
+        if (r >= height || c >= width) return '#';
         return tiles[r][c];
     }
 };

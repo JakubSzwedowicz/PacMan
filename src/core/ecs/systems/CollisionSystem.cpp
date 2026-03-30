@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "core/ecs/Components.hpp"
+#include "core/maps/Map.hpp"
 
 namespace pacman::core::ecs::systems {
 
@@ -27,7 +28,7 @@ void resolveWallCollisions(entt::registry &registry, const maps::Map &map) {
 
         for (int row = rowMin; row <= rowMax; ++row) {
             for (int c = colMin; c <= colMax; ++c) {
-                if (map.tileAt(c, row) != '#') {
+                if (map.tileTypeAt(c, row) != maps::TileType::Wall) {
                     continue;
                 }
 

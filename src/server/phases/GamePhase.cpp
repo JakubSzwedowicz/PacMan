@@ -130,12 +130,12 @@ void GamePhase::spawnEntities() {
 
     for (size_t r = 0; r < m_map.height; ++r) {
         for (size_t c = 0; c < m_map.width; ++c) {
-            char tile = m_map.tileAt(c, r);
-            if (tile == '.') {
+            const auto tileType = m_map.tileTypeAt(c, r);
+            if (tileType == core::maps::TileType::Pellet) {
                 auto e = m_registry.create();
                 m_registry.emplace<core::ecs::Position>(e, static_cast<float>(c) * ts, static_cast<float>(r) * ts);
                 m_registry.emplace<core::ecs::PelletTag>(e);
-            } else if (tile == 'o') {
+            } else if (tileType == core::maps::TileType::PowerPellet) {
                 auto e = m_registry.create();
                 m_registry.emplace<core::ecs::Position>(e, static_cast<float>(c) * ts, static_cast<float>(r) * ts);
                 m_registry.emplace<core::ecs::PowerPelletTag>(e);

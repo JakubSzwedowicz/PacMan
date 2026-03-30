@@ -16,20 +16,20 @@ void Renderer::render(sf::RenderWindow &window, const entt::registry &registry, 
 
     for (int row = 0; row < static_cast<int>(map.height); ++row) {
         for (int col = 0; col < static_cast<int>(map.width); ++col) {
-            char tile = map.tileAt(col, row);
-            if (tile == '#') {
+            const auto tileType = map.tileTypeAt(col, row);
+            if (tileType == core::maps::TileType::Wall) {
                 sf::RectangleShape rect({ts, ts});
                 rect.setPosition({static_cast<float>(col) * ts, static_cast<float>(row) * ts});
                 rect.setFillColor(sf::Color(0, 0, 139));
                 window.draw(rect);
-            } else if (tile == '.') {
+            } else if (tileType == core::maps::TileType::Pellet) {
                 float radius = ts * 0.1f;
                 sf::CircleShape dot(radius);
                 dot.setPosition({static_cast<float>(col) * ts + ts / 2.0f - radius,
                                  static_cast<float>(row) * ts + ts / 2.0f - radius});
                 dot.setFillColor(sf::Color::Yellow);
                 window.draw(dot);
-            } else if (tile == 'o') {
+            } else if (tileType == core::maps::TileType::PowerPellet) {
                 float radius = ts * 0.25f;
                 sf::CircleShape pellet(radius);
                 pellet.setPosition({static_cast<float>(col) * ts + ts / 2.0f - radius,

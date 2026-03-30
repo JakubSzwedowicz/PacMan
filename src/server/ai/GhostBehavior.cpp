@@ -68,7 +68,7 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*reg
         int nc = static_cast<int>(ghostTile.col()) + cand.dc;
         int nr = static_cast<int>(ghostTile.row()) + cand.dr;
         if (nc < 0 || nr < 0) continue;
-        if (map.tileAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) == '#') continue;
+        if (map.tileTypeAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) == core::maps::TileType::Wall) continue;
 
         float dx = static_cast<float>(nc) - static_cast<float>(targetTile.col());
         float dy = static_cast<float>(nr) - static_cast<float>(targetTile.row());
@@ -86,7 +86,7 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*reg
             int nc = static_cast<int>(ghostTile.col()) + cand.dc;
             int nr = static_cast<int>(ghostTile.row()) + cand.dr;
             if (nc < 0 || nr < 0) continue;
-            if (map.tileAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) != '#') {
+            if (map.tileTypeAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) != core::maps::TileType::Wall) {
                 best = cand.dir;
                 break;
             }
