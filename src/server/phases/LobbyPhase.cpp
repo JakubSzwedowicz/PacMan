@@ -49,7 +49,8 @@ void LobbyPhase::onUpdate(const network::events::ServerNetworkEvent &event) {
 void LobbyPhase::handleConnect(core::PlayerId id) {
     const int spawnCap = m_map ? static_cast<int>(m_map->pacmanSpawns.size()) : core::maxPlayers;
     const int mapCap = (m_map && m_map->maxPlayers > 0) ? m_map->maxPlayers : spawnCap;
-    const int effectiveMax = (m_maxPlayers > 0) ? std::min({m_maxPlayers, mapCap, spawnCap}) : std::min(mapCap, spawnCap);
+    const int effectiveMax =
+        (m_maxPlayers > 0) ? std::min({m_maxPlayers, mapCap, spawnCap}) : std::min(mapCap, spawnCap);
 
     if (m_playerCount >= effectiveMax) {
         LOG_W("Lobby full ({}/{}), rejecting player {}", m_playerCount, effectiveMax, id);
@@ -99,9 +100,8 @@ void LobbyPhase::handleLobbyReady(core::PlayerId id, bool ready) {
 
 void LobbyPhase::broadcastLobbyState() {
     core::protocol::LobbyStatePacket pkt;
-    pkt.playerCount = m_playerCount;
-    for (int i = 0; i < core::maxPlayers; ++i) {
-        pkt.players[i] = {m_slots[i].id, m_slots[i].name, m_slots[i].connected, m_slots[i].ready};
+    for (const auto &slot : m_slots) {
+        if (slot.connected) pkt.players.push_back({slot.id, slot.name, true, slot.ready});
     }
     m_network.sendLobbyState(pkt);
 }
@@ -121,12 +121,13 @@ void LobbyPhase::requestStartGame() {
         return;
     }
 
-    std::array<core::protocol::PlayerInfo, core::maxPlayers> players{};
-    for (int i = 0; i < m_playerCount; ++i) {
-        players[i] = {m_slots[i].id, m_slots[i].name, true, false};
+    std::vector<core::protocol::PlayerInfo> players;
+    players.reserve(m_playerCount);
+    for (const auto &slot : m_slots) {
+        if (slot.connected) players.push_back({slot.id, slot.name, true, false});
     }
 
-    m_pendingRequest = StartGameRequest{std::move(*m_map), players, static_cast<uint8_t>(m_playerCount)};
+    m_pendingRequest = StartGameRequest{std::move(*m_map), std::move(players)};
     m_map.reset();
 }
 

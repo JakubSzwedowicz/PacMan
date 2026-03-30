@@ -5,7 +5,6 @@
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
 
-#include <array>
 #include <cstdint>
 #include <memory>
 
@@ -45,8 +44,7 @@ class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerN
 
     // Outgoing (implementations added in Phase 4)
     void sendLobbyState(const core::protocol::LobbyStatePacket &packet);
-    void broadcastGameStart(const core::protocol::GameStartPacket &templatePkt,
-                            const std::array<core::PlayerId, core::maxPlayers> &playerIds, uint8_t count);
+    void broadcastGameStart(core::protocol::GameStartPacket pkt);
     void broadcastSnapshot(const core::protocol::GameSnapshotPacket &packet);
     void broadcastRoundEnd(const core::protocol::RoundEndPacket &packet);
     void broadcastShutdown(const core::protocol::ServerShutdownPacket &packet);

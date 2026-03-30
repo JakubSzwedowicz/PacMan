@@ -40,7 +40,7 @@ void GameRunner::handleRequest(phases::PhaseRequest req) {
         pacman::overloaded{
             [](const phases::PhaseRunning &) {},
             [this](phases::StartGameRequest &r) {
-                transition(std::make_unique<phases::GamePhase>(m_network, std::move(r.map), r.players, r.playerCount,
+                transition(std::make_unique<phases::GamePhase>(m_network, std::move(r.map), std::move(r.players),
                                                                m_settings.renderAscii, m_settings.renderIntervalMs));
             },
             [this](const phases::ReturnToLobbyRequest &) {

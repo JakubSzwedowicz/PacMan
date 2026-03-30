@@ -43,16 +43,13 @@ void ServerNetwork::sendLobbyState(const core::protocol::LobbyStatePacket &p) {
     m_enetSource->broadcast({data.data(), data.size()}, true);
 }
 
-void ServerNetwork::broadcastGameStart(const core::protocol::GameStartPacket &templatePkt,
-                                       const std::array<core::PlayerId, core::maxPlayers> &playerIds,
-                                       uint8_t count) {
-    // Send each peer a copy with their assigned PlayerId filled in.
+void ServerNetwork::broadcastGameStart(core::protocol::GameStartPacket pkt) {
+    // Send each peer a copy with their own assigned PlayerId filled in.
     // PlayerId == peerId in this implementation (see NetworkEventParser::parse).
-    for (int i = 0; i < count; ++i) {
-        auto pkt = templatePkt;
-        pkt.assignedPlayerId = playerIds[i];
+    for (auto pid : pkt.playerIds) {
+        pkt.assignedPlayerId = pid;
         auto data = core::protocol::PacketCodec::serialize(pkt);
-        m_enetSource->sendTo(playerIds[i], {data.data(), data.size()}, true);
+        m_enetSource->sendTo(pid, {data.data(), data.size()}, true);
     }
 }
 

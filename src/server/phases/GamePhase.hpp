@@ -3,10 +3,10 @@
 #include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
-#include <array>
 #include <entt/entt.hpp>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 #include "core/maps/Map.hpp"
 #include "core/protocol/Packets.hpp"
@@ -22,9 +22,8 @@ namespace pacman::server::phases {
 
 class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
    public:
-    GamePhase(network::ServerNetwork &network, core::maps::Map map,
-              std::array<core::protocol::PlayerInfo, core::maxPlayers> players, uint8_t playerCount, bool renderAscii,
-              int renderIntervalMs);
+    GamePhase(network::ServerNetwork &network, core::maps::Map map, std::vector<core::protocol::PlayerInfo> players,
+              bool renderAscii, int renderIntervalMs);
 
     // Phase
     void onEnter() override;
@@ -58,8 +57,7 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     AuthoritativeLogic m_rules;
     render::AsciiRenderer m_asciiRenderer;
 
-    std::array<core::protocol::PlayerInfo, core::maxPlayers> m_players{};
-    uint8_t m_playerCount = 0;
+    std::vector<core::protocol::PlayerInfo> m_players;
     std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
     std::unordered_map<core::PlayerId, core::protocol::PlayerInputPacket> m_pendingInputs;
 

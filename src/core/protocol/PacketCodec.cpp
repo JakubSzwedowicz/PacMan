@@ -11,9 +11,7 @@ namespace pacman::core::protocol {
 
 // ── Internal helpers ───────────────────────────────────────────────────────
 
-static const uint8_t *toU8(std::span<const std::byte> data) {
-    return reinterpret_cast<const uint8_t *>(data.data());
-}
+static const uint8_t *toU8(std::span<const std::byte> data) { return reinterpret_cast<const uint8_t *>(data.data()); }
 
 static std::vector<std::byte> toBytes(flatbuffers::FlatBufferBuilder &b) {
     std::vector<std::byte> out(b.GetSize());
@@ -25,26 +23,22 @@ static proto::Direction fbDir(ecs::Direction d) { return static_cast<proto::Dire
 
 static ecs::Direction cppDir(proto::Direction d) { return static_cast<ecs::Direction>(static_cast<uint8_t>(d)); }
 
-static proto::GhostType fbGhostType(ecs::GhostType t) {
-    return static_cast<proto::GhostType>(static_cast<uint8_t>(t));
-}
+static proto::GhostType fbGhostType(ecs::GhostType t) { return static_cast<proto::GhostType>(static_cast<uint8_t>(t)); }
 
-static ecs::GhostType cppGhostType(proto::GhostType t) {
-    return static_cast<ecs::GhostType>(static_cast<uint8_t>(t));
-}
+static ecs::GhostType cppGhostType(proto::GhostType t) { return static_cast<ecs::GhostType>(static_cast<uint8_t>(t)); }
 
 static proto::GhostMode fbGhostMode(uint8_t m) { return static_cast<proto::GhostMode>(m); }
 
 // Build a PlayerInfoFB offset.
 static flatbuffers::Offset<proto::PlayerInfoFB> buildPlayerInfo(flatbuffers::FlatBufferBuilder &b,
-                                                                 const PlayerInfo &pi) {
+                                                                const PlayerInfo &pi) {
     auto name = b.CreateString(pi.name);
     return proto::CreatePlayerInfoFB(b, pi.id, name, pi.connected, pi.ready);
 }
 
 // Build an EntityStateFB offset.
 static flatbuffers::Offset<proto::EntityStateFB> buildEntityState(flatbuffers::FlatBufferBuilder &b,
-                                                                   const EntityState &es) {
+                                                                  const EntityState &es) {
     return proto::CreateEntityStateFB(b, es.id, es.x, es.y, fbDir(es.dir), es.score, es.lives, es.alive);
 }
 
@@ -83,10 +77,10 @@ PacketCodec::PacketType PacketCodec::getType(std::span<const std::byte> data) {
 std::vector<std::byte> PacketCodec::serialize(const LobbyStatePacket &p) {
     flatbuffers::FlatBufferBuilder b;
     std::vector<flatbuffers::Offset<proto::PlayerInfoFB>> players;
-    players.reserve(p.playerCount);
-    for (int i = 0; i < p.playerCount; ++i) players.push_back(buildPlayerInfo(b, p.players[i]));
+    players.reserve(p.players.size());
+    for (const auto &pi : p.players) players.push_back(buildPlayerInfo(b, pi));
     auto playersVec = b.CreateVector(players);
-    auto payload = proto::CreateLobbyStatePacketFB(b, playersVec, p.playerCount);
+    auto payload = proto::CreateLobbyStatePacketFB(b, playersVec);
     auto pkt = proto::CreatePacket(b, proto::AnyPacket_LobbyStatePacketFB, payload.Union());
     proto::FinishPacketBuffer(b, pkt);
     return toBytes(b);
@@ -105,17 +99,15 @@ std::vector<std::byte> PacketCodec::serialize(const GameStartPacket &p) {
     auto mapJson = b.CreateString(p.mapJson);
 
     std::vector<flatbuffers::Offset<proto::TileFB>> spawns;
-    spawns.reserve(p.playerCount);
-    for (int i = 0; i < p.playerCount; ++i) {
-        const auto &t = p.spawnPositions[i];
+    spawns.reserve(p.spawnPositions.size());
+    for (const auto &t : p.spawnPositions)
         spawns.push_back(proto::CreateTileFB(b, static_cast<uint64_t>(t.col()), static_cast<uint64_t>(t.row())));
-    }
     auto spawnsVec = b.CreateVector(spawns);
 
-    std::vector<uint32_t> ids(p.playerIds.begin(), p.playerIds.begin() + p.playerCount);
+    std::vector<uint32_t> ids(p.playerIds.begin(), p.playerIds.end());
     auto idsVec = b.CreateVector(ids);
 
-    auto payload = proto::CreateGameStartPacketFB(b, mapJson, spawnsVec, idsVec, p.playerCount, p.assignedPlayerId);
+    auto payload = proto::CreateGameStartPacketFB(b, mapJson, spawnsVec, idsVec, p.assignedPlayerId);
     auto pkt = proto::CreatePacket(b, proto::AnyPacket_GameStartPacketFB, payload.Union());
     proto::FinishPacketBuffer(b, pkt);
     return toBytes(b);
@@ -141,15 +133,16 @@ std::vector<std::byte> PacketCodec::serialize(const GameSnapshotPacket &p) {
     flatbuffers::FlatBufferBuilder b;
 
     std::vector<flatbuffers::Offset<proto::EntityStateFB>> players;
-    players.reserve(p.playerCount);
-    for (int i = 0; i < p.playerCount; ++i) players.push_back(buildEntityState(b, p.players[i]));
+    players.reserve(p.players.size());
+    for (const auto &es : p.players) players.push_back(buildEntityState(b, es));
     auto playersVec = b.CreateVector(players);
 
     std::vector<flatbuffers::Offset<proto::GhostStateFB>> ghosts;
     ghosts.reserve(ghostCount);
     for (int i = 0; i < ghostCount; ++i) {
         const auto &g = p.ghosts[i];
-        ghosts.push_back(proto::CreateGhostStateFB(b, fbGhostType(g.type), g.x, g.y, fbDir(g.dir), fbGhostMode(g.mode)));
+        ghosts.push_back(
+            proto::CreateGhostStateFB(b, fbGhostType(g.type), g.x, g.y, fbDir(g.dir), fbGhostMode(g.mode)));
     }
     auto ghostsVec = b.CreateVector(ghosts);
 
@@ -165,8 +158,7 @@ std::vector<std::byte> PacketCodec::serialize(const GameSnapshotPacket &p) {
         powerPellets.push_back(proto::CreateTileFB(b, static_cast<uint64_t>(t.col()), static_cast<uint64_t>(t.row())));
     auto powerPelletsVec = b.CreateVector(powerPellets);
 
-    auto payload = proto::CreateGameSnapshotPacketFB(b, p.tick, playersVec, ghostsVec, p.playerCount,
-                                                     pelletsVec, powerPelletsVec);
+    auto payload = proto::CreateGameSnapshotPacketFB(b, p.tick, playersVec, ghostsVec, pelletsVec, powerPelletsVec);
     auto pkt = proto::CreatePacket(b, proto::AnyPacket_GameSnapshotPacketFB, payload.Union());
     proto::FinishPacketBuffer(b, pkt);
     return toBytes(b);
@@ -175,10 +167,10 @@ std::vector<std::byte> PacketCodec::serialize(const GameSnapshotPacket &p) {
 std::vector<std::byte> PacketCodec::serialize(const RoundEndPacket &p) {
     flatbuffers::FlatBufferBuilder b;
     std::vector<flatbuffers::Offset<proto::EntityStateFB>> scores;
-    scores.reserve(p.playerCount);
-    for (int i = 0; i < p.playerCount; ++i) scores.push_back(buildEntityState(b, p.finalScores[i]));
+    scores.reserve(p.finalScores.size());
+    for (const auto &es : p.finalScores) scores.push_back(buildEntityState(b, es));
     auto scoresVec = b.CreateVector(scores);
-    auto payload = proto::CreateRoundEndPacketFB(b, scoresVec, p.playerCount, p.winnerId);
+    auto payload = proto::CreateRoundEndPacketFB(b, scoresVec, p.winnerId);
     auto pkt = proto::CreatePacket(b, proto::AnyPacket_RoundEndPacketFB, payload.Union());
     proto::FinishPacketBuffer(b, pkt);
     return toBytes(b);
@@ -226,14 +218,11 @@ std::optional<LobbyStatePacket> PacketCodec::deserializeLobbyState(std::span<con
     if (!fb) return std::nullopt;
 
     LobbyStatePacket out;
-    out.playerCount = fb->player_count();
     if (fb->players()) {
-        int n = static_cast<int>(fb->players()->size());
-        if (n > maxPlayers) n = maxPlayers;
-        for (int i = 0; i < n; ++i) {
-            const auto *pi = (*fb->players())[i];
+        out.players.reserve(fb->players()->size());
+        for (const auto *pi : *fb->players()) {
             if (!pi) continue;
-            out.players[i] = {pi->id(), pi->name() ? pi->name()->str() : "", pi->connected(), pi->ready()};
+            out.players.push_back({pi->id(), pi->name() ? pi->name()->str() : "", pi->connected(), pi->ready()});
         }
     }
     return out;
@@ -247,22 +236,18 @@ std::optional<GameStartPacket> PacketCodec::deserializeGameStart(std::span<const
 
     GameStartPacket out;
     out.mapJson = fb->map_json() ? fb->map_json()->str() : "";
-    out.playerCount = fb->player_count();
     out.assignedPlayerId = fb->assigned_player_id();
 
     if (fb->spawn_positions()) {
-        int n = static_cast<int>(fb->spawn_positions()->size());
-        if (n > maxPlayers) n = maxPlayers;
-        for (int i = 0; i < n; ++i) {
-            const auto *t = (*fb->spawn_positions())[i];
+        out.spawnPositions.reserve(fb->spawn_positions()->size());
+        for (const auto *t : *fb->spawn_positions()) {
             if (!t) continue;
-            out.spawnPositions[i].pos = {static_cast<size_t>(t->col()), static_cast<size_t>(t->row())};
+            out.spawnPositions.push_back(maps::Tile{{static_cast<size_t>(t->col()), static_cast<size_t>(t->row())}});
         }
     }
     if (fb->player_ids()) {
-        int n = static_cast<int>(fb->player_ids()->size());
-        if (n > maxPlayers) n = maxPlayers;
-        for (int i = 0; i < n; ++i) out.playerIds[i] = (*fb->player_ids())[i];
+        out.playerIds.reserve(fb->player_ids()->size());
+        for (auto id : *fb->player_ids()) out.playerIds.push_back(id);
     }
     return out;
 }
@@ -275,15 +260,13 @@ std::optional<GameSnapshotPacket> PacketCodec::deserializeGameSnapshot(std::span
 
     GameSnapshotPacket out;
     out.tick = fb->tick();
-    out.playerCount = fb->player_count();
 
     if (fb->players()) {
-        int n = static_cast<int>(fb->players()->size());
-        if (n > maxPlayers) n = maxPlayers;
-        for (int i = 0; i < n; ++i) {
-            const auto *es = (*fb->players())[i];
+        out.players.reserve(fb->players()->size());
+        for (const auto *es : *fb->players()) {
             if (!es) continue;
-            out.players[i] = {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(), es->alive()};
+            out.players.push_back(
+                {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(), es->alive()});
         }
     }
     if (fb->ghosts()) {
@@ -307,7 +290,8 @@ std::optional<GameSnapshotPacket> PacketCodec::deserializeGameSnapshot(std::span
         out.remainingPowerPellets.reserve(fb->power_pellets()->size());
         for (const auto *t : *fb->power_pellets()) {
             if (!t) continue;
-            out.remainingPowerPellets.push_back(maps::Tile{{static_cast<size_t>(t->col()), static_cast<size_t>(t->row())}});
+            out.remainingPowerPellets.push_back(
+                maps::Tile{{static_cast<size_t>(t->col()), static_cast<size_t>(t->row())}});
         }
     }
     return out;
@@ -320,16 +304,13 @@ std::optional<RoundEndPacket> PacketCodec::deserializeRoundEnd(std::span<const s
     if (!fb) return std::nullopt;
 
     RoundEndPacket out;
-    out.playerCount = fb->player_count();
     out.winnerId = fb->winner_id();
     if (fb->final_scores()) {
-        int n = static_cast<int>(fb->final_scores()->size());
-        if (n > maxPlayers) n = maxPlayers;
-        for (int i = 0; i < n; ++i) {
-            const auto *es = (*fb->final_scores())[i];
+        out.finalScores.reserve(fb->final_scores()->size());
+        for (const auto *es : *fb->final_scores()) {
             if (!es) continue;
-            out.finalScores[i] = {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(),
-                                  es->alive()};
+            out.finalScores.push_back(
+                {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(), es->alive()});
         }
     }
     return out;

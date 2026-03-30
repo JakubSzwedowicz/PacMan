@@ -10,20 +10,18 @@
 namespace pacman::server::phases {
 
 GamePhase::GamePhase(network::ServerNetwork &network, core::maps::Map map,
-                     std::array<core::protocol::PlayerInfo, core::maxPlayers> players, uint8_t playerCount,
-                     bool renderAscii, int renderIntervalMs)
+                     std::vector<core::protocol::PlayerInfo> players, bool renderAscii, int renderIntervalMs)
     : m_network(network),
       m_map(std::move(map)),
-      m_players(players),
-      m_playerCount(playerCount),
+      m_players(std::move(players)),
       m_renderAscii(renderAscii),
       m_renderInterval(static_cast<float>(renderIntervalMs) / 1000.0f) {}
 
 void GamePhase::onEnter() {
-    LOG_I("GamePhase entered ({} players)", m_playerCount);
+    LOG_I("GamePhase entered ({} players)", m_players.size());
     spawnEntities();
 
-    if (m_playerCount == 0) {
+    if (m_players.empty()) {
         m_allReady = true;  // solo / AI-only mode — start immediately
         return;
     }
@@ -37,15 +35,12 @@ void GamePhase::onEnter() {
 
     core::protocol::GameStartPacket pkt;
     pkt.mapJson = std::move(*mapJson);
-    pkt.playerCount = m_playerCount;
-    std::array<core::PlayerId, core::maxPlayers> playerIds{};
-    for (int i = 0; i < m_playerCount; ++i) {
-        pkt.playerIds[i] = m_players[i].id;
-        pkt.spawnPositions[i] = m_map.pacmanSpawns[i % m_map.pacmanSpawns.size()];
-        playerIds[i] = m_players[i].id;
+    for (size_t i = 0; i < m_players.size(); ++i) {
+        pkt.playerIds.push_back(m_players[i].id);
+        pkt.spawnPositions.push_back(m_map.pacmanSpawns[i % m_map.pacmanSpawns.size()]);
     }
-    m_network.broadcastGameStart(pkt, playerIds, m_playerCount);
-    LOG_I("GameStart broadcast sent, waiting for {} ReadyToPlay(s)", m_playerCount);
+    m_network.broadcastGameStart(std::move(pkt));
+    LOG_I("GameStart broadcast sent, waiting for {} ReadyToPlay(s)", m_players.size());
 }
 
 void GamePhase::onExit() {
@@ -60,8 +55,8 @@ void GamePhase::onUpdate(const network::events::ServerNetworkEvent &event) {
                           [this](const network::events::PlayerInputEvent &e) { handleInput(e.packet); },
                           [this](const network::events::ReadyToPlayEvent &) {
                               ++m_readyCount;
-                              LOG_I("ReadyToPlay {}/{}", m_readyCount, m_playerCount);
-                              if (m_readyCount >= m_playerCount) {
+                              LOG_I("ReadyToPlay {}/{}", m_readyCount, m_players.size());
+                              if (m_readyCount >= m_players.size()) {
                                   m_allReady = true;
                                   LOG_I("All players ready — simulation starting");
                               }
@@ -148,7 +143,7 @@ void GamePhase::spawnEntities() {
         }
     }
 
-    for (uint8_t i = 0; i < m_playerCount; ++i) {
+    for (size_t i = 0; i < m_players.size(); ++i) {
         core::PlayerId pid = m_players[i].id;
         const auto &spawn = m_map.pacmanSpawns[i % m_map.pacmanSpawns.size()];
 
@@ -181,7 +176,7 @@ void GamePhase::spawnEntities() {
     spawnGhost(core::ecs::GhostType::Inky, gs.inky);
     spawnGhost(core::ecs::GhostType::Clyde, gs.clyde);
 
-    LOG_I("Spawned entities: {} PacMen, ghosts from map", m_playerCount);
+    LOG_I("Spawned entities: {} PacMen, ghosts from map", m_players.size());
 }
 
 void GamePhase::applyPendingInputs() {
@@ -197,7 +192,7 @@ void GamePhase::applyPendingInputs() {
 void GamePhase::broadcastSnapshot() { m_network.broadcastSnapshot(buildSnapshot()); }
 
 bool GamePhase::isRoundOver() const {
-    if (m_playerCount == 0) return false;
+    if (m_players.empty()) return false;
 
     bool noPellets = m_registry.view<const core::ecs::PelletTag>().empty() &&
                      m_registry.view<const core::ecs::PowerPelletTag>().empty();
@@ -218,15 +213,13 @@ void GamePhase::endRound() {
 core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
     core::protocol::GameSnapshotPacket snap;
     snap.tick = m_tick;
-    snap.playerCount = m_playerCount;
 
-    uint8_t pi = 0;
     for (const auto &[pid, entity] : m_playerEntities) {
-        if (!m_registry.valid(entity) || pi >= core::maxPlayers) continue;
+        if (!m_registry.valid(entity)) continue;
         const auto &pos = m_registry.get<core::ecs::Position>(entity);
         const auto &dir = m_registry.get<core::ecs::DirectionState>(entity);
         const auto &state = m_registry.get<core::ecs::PlayerState>(entity);
-        snap.players[pi++] = {pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0};
+        snap.players.push_back({pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0});
     }
 
     uint8_t gi = 0;
@@ -256,16 +249,14 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
 
 core::protocol::RoundEndPacket GamePhase::buildRoundEnd() const {
     core::protocol::RoundEndPacket pkt;
-    pkt.playerCount = m_playerCount;
 
-    uint8_t i = 0;
     int maxScore = -1;
     for (const auto &[pid, entity] : m_playerEntities) {
-        if (!m_registry.valid(entity) || i >= core::maxPlayers) continue;
+        if (!m_registry.valid(entity)) continue;
         const auto &pos = m_registry.get<core::ecs::Position>(entity);
         const auto &dir = m_registry.get<core::ecs::DirectionState>(entity);
         const auto &state = m_registry.get<core::ecs::PlayerState>(entity);
-        pkt.finalScores[i++] = {pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0};
+        pkt.finalScores.push_back({pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0});
         if (state.score > maxScore) {
             maxScore = state.score;
             pkt.winnerId = pid;

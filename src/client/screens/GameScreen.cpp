@@ -20,8 +20,8 @@ using namespace network::events;
 // Constructors
 // ---------------------------------------------------------------------------
 
-GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network,
-                       std::string mapPath, std::string serverAddress, int serverPort)
+GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+                       std::string serverAddress, int serverPort)
     : m_screenManager(screenManager),
       m_network(network),
       m_mapPath(std::move(mapPath)),
@@ -30,12 +30,10 @@ GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetw
     m_ghostEntities.fill(entt::null);
 }
 
-GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network,
-                       entt::registry &&registry, core::maps::Map map,
-                       std::unordered_map<core::PlayerId, entt::entity> playerEntities,
-                       std::array<entt::entity, core::ghostCount> ghostEntities,
-                       core::PlayerId localPlayerId, bool isHost,
-                       std::string mapPath, std::string serverAddress, int serverPort)
+GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, entt::registry &&registry,
+                       core::maps::Map map, std::unordered_map<core::PlayerId, entt::entity> playerEntities,
+                       std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId,
+                       bool isHost, std::string mapPath, std::string serverAddress, int serverPort)
     : m_screenManager(screenManager),
       m_network(network),
       m_mapPath(std::move(mapPath)),
@@ -132,25 +130,23 @@ void GameScreen::setLastInput(const core::ecs::Input &input) { m_lastInput = inp
 // ---------------------------------------------------------------------------
 
 void GameScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(
-        pacman::overloaded{
-            [this](const GameSnapshotEvent &e) { applySnapshot(e.packet); },
-            [this](const RoundEndEvent &e) {
-                LOG_I("Round ended — transitioning to ResultsScreen");
-                m_screenManager.setScreen(std::make_unique<ResultsScreen>(
-                    m_screenManager, &m_network, e.packet, m_localPlayerId, m_isHost,
-                    m_mapPath, m_serverAddress, m_serverPort));
-            },
-            [this](const DisconnectedEvent &) {
-                LOG_I("Disconnected during game");
-                goToMenu();
-            },
-            [this](const ServerShutdownEvent &e) {
-                LOG_I("Server shutdown during game: {}", e.packet.reason);
-                goToMenu();
-            },
-            [](const auto &) {}},
-        event);
+    std::visit(pacman::overloaded{[this](const GameSnapshotEvent &e) { applySnapshot(e.packet); },
+                                  [this](const RoundEndEvent &e) {
+                                      LOG_I("Round ended — transitioning to ResultsScreen");
+                                      m_screenManager.setScreen(std::make_unique<ResultsScreen>(
+                                          m_screenManager, &m_network, e.packet, m_localPlayerId, m_isHost, m_mapPath,
+                                          m_serverAddress, m_serverPort));
+                                  },
+                                  [this](const DisconnectedEvent &) {
+                                      LOG_I("Disconnected during game");
+                                      goToMenu();
+                                  },
+                                  [this](const ServerShutdownEvent &e) {
+                                      LOG_I("Server shutdown during game: {}", e.packet.reason);
+                                      goToMenu();
+                                  },
+                                  [](const auto &) {}},
+               event);
 }
 
 // ---------------------------------------------------------------------------
@@ -158,17 +154,22 @@ void GameScreen::onUpdate(const ClientNetworkEvent &event) {
 // ---------------------------------------------------------------------------
 
 void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
-    for (int i = 0; i < snap.playerCount; ++i) {
-        const auto &state = snap.players[i];
+    for (const auto &state : snap.players) {
         auto it = m_playerEntities.find(state.id);
         if (it == m_playerEntities.end()) continue;
         entt::entity e = it->second;
 
         auto *pos = m_registry.try_get<core::ecs::Position>(e);
-        if (pos) { pos->x = state.x; pos->y = state.y; }
+        if (pos) {
+            pos->x = state.x;
+            pos->y = state.y;
+        }
 
         auto *ps = m_registry.try_get<core::ecs::PlayerState>(e);
-        if (ps) { ps->score = state.score; ps->lives = state.lives; }
+        if (ps) {
+            ps->score = state.score;
+            ps->lives = state.lives;
+        }
 
         auto *ds = m_registry.try_get<core::ecs::DirectionState>(e);
         if (ds) ds->current = state.dir;
@@ -180,7 +181,10 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
         const auto &gs = snap.ghosts[i];
 
         auto *pos = m_registry.try_get<core::ecs::Position>(e);
-        if (pos) { pos->x = gs.x; pos->y = gs.y; }
+        if (pos) {
+            pos->x = gs.x;
+            pos->y = gs.y;
+        }
 
         auto *ghostState = m_registry.try_get<core::ecs::GhostState>(e);
         if (ghostState) ghostState->mode = static_cast<core::ecs::GhostState::Mode>(gs.mode);
@@ -195,8 +199,7 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
         using Tag = decltype(tag);
         std::unordered_set<uint64_t> surviving;
         surviving.reserve(remaining.size());
-        for (const auto &tile : remaining)
-            surviving.insert((static_cast<uint64_t>(tile.col()) << 32) | tile.row());
+        for (const auto &tile : remaining) surviving.insert((static_cast<uint64_t>(tile.col()) << 32) | tile.row());
 
         std::vector<entt::entity> toDestroy;
         for (auto e : m_registry.view<core::ecs::Position, Tag>()) {

@@ -29,11 +29,9 @@ class GameScreen : public screen::Screen,
                std::string serverAddress, int serverPort);
 
     // Networked constructor — receives pre-populated registry from LoadingScreen.
-    GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network,
-               entt::registry &&registry, core::maps::Map map,
-               std::unordered_map<core::PlayerId, entt::entity> playerEntities,
-               std::array<entt::entity, core::ghostCount> ghostEntities,
-               core::PlayerId localPlayerId, bool isHost,
+    GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, entt::registry &&registry,
+               core::maps::Map map, std::unordered_map<core::PlayerId, entt::entity> playerEntities,
+               std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId, bool isHost,
                std::string mapPath, std::string serverAddress, int serverPort);
 
     void onEnter() override;

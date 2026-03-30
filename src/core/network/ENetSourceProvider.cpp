@@ -1,11 +1,10 @@
 #include "core/network/ENetSourceProvider.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
+#include <enet/enet.h>
 
 #include <cstring>
 #include <unordered_map>
-
-#include <enet/enet.h>
 
 namespace pacman::core::network {
 
@@ -154,8 +153,7 @@ void ENetSourceProvider::sendTo(uint32_t peerId, std::span<const std::byte> data
         return;
     }
     auto flags = reliable ? ENET_PACKET_FLAG_RELIABLE : 0u;
-    auto *packet =
-        enet_packet_create(reinterpret_cast<const void *>(data.data()), data.size(), flags);
+    auto *packet = enet_packet_create(reinterpret_cast<const void *>(data.data()), data.size(), flags);
     enet_peer_send(it->second, 0, packet);
     enet_host_flush(m_impl->host);
 }
@@ -163,8 +161,7 @@ void ENetSourceProvider::sendTo(uint32_t peerId, std::span<const std::byte> data
 void ENetSourceProvider::broadcast(std::span<const std::byte> data, bool reliable) {
     if (!m_impl->active || !m_impl->host) return;
     auto flags = reliable ? ENET_PACKET_FLAG_RELIABLE : 0u;
-    auto *packet =
-        enet_packet_create(reinterpret_cast<const void *>(data.data()), data.size(), flags);
+    auto *packet = enet_packet_create(reinterpret_cast<const void *>(data.data()), data.size(), flags);
     enet_host_broadcast(m_impl->host, 0, packet);
     enet_host_flush(m_impl->host);
 }

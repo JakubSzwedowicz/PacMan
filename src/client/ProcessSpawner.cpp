@@ -1,12 +1,12 @@
 #include "client/ProcessSpawner.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
-
-#include <csignal>
-#include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <csignal>
+#include <cstring>
 
 namespace pacman::client {
 

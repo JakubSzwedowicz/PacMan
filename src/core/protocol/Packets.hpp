@@ -49,8 +49,7 @@ struct GhostState {
 
 // Server → all clients: current lobby state, broadcast on every change.
 struct LobbyStatePacket {
-    std::array<PlayerInfo, maxPlayers> players{};
-    uint8_t playerCount = 0;
+    std::vector<PlayerInfo> players;
 };
 
 // Client → server: player toggles ready status.
@@ -66,9 +65,8 @@ struct LobbyReadyPacket {
 // Server → all clients: game is starting.
 struct GameStartPacket {
     std::string mapJson;
-    std::array<maps::Tile, maxPlayers> spawnPositions{};
-    std::array<PlayerId, maxPlayers> playerIds{};
-    uint8_t playerCount = 0;
+    std::vector<maps::Tile> spawnPositions;
+    std::vector<PlayerId> playerIds;
     PlayerId assignedPlayerId = 0;  // filled in per-client by the server
 };
 
@@ -91,9 +89,8 @@ struct PlayerInputPacket {
 // Server → all clients: authoritative world state (sent at ~20 Hz).
 struct GameSnapshotPacket {
     Tick tick = 0;
-    std::array<EntityState, maxPlayers> players{};
-    std::array<GhostState, ghostCount> ghosts{};
-    uint8_t playerCount = 0;
+    std::vector<EntityState> players;
+    std::array<GhostState, ghostCount> ghosts{};  // fixed: always ghostCount slots
     std::vector<maps::Tile> remainingPellets;
     std::vector<maps::Tile> remainingPowerPellets;
 };
@@ -104,8 +101,7 @@ struct GameSnapshotPacket {
 
 // Server → all clients: round finished.
 struct RoundEndPacket {
-    std::array<EntityState, maxPlayers> finalScores{};
-    uint8_t playerCount = 0;
+    std::vector<EntityState> finalScores;
     PlayerId winnerId = 0;  // player with the highest score
 };
 

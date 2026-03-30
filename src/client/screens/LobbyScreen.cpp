@@ -45,8 +45,7 @@ void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
     ImGui::TableSetupColumn("Gracz");
     ImGui::TableSetupColumn("Status");
     ImGui::TableHeadersRow();
-    for (int i = 0; i < m_lobbyState.playerCount; ++i) {
-        const auto &p = m_lobbyState.players[i];
+    for (const auto &p : m_lobbyState.players) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%s%s", p.name.c_str(), p.id == 1 ? " (Host)" : "");
@@ -73,25 +72,23 @@ void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
 }
 
 void LobbyScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(
-        pacman::overloaded{
-            [this](const LobbyStateEvent &e) { m_lobbyState = e.packet; },
-            [this](const GameStartEvent &e) {
-                LOG_I("GameStart received — transitioning to LoadingScreen");
-                m_screenManager.setScreen(std::make_unique<LoadingScreen>(m_screenManager, m_network, m_mapPath,
-                                                                          m_serverAddress, m_serverPort, e.packet,
-                                                                          e.packet.assignedPlayerId, m_isHost));
-            },
-            [this](const DisconnectedEvent &) {
-                LOG_I("Disconnected — returning to menu");
-                goToMenu();
-            },
-            [this](const ServerShutdownEvent &e) {
-                LOG_I("Server shutdown: {} — returning to menu", e.packet.reason);
-                goToMenu();
-            },
-            [](const auto &) {}},
-        event);
+    std::visit(pacman::overloaded{[this](const LobbyStateEvent &e) { m_lobbyState = e.packet; },
+                                  [this](const GameStartEvent &e) {
+                                      LOG_I("GameStart received — transitioning to LoadingScreen");
+                                      m_screenManager.setScreen(std::make_unique<LoadingScreen>(
+                                          m_screenManager, m_network, m_mapPath, m_serverAddress, m_serverPort,
+                                          e.packet, e.packet.assignedPlayerId, m_isHost));
+                                  },
+                                  [this](const DisconnectedEvent &) {
+                                      LOG_I("Disconnected — returning to menu");
+                                      goToMenu();
+                                  },
+                                  [this](const ServerShutdownEvent &e) {
+                                      LOG_I("Server shutdown: {} — returning to menu", e.packet.reason);
+                                      goToMenu();
+                                  },
+                                  [](const auto &) {}},
+               event);
 }
 
 void LobbyScreen::goToMenu() {

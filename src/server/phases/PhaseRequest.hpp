@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <variant>
+#include <vector>
 
 #include "core/Common.hpp"
 #include "core/maps/Map.hpp"
@@ -17,8 +17,7 @@ struct PhaseRunning {};  // keep running, no transition
 
 struct StartGameRequest {
     core::maps::Map map;
-    std::array<core::protocol::PlayerInfo, core::maxPlayers> players;
-    uint8_t playerCount;
+    std::vector<core::protocol::PlayerInfo> players;
 };
 
 struct ReturnToLobbyRequest {};

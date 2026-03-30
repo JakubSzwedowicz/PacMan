@@ -35,8 +35,7 @@ table TileFB {
 }
 
 table LobbyStatePacketFB {
-    players      : [PlayerInfoFB];
-    player_count : ubyte;
+    players : [PlayerInfoFB];
 }
 
 table LobbyReadyPacketFB {
@@ -48,7 +47,6 @@ table GameStartPacketFB {
     map_json           : string;
     spawn_positions    : [TileFB];
     player_ids         : [uint32];
-    player_count       : ubyte;
     assigned_player_id : uint32;
 }
 
@@ -63,17 +61,15 @@ table PlayerInputPacketFB {
 }
 
 table GameSnapshotPacketFB {
-    tick              : uint32;
-    players           : [EntityStateFB];
-    ghosts            : [GhostStateFB];
-    player_count      : ubyte;
-    pellets           : [TileFB];
-    power_pellets     : [TileFB];
+    tick          : uint32;
+    players       : [EntityStateFB];
+    ghosts        : [GhostStateFB];
+    pellets       : [TileFB];
+    power_pellets : [TileFB];
 }
 
 table RoundEndPacketFB {
     final_scores : [EntityStateFB];
-    player_count : ubyte;
     winner_id    : uint32;
 }
 

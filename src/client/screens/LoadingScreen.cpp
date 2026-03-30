@@ -14,10 +14,9 @@ namespace pacman::client::screens {
 
 using namespace network::events;
 
-LoadingScreen::LoadingScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network,
-                             std::string mapPath, std::string serverAddress, int serverPort,
-                             core::protocol::GameStartPacket gameStart, core::PlayerId localPlayerId,
-                             bool isHost)
+LoadingScreen::LoadingScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+                             std::string serverAddress, int serverPort, core::protocol::GameStartPacket gameStart,
+                             core::PlayerId localPlayerId, bool isHost)
     : m_screenManager(screenManager),
       m_network(network),
       m_mapPath(std::move(mapPath)),
@@ -80,25 +79,23 @@ void LoadingScreen::draw(sf::RenderWindow & /*window*/) {
 }
 
 void LoadingScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(
-        pacman::overloaded{
-            [this](const GameSnapshotEvent &) {
-                LOG_I("First snapshot received — transitioning to GameScreen");
-                m_screenManager.setScreen(std::make_unique<GameScreen>(
-                    m_screenManager, m_network, std::move(m_registry), std::move(m_map),
-                    std::move(m_playerEntities), m_ghostEntities, m_localPlayerId, m_isHost,
-                    m_mapPath, m_serverAddress, m_serverPort));
-            },
-            [this](const DisconnectedEvent &) {
-                LOG_I("Disconnected during loading");
-                goToMenu();
-            },
-            [this](const ServerShutdownEvent &e) {
-                LOG_I("Server shutdown during loading: {}", e.packet.reason);
-                goToMenu();
-            },
-            [](const auto &) {}},
-        event);
+    std::visit(pacman::overloaded{[this](const GameSnapshotEvent &) {
+                                      LOG_I("First snapshot received — transitioning to GameScreen");
+                                      m_screenManager.setScreen(std::make_unique<GameScreen>(
+                                          m_screenManager, m_network, std::move(m_registry), std::move(m_map),
+                                          std::move(m_playerEntities), m_ghostEntities, m_localPlayerId, m_isHost,
+                                          m_mapPath, m_serverAddress, m_serverPort));
+                                  },
+                                  [this](const DisconnectedEvent &) {
+                                      LOG_I("Disconnected during loading");
+                                      goToMenu();
+                                  },
+                                  [this](const ServerShutdownEvent &e) {
+                                      LOG_I("Server shutdown during loading: {}", e.packet.reason);
+                                      goToMenu();
+                                  },
+                                  [](const auto &) {}},
+               event);
 }
 
 void LoadingScreen::spawnEntitiesFromMap() {
@@ -129,7 +126,7 @@ void LoadingScreen::spawnEntitiesFromMap() {
     }
 
     // Players: one entity per assigned player in the GameStart packet
-    for (int i = 0; i < m_gameStart.playerCount; ++i) {
+    for (size_t i = 0; i < m_gameStart.playerIds.size(); ++i) {
         const core::PlayerId pid = m_gameStart.playerIds[i];
         const auto &spawn = m_gameStart.spawnPositions[i];
         float x = static_cast<float>(spawn.col()) * ts;
@@ -147,12 +144,11 @@ void LoadingScreen::spawnEntitiesFromMap() {
 
     // Ghosts: spawn at map ghost spawn positions
     const std::array<core::maps::Tile, core::ghostCount> ghostTiles = {
-        m_map.ghostSpawns.blinky, m_map.ghostSpawns.pinky,
-        m_map.ghostSpawns.inky,   m_map.ghostSpawns.clyde};
+        m_map.ghostSpawns.blinky, m_map.ghostSpawns.pinky, m_map.ghostSpawns.inky, m_map.ghostSpawns.clyde};
 
     const std::array<core::ecs::GhostType, core::ghostCount> ghostTypes = {
-        core::ecs::GhostType::Blinky, core::ecs::GhostType::Pinky,
-        core::ecs::GhostType::Inky,   core::ecs::GhostType::Clyde};
+        core::ecs::GhostType::Blinky, core::ecs::GhostType::Pinky, core::ecs::GhostType::Inky,
+        core::ecs::GhostType::Clyde};
 
     for (int i = 0; i < core::ghostCount; ++i) {
         const auto &tile = ghostTiles[i];

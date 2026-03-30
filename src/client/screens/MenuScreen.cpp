@@ -3,9 +3,9 @@
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
 
+#include <chrono>
 #include <filesystem>
 #include <thread>
-#include <chrono>
 
 #include "client/screen/ScreenManager.hpp"
 #include "client/screens/LobbyScreen.hpp"
@@ -72,8 +72,10 @@ void MenuScreen::hostGame() {
 
     auto serverBin = serverBinaryPath();
     std::vector<std::string> args{
-        "--port", std::to_string(m_serverPort),
-        "--map_path", m_mapPath,
+        "--port",
+        std::to_string(m_serverPort),
+        "--map_path",
+        m_mapPath,
     };
 
     if (!m_spawner.spawn(serverBin, args)) {
@@ -92,8 +94,8 @@ void MenuScreen::hostGame() {
 
     LOG_I("Connected to local server");
     m_screenManager.setScreen(std::make_unique<LobbyScreen>(m_screenManager, m_network, m_mapPath, m_serverAddress,
-                                                             m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
-                                                             true /*isHost*/));
+                                                            m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
+                                                            true /*isHost*/));
 }
 
 void MenuScreen::joinGame() {
@@ -106,8 +108,8 @@ void MenuScreen::joinGame() {
 
     LOG_I("Connected to server");
     m_screenManager.setScreen(std::make_unique<LobbyScreen>(m_screenManager, m_network, m_mapPath, m_serverAddress,
-                                                             m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
-                                                             false /*isHost*/));
+                                                            m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
+                                                            false /*isHost*/));
 }
 
 bool MenuScreen::shouldQuit() const { return m_shouldQuit; }
