@@ -3,6 +3,9 @@
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
 
+#include <unordered_set>
+#include <vector>
+
 #include "client/screen/ScreenManager.hpp"
 #include "client/screens/MenuScreen.hpp"
 #include "client/screens/ResultsScreen.hpp"
@@ -185,6 +188,28 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
         auto *ds = m_registry.try_get<core::ecs::DirectionState>(e);
         if (ds) ds->current = gs.dir;
     }
+
+    // Reconcile pellets: destroy client-side entities absent from the server's remaining list.
+    const float ts = m_map.tileSize;
+    auto reconcilePellets = [&](auto tag, const std::vector<core::maps::Tile> &remaining) {
+        using Tag = decltype(tag);
+        std::unordered_set<uint64_t> surviving;
+        surviving.reserve(remaining.size());
+        for (const auto &tile : remaining)
+            surviving.insert((static_cast<uint64_t>(tile.col()) << 32) | tile.row());
+
+        std::vector<entt::entity> toDestroy;
+        for (auto e : m_registry.view<core::ecs::Position, Tag>()) {
+            const auto &pos = m_registry.get<core::ecs::Position>(e);
+            auto col = static_cast<uint64_t>(pos.x / ts);
+            auto row = static_cast<uint64_t>(pos.y / ts);
+            if (!surviving.count((col << 32) | row)) toDestroy.push_back(e);
+        }
+        for (auto e : toDestroy) m_registry.destroy(e);
+    };
+
+    reconcilePellets(core::ecs::PelletTag{}, snap.remainingPellets);
+    reconcilePellets(core::ecs::PowerPelletTag{}, snap.remainingPowerPellets);
 }
 
 void GameScreen::spawnEntitiesFromMap() {

@@ -30,8 +30,8 @@ void GamePhase::onEnter() {
 
     auto mapJson = core::maps::MapsManager::toJson(m_map);
     if (!mapJson) {
-        LOG_E("Failed to serialize map for GameStart: {}", mapJson.error());
-        m_allReady = true;  // degraded: start without waiting
+        LOG_E("Failed to serialize map for GameStart: {} — aborting to lobby", mapJson.error());
+        m_pendingRequest = ReturnToLobbyRequest{};
         return;
     }
 
@@ -237,6 +237,18 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
         const auto &dir = m_registry.get<core::ecs::DirectionState>(e);
         const auto &gs = m_registry.get<core::ecs::GhostState>(e);
         snap.ghosts[gi++] = {gs.type, pos.x, pos.y, dir.current, static_cast<uint8_t>(gs.mode)};
+    }
+
+    const float ts = m_map.tileSize;
+    for (auto e : m_registry.view<const core::ecs::Position, const core::ecs::PelletTag>()) {
+        const auto &pos = m_registry.get<core::ecs::Position>(e);
+        snap.remainingPellets.push_back(
+            core::maps::Tile{{static_cast<size_t>(pos.x / ts), static_cast<size_t>(pos.y / ts)}});
+    }
+    for (auto e : m_registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>()) {
+        const auto &pos = m_registry.get<core::ecs::Position>(e);
+        snap.remainingPowerPellets.push_back(
+            core::maps::Tile{{static_cast<size_t>(pos.x / ts), static_cast<size_t>(pos.y / ts)}});
     }
 
     return snap;

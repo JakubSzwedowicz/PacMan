@@ -3,7 +3,7 @@
     "width": 5,
     "height": 5,
     "tileSize": 32.0,
-    "minPlayers": 0,
+    "maxPlayers": 4,
     "tiles": [
         "#####",
         "#...#",

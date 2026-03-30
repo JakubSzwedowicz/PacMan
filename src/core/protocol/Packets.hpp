@@ -2,6 +2,7 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
 #include "core/Common.hpp"
 #include "core/ecs/Components.hpp"
@@ -93,6 +94,8 @@ struct GameSnapshotPacket {
     std::array<EntityState, maxPlayers> players{};
     std::array<GhostState, ghostCount> ghosts{};
     uint8_t playerCount = 0;
+    std::vector<maps::Tile> remainingPellets;
+    std::vector<maps::Tile> remainingPowerPellets;
 };
 
 // ---------------------------------------------------------------------------

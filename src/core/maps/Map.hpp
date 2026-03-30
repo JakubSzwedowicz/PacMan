@@ -31,7 +31,7 @@ struct Map {
     Tile::Unit width = 0;
     Tile::Unit height = 0;
     float tileSize = 16.0f;
-    int minPlayers = 0;
+    int maxPlayers = 0;  // 0 = unlimited (capped by pacmanSpawns.size())
     std::vector<TileRow> tiles;
     std::vector<Tile> pacmanSpawns;
     GhostSpawns ghostSpawns;

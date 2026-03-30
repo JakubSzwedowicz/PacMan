@@ -63,10 +63,12 @@ table PlayerInputPacketFB {
 }
 
 table GameSnapshotPacketFB {
-    tick         : uint32;
-    players      : [EntityStateFB];
-    ghosts       : [GhostStateFB];
-    player_count : ubyte;
+    tick              : uint32;
+    players           : [EntityStateFB];
+    ghosts            : [GhostStateFB];
+    player_count      : ubyte;
+    pellets           : [TileFB];
+    power_pellets     : [TileFB];
 }
 
 table RoundEndPacketFB {

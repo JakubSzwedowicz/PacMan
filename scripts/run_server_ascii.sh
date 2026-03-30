@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Run the server in solo mode (no players) with ASCII rendering.
-# The test map has minPlayers=0, so the game starts immediately without
-# waiting for any clients to connect.
+# --max_players 0 means no clients are expected; game starts immediately.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

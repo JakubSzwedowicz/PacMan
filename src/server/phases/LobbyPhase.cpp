@@ -21,8 +21,8 @@ void LobbyPhase::onEnter() {
     }
     m_map = std::move(*result);
 
-    if (m_map->minPlayers == 0) {
-        LOG_I("minPlayers=0 — starting game immediately (server solo mode)");
+    if (m_maxPlayers == 0) {
+        LOG_I("maxPlayers=0 — starting game immediately (solo/AI-only mode)");
         requestStartGame();
     }
 }
@@ -47,8 +47,9 @@ void LobbyPhase::onUpdate(const network::events::ServerNetworkEvent &event) {
 }
 
 void LobbyPhase::handleConnect(core::PlayerId id) {
-    const int effectiveMax =
-        m_map ? std::min(m_maxPlayers, static_cast<int>(m_map->pacmanSpawns.size())) : m_maxPlayers;
+    const int spawnCap = m_map ? static_cast<int>(m_map->pacmanSpawns.size()) : core::maxPlayers;
+    const int mapCap = (m_map && m_map->maxPlayers > 0) ? m_map->maxPlayers : spawnCap;
+    const int effectiveMax = (m_maxPlayers > 0) ? std::min({m_maxPlayers, mapCap, spawnCap}) : std::min(mapCap, spawnCap);
 
     if (m_playerCount >= effectiveMax) {
         LOG_W("Lobby full ({}/{}), rejecting player {}", m_playerCount, effectiveMax, id);

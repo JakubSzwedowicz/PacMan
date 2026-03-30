@@ -153,7 +153,20 @@ std::vector<std::byte> PacketCodec::serialize(const GameSnapshotPacket &p) {
     }
     auto ghostsVec = b.CreateVector(ghosts);
 
-    auto payload = proto::CreateGameSnapshotPacketFB(b, p.tick, playersVec, ghostsVec, p.playerCount);
+    std::vector<flatbuffers::Offset<proto::TileFB>> pellets;
+    pellets.reserve(p.remainingPellets.size());
+    for (const auto &t : p.remainingPellets)
+        pellets.push_back(proto::CreateTileFB(b, static_cast<uint64_t>(t.col()), static_cast<uint64_t>(t.row())));
+    auto pelletsVec = b.CreateVector(pellets);
+
+    std::vector<flatbuffers::Offset<proto::TileFB>> powerPellets;
+    powerPellets.reserve(p.remainingPowerPellets.size());
+    for (const auto &t : p.remainingPowerPellets)
+        powerPellets.push_back(proto::CreateTileFB(b, static_cast<uint64_t>(t.col()), static_cast<uint64_t>(t.row())));
+    auto powerPelletsVec = b.CreateVector(powerPellets);
+
+    auto payload = proto::CreateGameSnapshotPacketFB(b, p.tick, playersVec, ghostsVec, p.playerCount,
+                                                     pelletsVec, powerPelletsVec);
     auto pkt = proto::CreatePacket(b, proto::AnyPacket_GameSnapshotPacketFB, payload.Union());
     proto::FinishPacketBuffer(b, pkt);
     return toBytes(b);
@@ -281,6 +294,20 @@ std::optional<GameSnapshotPacket> PacketCodec::deserializeGameSnapshot(std::span
             if (!gs) continue;
             out.ghosts[i] = {cppGhostType(gs->type()), gs->x(), gs->y(), cppDir(gs->dir()),
                              static_cast<uint8_t>(gs->mode())};
+        }
+    }
+    if (fb->pellets()) {
+        out.remainingPellets.reserve(fb->pellets()->size());
+        for (const auto *t : *fb->pellets()) {
+            if (!t) continue;
+            out.remainingPellets.push_back(maps::Tile{{static_cast<size_t>(t->col()), static_cast<size_t>(t->row())}});
+        }
+    }
+    if (fb->power_pellets()) {
+        out.remainingPowerPellets.reserve(fb->power_pellets()->size());
+        for (const auto *t : *fb->power_pellets()) {
+            if (!t) continue;
+            out.remainingPowerPellets.push_back(maps::Tile{{static_cast<size_t>(t->col()), static_cast<size_t>(t->row())}});
         }
     }
     return out;
