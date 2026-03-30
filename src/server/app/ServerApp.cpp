@@ -1,8 +1,8 @@
 #include "server/app/ServerApp.hpp"
 
 #include <Utils/Config/ConfigManager.h>
-#include <Utils/Config/Providers/CLIConfigProvider.h>
-#include <Utils/Config/Providers/JsonConfigProvider.h>
+#include <Utils/Config/ConfigProviders/CLIConfigProvider.h>
+#include <Utils/Config/ConfigProviders/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
 #include <Utils/Providers/FileSourceProvider.h>
 
@@ -48,17 +48,16 @@ int ServerApp::main(int argc, char *argv[]) {
 }
 
 void ServerApp::init(int argc, char *argv[]) {
-    using CLIProvider = Utils::Config::Providers::CLIConfigProvider<ServerConfig>;
-    using JsonProvider = Utils::Config::Providers::JsonConfigProvider<ServerConfig>;
+    using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ServerConfig>;
+    using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ServerConfig>;
     using Manager = Utils::Config::ConfigManager<ServerConfig, CLIProvider, JsonProvider>;
 
     auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("");
     auto *fileSourcePtr = fileSource.get();
 
-    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(),
+    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
                                              std::make_unique<JsonProvider>(std::move(fileSource)));
 
-    manager->update<CLIProvider>(argc, argv);
     fileSourcePtr->setPath(m_config->configPath.get());
     manager->run();
 

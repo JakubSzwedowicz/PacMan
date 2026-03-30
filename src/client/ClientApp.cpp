@@ -1,8 +1,8 @@
 #include "client/ClientApp.hpp"
 
 #include <Utils/Config/ConfigManager.h>
-#include <Utils/Config/Providers/CLIConfigProvider.h>
-#include <Utils/Config/Providers/JsonConfigProvider.h>
+#include <Utils/Config/ConfigProviders/CLIConfigProvider.h>
+#include <Utils/Config/ConfigProviders/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
 #include <Utils/Providers/FileSourceProvider.h>
 
@@ -28,17 +28,15 @@ int ClientApp::main(int argc, char *argv[]) {
 // ---------------------------------------------------------------------------
 
 void ClientApp::init(int argc, char *argv[]) {
-    using CLIProvider = Utils::Config::Providers::CLIConfigProvider<ClientConfig>;
-    using JsonProvider = Utils::Config::Providers::JsonConfigProvider<ClientConfig>;
+    using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ClientConfig>;
+    using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ClientConfig>;
     using Manager = Utils::Config::ConfigManager<ClientConfig, CLIProvider, JsonProvider>;
 
     auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("config/client.json");
     auto *fileSourcePtr = fileSource.get();
 
-    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(),
+    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
                                              std::make_unique<JsonProvider>(std::move(fileSource)));
-
-    manager->update<CLIProvider>(argc, argv);
 
     fileSourcePtr->setPath(m_config->configPath.get());
     manager->run();
