@@ -9,6 +9,15 @@
 
 namespace pacman::core::maps {
 
+Utils::Logging::Logger &MapsManager::logger() {
+    static Utils::Logging::Logger s_logger{"MapsManager"};
+    return s_logger;
+}
+
+// Route LOG_X macros to the function-local static logger above.
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define m_logger MapsManager::logger()
+
 std::expected<Map, std::string> MapsManager::loadFromFile(const std::filesystem::path &path) {
     LOG_I("Loading map from {}", path.string());
 

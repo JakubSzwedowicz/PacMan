@@ -23,7 +23,7 @@ class MapsManager {
    private:
     static std::expected<void, std::string> validate(const Map &map);
 
-    static inline Utils::Logging::Logger m_logger{"MapsManager"};
+    static Utils::Logging::Logger &logger();
 };
 
 }  // namespace pacman::core::maps
