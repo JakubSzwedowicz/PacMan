@@ -13,27 +13,19 @@
 
 namespace pacman::client {
 
-// ---------------------------------------------------------------------------
-// Entry point
-// ---------------------------------------------------------------------------
-
-int ClientApp::main(int argc, char *argv[]) {
+int ClientApp::main(int argc, char* argv[]) {
     init(argc, argv);
     run();
     return 0;
 }
 
-// ---------------------------------------------------------------------------
-// Initialization
-// ---------------------------------------------------------------------------
-
-void ClientApp::init(int argc, char *argv[]) {
+void ClientApp::init(int argc, char* argv[]) {
     using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ClientConfig>;
     using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ClientConfig>;
     using Manager = Utils::Config::ConfigManager<ClientConfig, CLIProvider, JsonProvider>;
 
     auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("config/client.json");
-    auto *fileSourcePtr = fileSource.get();
+    auto* fileSourcePtr = fileSource.get();
 
     auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
                                              std::make_unique<JsonProvider>(std::move(fileSource)));
@@ -49,18 +41,13 @@ void ClientApp::init(int argc, char *argv[]) {
 
     m_uiOverlay.init(m_window->getRenderWindow());
 
-    m_screenManager.setScreen(std::make_unique<screens::MenuScreen>(m_screenManager, m_network,
-                                                                       m_config->mapPath.get(),
-                                                                       m_config->serverAddress.get(),
-                                                                       m_config->serverPort.get()));
+    m_screenManager.setScreen(std::make_unique<screens::MenuScreen>(m_screenManager, m_network, m_config->mapPath.get(),
+                                                                    m_config->serverAddress.get(),
+                                                                    m_config->serverPort.get()));
     m_screenManager.applyPendingTransition();
 
     LOG_I("ClientApp initialised");
 }
-
-// ---------------------------------------------------------------------------
-// Event / render loop
-// ---------------------------------------------------------------------------
 
 void ClientApp::run() {
     LOG_I("ClientApp starting main loop");
@@ -77,7 +64,7 @@ void ClientApp::run() {
         m_configManager->run();
         m_network.run();
 
-        m_window->pollEvents([this](const sf::Event &event) {
+        m_window->pollEvents([this](const sf::Event& event) {
             if (event.is<sf::Event::Closed>()) {
                 m_window->getRenderWindow().close();
                 return;
@@ -89,7 +76,7 @@ void ClientApp::run() {
 
         auto input = m_inputManager.poll(m_tick);
 
-        auto *gameScreen = dynamic_cast<screens::GameScreen *>(&*m_screenManager.getCurrentScreen());
+        auto* gameScreen = dynamic_cast<screens::GameScreen*>(&*m_screenManager.getCurrentScreen());
         if (gameScreen) gameScreen->setLastInput(input);
 
         while (accumulator >= core::tickDt) {
@@ -100,7 +87,7 @@ void ClientApp::run() {
 
         m_screenManager.applyPendingTransition();
 
-        auto *menuScreen = dynamic_cast<screens::MenuScreen *>(&*m_screenManager.getCurrentScreen());
+        auto* menuScreen = dynamic_cast<screens::MenuScreen*>(&*m_screenManager.getCurrentScreen());
         if (menuScreen && menuScreen->shouldQuit()) m_shouldQuit = true;
 
         m_uiOverlay.update(m_window->getRenderWindow(), frameTime);

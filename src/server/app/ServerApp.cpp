@@ -40,6 +40,7 @@ int ServerApp::main(int argc, char *argv[]) {
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
 
+    LOG_I("PacMan Server starting");
     init(argc, argv);
     run();
 
@@ -48,6 +49,7 @@ int ServerApp::main(int argc, char *argv[]) {
 }
 
 void ServerApp::init(int argc, char *argv[]) {
+    LOG_I("ServerApp initializing");
     using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ServerConfig>;
     using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ServerConfig>;
     using Manager = Utils::Config::ConfigManager<ServerConfig, CLIProvider, JsonProvider>;
@@ -72,6 +74,7 @@ void ServerApp::init(int argc, char *argv[]) {
         m_config->renderInterval.get(),
     };
     m_gameRunner = std::make_unique<game::GameRunner>(std::move(settings), m_network);
+    LOG_I("ServerApp initialized");
 }
 
 void ServerApp::run() {

@@ -1,20 +1,8 @@
-// packets.fbs — PacMan client↔server wire protocol.
-// Serialized with FlatBuffers; the in-memory representation lives in Packets.hpp.
-
 namespace pacman.proto;
 
-// ── Enums (values must match the C++ enums in Components.hpp / Packets.hpp) ──
-
-// Matches ecs::Direction { Up=0, Down=1, Left=2, Right=3, None=4 }
 enum Direction : ubyte { Up = 0, Down = 1, Left = 2, Right = 3, None = 4 }
-
-// Matches ecs::GhostType { Blinky=0, Pinky=1, Inky=2, Clyde=3 }
 enum GhostType : ubyte { Blinky = 0, Pinky = 1, Inky = 2, Clyde = 3 }
-
-// Matches ecs::GhostState::Mode { Chase=0, Scatter=1, Frightened=2, Eaten=3 }
 enum GhostMode : ubyte { Chase = 0, Scatter = 1, Frightened = 2, Eaten = 3 }
-
-// ── Sub-tables ─────────────────────────────────────────────────────────────
 
 table PlayerInfoFB {
     id        : uint32;
@@ -46,21 +34,16 @@ table TileFB {
     row : uint64;
 }
 
-// ── Packet tables ──────────────────────────────────────────────────────────
-
-// Server → Client: lobby state broadcast on every change.
 table LobbyStatePacketFB {
     players      : [PlayerInfoFB];
     player_count : ubyte;
 }
 
-// Client → Server: player toggles ready.
 table LobbyReadyPacketFB {
     player_id : uint32;
     ready     : bool;
 }
 
-// Server → Client: game is starting.
 table GameStartPacketFB {
     map_json           : string;
     spawn_positions    : [TileFB];
@@ -69,19 +52,16 @@ table GameStartPacketFB {
     assigned_player_id : uint32;
 }
 
-// Client → Server: finished loading, ready for first tick.
 table ReadyToPlayPacketFB {
     player_id : uint32;
 }
 
-// Client → Server: one input sample per tick.
 table PlayerInputPacketFB {
     tick      : uint32;
     player_id : uint32;
     dir       : Direction;
 }
 
-// Server → Client: authoritative world state (~20 Hz).
 table GameSnapshotPacketFB {
     tick         : uint32;
     players      : [EntityStateFB];
@@ -89,19 +69,15 @@ table GameSnapshotPacketFB {
     player_count : ubyte;
 }
 
-// Server → Client: round finished.
 table RoundEndPacketFB {
     final_scores : [EntityStateFB];
     player_count : ubyte;
     winner_id    : uint32;
 }
 
-// Server → Client: server shutting down.
 table ServerShutdownPacketFB {
     reason : string;
 }
-
-// ── Discriminated union envelope (root type) ───────────────────────────────
 
 union AnyPacket {
     LobbyStatePacketFB,

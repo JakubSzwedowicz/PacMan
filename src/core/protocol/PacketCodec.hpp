@@ -34,31 +34,26 @@ class PacketCodec {
 
     [[nodiscard]] static PacketType getType(std::span<const std::byte> data);
 
-    // ── Serialize ──────────────────────────────────────────────────────────
+    [[nodiscard]] static std::vector<std::byte> serialize(const LobbyStatePacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const LobbyReadyPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const GameStartPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const ReadyToPlayPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const PlayerInputPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const GameSnapshotPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const RoundEndPacket& p);
+    [[nodiscard]] static std::vector<std::byte> serialize(const ServerShutdownPacket& p);
 
-    [[nodiscard]] static std::vector<std::byte> serialize(const LobbyStatePacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const LobbyReadyPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const GameStartPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const ReadyToPlayPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const PlayerInputPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const GameSnapshotPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const RoundEndPacket &p);
-    [[nodiscard]] static std::vector<std::byte> serialize(const ServerShutdownPacket &p);
-
-    // ── Deserialize ────────────────────────────────────────────────────────
-
-    // Server-bound (client → server)
+    // client → server
     [[nodiscard]] static std::optional<LobbyReadyPacket> deserializeLobbyReady(std::span<const std::byte> data);
     [[nodiscard]] static std::optional<ReadyToPlayPacket> deserializeReadyToPlay(std::span<const std::byte> data);
     [[nodiscard]] static std::optional<PlayerInputPacket> deserializePlayerInput(std::span<const std::byte> data);
 
-    // Client-bound (server → client)
+    // server → client
     [[nodiscard]] static std::optional<LobbyStatePacket> deserializeLobbyState(std::span<const std::byte> data);
     [[nodiscard]] static std::optional<GameStartPacket> deserializeGameStart(std::span<const std::byte> data);
     [[nodiscard]] static std::optional<GameSnapshotPacket> deserializeGameSnapshot(std::span<const std::byte> data);
     [[nodiscard]] static std::optional<RoundEndPacket> deserializeRoundEnd(std::span<const std::byte> data);
-    [[nodiscard]] static std::optional<ServerShutdownPacket> deserializeServerShutdown(
-        std::span<const std::byte> data);
+    [[nodiscard]] static std::optional<ServerShutdownPacket> deserializeServerShutdown(std::span<const std::byte> data);
 };
 
 }  // namespace pacman::core::protocol
