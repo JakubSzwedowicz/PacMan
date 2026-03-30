@@ -19,24 +19,24 @@ RuleEvents AuthoritativeLogic::applyRules(entt::registry& registry, const core::
 }
 
 void AuthoritativeLogic::checkPelletPickup(entt::registry& registry, const core::maps::Map& map) {
-    float ts = map.tileSize;
+    const float ts = map.tileSize;
 
-    auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
-    auto pelletView = registry.view<const core::ecs::Position, const core::ecs::PelletTag>();
+    const auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
+    const auto pelletView = registry.view<const core::ecs::Position, const core::ecs::PelletTag>();
 
     std::vector<entt::entity> toDestroy;
 
-    for (auto pac : pacView) {
+    for (const auto& pac : pacView) {
         const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
 
-        auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
+        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
 
-        for (auto pellet : pelletView) {
+        for (const auto& pellet : pelletView) {
             const auto& pelletPos = pelletView.get<const core::ecs::Position>(pellet);
-            auto pc = static_cast<size_t>(pelletPos.x / ts);
-            auto pr = static_cast<size_t>(pelletPos.y / ts);
+            const auto pc = static_cast<size_t>(pelletPos.x / ts);
+            const auto pr = static_cast<size_t>(pelletPos.y / ts);
 
             if (pc == pacCol && pr == pacRow) {
                 state.score += 10;
@@ -53,25 +53,25 @@ void AuthoritativeLogic::checkPelletPickup(entt::registry& registry, const core:
 }
 
 bool AuthoritativeLogic::checkPowerPellet(entt::registry& registry, const core::maps::Map& map) {
-    float ts = map.tileSize;
+    const float ts = map.tileSize;
 
-    auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
-    auto ppView = registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>();
+    const auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
+    const auto ppView = registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>();
 
     std::vector<entt::entity> toDestroy;
     bool eaten = false;
 
-    for (auto pac : pacView) {
+    for (const auto& pac : pacView) {
         const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
 
-        auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
+        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
 
-        for (auto pp : ppView) {
+        for (const auto& pp : ppView) {
             const auto& ppPos = ppView.get<const core::ecs::Position>(pp);
-            auto pc = static_cast<size_t>(ppPos.x / ts);
-            auto pr = static_cast<size_t>(ppPos.y / ts);
+            const auto pc = static_cast<size_t>(ppPos.x / ts);
+            const auto pr = static_cast<size_t>(ppPos.y / ts);
 
             if (pc == pacCol && pr == pacRow) {
                 state.score += 50;
@@ -83,32 +83,32 @@ bool AuthoritativeLogic::checkPowerPellet(entt::registry& registry, const core::
         }
     }
 
-    for (auto e : toDestroy) {
+    for (const auto& e : toDestroy) {
         registry.destroy(e);
     }
     return eaten;
 }
 
 void AuthoritativeLogic::checkGhostCollision(entt::registry& registry, const core::maps::Map& map) {
-    float ts = map.tileSize;
+    const float ts = map.tileSize;
 
-    auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
-    auto ghostView = registry.view<const core::ecs::Position, core::ecs::GhostState, const core::ecs::GhostTag>();
+    const auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
+    const auto ghostView = registry.view<const core::ecs::Position, core::ecs::GhostState, const core::ecs::GhostTag>();
 
-    for (auto pac : pacView) {
+    for (const auto& pac : pacView) {
         const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
         if (state.lives <= 0) continue;
 
-        auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
+        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
 
-        for (auto ghost : ghostView) {
+        for (const auto& ghost : ghostView) {
             const auto& ghostPos = ghostView.get<const core::ecs::Position>(ghost);
             auto& ghostState = ghostView.get<core::ecs::GhostState>(ghost);
 
-            auto gc = static_cast<size_t>(ghostPos.x / ts);
-            auto gr = static_cast<size_t>(ghostPos.y / ts);
+            const auto gc = static_cast<size_t>(ghostPos.x / ts);
+            const auto gr = static_cast<size_t>(ghostPos.y / ts);
 
             if (gc != pacCol || gr != pacRow) continue;
 
