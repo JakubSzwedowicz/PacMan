@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <entt/entt.hpp>
 #include <string>
@@ -32,7 +32,7 @@ class AsciiRenderer {
 
     void printGrid(const std::vector<std::string> &grid, const core::maps::Map &map) const;
 
-    Utils::Logging::LoggerSubscribed m_logger{"AsciiRenderer"};
+    Utils::Logging::Logger m_logger{"AsciiRenderer"};
 };
 
 }  // namespace pacman::server::render

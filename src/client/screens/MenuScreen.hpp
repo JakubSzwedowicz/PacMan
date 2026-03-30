@@ -1,9 +1,11 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <string>
 
+#include "client/ProcessSpawner.hpp"
+#include "client/network/ClientNetwork.hpp"
 #include "client/screen/Screen.hpp"
 
 namespace pacman::client::screen {
@@ -14,7 +16,8 @@ namespace pacman::client::screens {
 
 class MenuScreen : public screen::Screen {
    public:
-    MenuScreen(screen::ScreenManager &screenManager, std::string mapPath);
+    MenuScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+               std::string serverAddress, int serverPort);
 
     void onEnter() override;
     void onExit() override;
@@ -25,10 +28,18 @@ class MenuScreen : public screen::Screen {
     [[nodiscard]] bool shouldQuit() const;
 
    private:
+    void hostGame();
+    void joinGame();
+
     screen::ScreenManager &m_screenManager;
+    network::ClientNetwork &m_network;
     std::string m_mapPath;
+    std::string m_serverAddress;
+    int m_serverPort;
+
+    ProcessSpawner m_spawner;
     bool m_shouldQuit = false;
-    Utils::Logging::LoggerSubscribed m_logger{"MenuScreen"};
+    Utils::Logging::Logger m_logger{"MenuScreen"};
 };
 
 }  // namespace pacman::client::screens

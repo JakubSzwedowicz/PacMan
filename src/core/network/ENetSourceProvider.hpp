@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/Providers/ISourceProvider.h>
 
 #include <cstddef>
@@ -53,7 +53,7 @@ class ENetSourceProvider : public Utils::Providers::ISourceProvider<RawNetworkMe
     struct Impl;
     std::unique_ptr<Impl> m_impl;
     std::queue<RawNetworkMessage> m_queue;
-    Utils::Logging::LoggerSubscribed m_logger{"ENetSourceProvider"};
+    Utils::Logging::Logger m_logger{"ENetSourceProvider"};
 };
 
 }  // namespace pacman::core::network

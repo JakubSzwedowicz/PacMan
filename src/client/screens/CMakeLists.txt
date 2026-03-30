@@ -8,6 +8,7 @@ target_sources(Screens PRIVATE
     LobbyScreen.cpp
     LoadingScreen.cpp
     ResultsScreen.cpp
+    ../ProcessSpawner.cpp
 )
 target_link_libraries(Screens
     PUBLIC  Client::Screen Client::Graphics Client::Network

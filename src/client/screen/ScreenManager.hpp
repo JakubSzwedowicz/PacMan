@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <memory>
 
@@ -25,7 +25,7 @@ class ScreenManager {
    private:
     std::unique_ptr<Screen> m_currentScreen;
     std::unique_ptr<Screen> m_pendingScreen;
-    Utils::Logging::LoggerSubscribed m_logger{"ScreenManager"};
+    Utils::Logging::Logger m_logger{"ScreenManager"};
 };
 
 }  // namespace pacman::client::screen

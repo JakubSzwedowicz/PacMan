@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <entt/entt.hpp>
 
@@ -25,7 +25,7 @@ class AISystem {
 
    private:
     GhostPhaseTimer m_phaseTimer;
-    Utils::Logging::LoggerSubscribed m_logger{"AISystem"};
+    Utils::Logging::Logger m_logger{"AISystem"};
 };
 
 }  // namespace pacman::server::ai

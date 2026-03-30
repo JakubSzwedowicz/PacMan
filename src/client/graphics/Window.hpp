@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -23,7 +23,7 @@ class Window {
 
    private:
     sf::RenderWindow m_window;
-    Utils::Logging::LoggerSubscribed m_logger{"Window"};
+    Utils::Logging::Logger m_logger{"Window"};
 };
 
 }  // namespace pacman::client::graphics

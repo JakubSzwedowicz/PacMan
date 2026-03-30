@@ -15,8 +15,8 @@ using Utils::Config::ConfigParameters::ConfigParametersContainer;
 struct ServerConfig {
     ConfigParametersContainer m_container;
 
-    // loggerConfig is extracted by ConfigManagerWithLogger to publish
-    // LoggerConfig changes to all LoggerSubscribed instances.
+    // Picked up by ConfigManager via HasLoggerConfig concept and forwarded
+    // to all Logger subscribers automatically on each config change.
     ConfigParameter<Utils::Logging::LoggerConfig> loggerConfig;
     ConfigParameter<std::string> configPath;
     ConfigParameter<int> port;

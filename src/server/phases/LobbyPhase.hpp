@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <array>
@@ -55,7 +55,7 @@ class LobbyPhase : public Phase, public Utils::PublishSubscribe::ISubscriber<net
     std::array<PlayerSlot, core::maxPlayers> m_slots{};
     uint8_t m_playerCount = 0;
 
-    Utils::Logging::LoggerSubscribed m_logger{"LobbyPhase"};
+    Utils::Logging::Logger m_logger{"LobbyPhase"};
 };
 
 }  // namespace pacman::server::phases

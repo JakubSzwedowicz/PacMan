@@ -4,6 +4,8 @@
 
 #include "core/Common.hpp"
 #include "core/ecs/Components.hpp"
+#include "core/maps/MapsManager.hpp"
+#include "core/protocol/Packets.hpp"
 
 namespace pacman::server::phases {
 
@@ -20,7 +22,30 @@ GamePhase::GamePhase(network::ServerNetwork &network, core::maps::Map map,
 void GamePhase::onEnter() {
     LOG_I("GamePhase entered ({} players)", m_playerCount);
     spawnEntities();
-    // TODO (Phase 4): broadcastGameStart
+
+    if (m_playerCount == 0) {
+        m_allReady = true;  // solo / AI-only mode — start immediately
+        return;
+    }
+
+    auto mapJson = core::maps::MapsManager::toJson(m_map);
+    if (!mapJson) {
+        LOG_E("Failed to serialize map for GameStart: {}", mapJson.error());
+        m_allReady = true;  // degraded: start without waiting
+        return;
+    }
+
+    core::protocol::GameStartPacket pkt;
+    pkt.mapJson = std::move(*mapJson);
+    pkt.playerCount = m_playerCount;
+    std::array<core::PlayerId, core::maxPlayers> playerIds{};
+    for (int i = 0; i < m_playerCount; ++i) {
+        pkt.playerIds[i] = m_players[i].id;
+        pkt.spawnPositions[i] = m_map.pacmanSpawns[i % m_map.pacmanSpawns.size()];
+        playerIds[i] = m_players[i].id;
+    }
+    m_network.broadcastGameStart(pkt, playerIds, m_playerCount);
+    LOG_I("GameStart broadcast sent, waiting for {} ReadyToPlay(s)", m_playerCount);
 }
 
 void GamePhase::onExit() {
@@ -31,15 +56,30 @@ void GamePhase::onExit() {
 }
 
 void GamePhase::onUpdate(const network::events::ServerNetworkEvent &event) {
-    std::visit(overloaded{
-                   [this](const network::events::PlayerDisconnectedEvent &e) { handleDisconnect(e.playerId); },
-                   [this](const network::events::PlayerInputEvent &e) { handleInput(e.packet); },
-                   [](const auto &) {}  // connect/lobbyReady/readyToPlay not relevant mid-game
-               },
+    std::visit(overloaded{[this](const network::events::PlayerDisconnectedEvent &e) { handleDisconnect(e.playerId); },
+                          [this](const network::events::PlayerInputEvent &e) { handleInput(e.packet); },
+                          [this](const network::events::ReadyToPlayEvent &) {
+                              ++m_readyCount;
+                              LOG_I("ReadyToPlay {}/{}", m_readyCount, m_playerCount);
+                              if (m_readyCount >= m_playerCount) {
+                                  m_allReady = true;
+                                  LOG_I("All players ready — simulation starting");
+                              }
+                          },
+                          [](const auto &) {}},
                event);
 }
 
 PhaseRequest GamePhase::update(float dt) {
+    if (!m_allReady) {
+        if (m_pendingRequest) {
+            auto req = std::move(*m_pendingRequest);
+            m_pendingRequest.reset();
+            return req;
+        }
+        return PhaseRunning{};
+    }
+
     applyPendingInputs();
     m_simulation.update(m_registry, dt, m_map);
     m_aiSystem.update(m_registry, m_map, dt);

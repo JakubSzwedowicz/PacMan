@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <SFML/Window/Event.hpp>
 
@@ -17,7 +17,7 @@ class InputManager {
 
    private:
     core::ecs::Direction m_currentDirection = core::ecs::Direction::None;
-    Utils::Logging::LoggerSubscribed m_logger{"InputManager"};
+    Utils::Logging::Logger m_logger{"InputManager"};
 };
 
 }  // namespace pacman::client::input

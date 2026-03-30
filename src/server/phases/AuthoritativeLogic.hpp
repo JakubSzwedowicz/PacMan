@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <entt/entt.hpp>
 
@@ -27,7 +27,7 @@ class AuthoritativeLogic {
     bool checkPowerPellet(entt::registry &registry, const core::maps::Map &map);
     void checkGhostCollision(entt::registry &registry, const core::maps::Map &map);
 
-    Utils::Logging::LoggerSubscribed m_logger{"AuthoritativeLogic"};
+    Utils::Logging::Logger m_logger{"AuthoritativeLogic"};
 };
 
 }  // namespace pacman::server::phases

@@ -1,6 +1,6 @@
 #include "server/app/ServerApp.hpp"
 
-#include <Utils/Config/ConfigManagerWithLogger.h>
+#include <Utils/Config/ConfigManager.h>
 #include <Utils/Config/Providers/CLIConfigProvider.h>
 #include <Utils/Config/Providers/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
@@ -50,7 +50,7 @@ int ServerApp::main(int argc, char *argv[]) {
 void ServerApp::init(int argc, char *argv[]) {
     using CLIProvider = Utils::Config::Providers::CLIConfigProvider<ServerConfig>;
     using JsonProvider = Utils::Config::Providers::JsonConfigProvider<ServerConfig>;
-    using Manager = Utils::Config::ConfigManagerWithLogger<ServerConfig, CLIProvider, JsonProvider>;
+    using Manager = Utils::Config::ConfigManager<ServerConfig, CLIProvider, JsonProvider>;
 
     auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("");
     auto *fileSourcePtr = fileSource.get();

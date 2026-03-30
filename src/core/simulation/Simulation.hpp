@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <entt/entt.hpp>
 
@@ -17,7 +17,7 @@ class Simulation {
     void update(entt::registry &registry, float dt, const maps::Map &map);
 
    private:
-    Utils::Logging::LoggerSubscribed m_logger{"Simulation"};
+    Utils::Logging::Logger m_logger{"Simulation"};
 };
 
 }  // namespace pacman::core::simulation

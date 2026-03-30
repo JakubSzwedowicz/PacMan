@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <expected>
 #include <filesystem>
@@ -17,10 +17,13 @@ class MapsManager {
 
     static std::expected<Map, std::string> loadFromJson(std::string_view json);
 
+    // Serialize map back to JSON string (inverse of loadFromJson).
+    static std::expected<std::string, std::string> toJson(const Map &map);
+
    private:
     static std::expected<void, std::string> validate(const Map &map);
 
-    static inline Utils::Logging::LoggerSubscribed m_logger{"MapsManager"};
+    static inline Utils::Logging::Logger m_logger{"MapsManager"};
 };
 
 }  // namespace pacman::core::maps

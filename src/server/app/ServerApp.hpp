@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
 
@@ -57,7 +57,7 @@ class ServerApp : public Utils::PublishSubscribe::ISubscriber<std::shared_ptr<co
     core::Tick m_tick = 0;
     std::atomic<bool> m_running{false};
 
-    Utils::Logging::LoggerSubscribed m_logger{"ServerApp"};
+    Utils::Logging::Logger m_logger{"ServerApp"};
 };
 
 }  // namespace pacman::server::app

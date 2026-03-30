@@ -1,6 +1,6 @@
 #include "client/ClientApp.hpp"
 
-#include <Utils/Config/ConfigManagerWithLogger.h>
+#include <Utils/Config/ConfigManager.h>
 #include <Utils/Config/Providers/CLIConfigProvider.h>
 #include <Utils/Config/Providers/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
@@ -30,7 +30,7 @@ int ClientApp::main(int argc, char *argv[]) {
 void ClientApp::init(int argc, char *argv[]) {
     using CLIProvider = Utils::Config::Providers::CLIConfigProvider<ClientConfig>;
     using JsonProvider = Utils::Config::Providers::JsonConfigProvider<ClientConfig>;
-    using Manager = Utils::Config::ConfigManagerWithLogger<ClientConfig, CLIProvider, JsonProvider>;
+    using Manager = Utils::Config::ConfigManager<ClientConfig, CLIProvider, JsonProvider>;
 
     auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("config/client.json");
     auto *fileSourcePtr = fileSource.get();
@@ -51,7 +51,10 @@ void ClientApp::init(int argc, char *argv[]) {
 
     m_uiOverlay.init(m_window->getRenderWindow());
 
-    m_screenManager.setScreen(std::make_unique<screens::MenuScreen>(m_screenManager, m_config->mapPath.get()));
+    m_screenManager.setScreen(std::make_unique<screens::MenuScreen>(m_screenManager, m_network,
+                                                                       m_config->mapPath.get(),
+                                                                       m_config->serverAddress.get(),
+                                                                       m_config->serverPort.get()));
     m_screenManager.applyPendingTransition();
 
     LOG_I("ClientApp initialised");

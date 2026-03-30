@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/Providers/QueuedResourceProvider.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
@@ -62,7 +62,7 @@ class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerN
     std::unique_ptr<EventProvider> m_eventProvider;
     core::network::ENetSourceProvider *m_enetSource = nullptr;  // non-owning; owned by m_eventProvider
 
-    Utils::Logging::LoggerSubscribed m_logger{"ServerNetwork"};
+    Utils::Logging::Logger m_logger{"ServerNetwork"};
 };
 
 }  // namespace pacman::server::network

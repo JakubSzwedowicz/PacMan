@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <array>
@@ -63,6 +63,10 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
     std::unordered_map<core::PlayerId, core::protocol::PlayerInputPacket> m_pendingInputs;
 
+    // Readiness gate: simulation only runs once all clients have sent ReadyToPlay.
+    uint8_t m_readyCount = 0;
+    bool m_allReady = false;
+
     core::Tick m_tick = 0;
     float m_snapshotAccumulator = 0.0f;
     static constexpr float snapshotRate = 1.0f / 20.0f;
@@ -71,7 +75,7 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     float m_renderInterval = 0.5f;
     float m_renderAccumulator = 0.0f;
 
-    Utils::Logging::LoggerSubscribed m_logger{"GamePhase"};
+    Utils::Logging::Logger m_logger{"GamePhase"};
 };
 
 }  // namespace pacman::server::phases

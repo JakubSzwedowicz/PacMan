@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Time.hpp>
@@ -26,7 +26,7 @@ class UIOverlay {
 
    private:
     bool m_initialized = false;
-    Utils::Logging::LoggerSubscribed m_logger{"UIOverlay"};
+    Utils::Logging::Logger m_logger{"UIOverlay"};
 };
 
 }  // namespace pacman::client::ui

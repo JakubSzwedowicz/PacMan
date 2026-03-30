@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/Runnables/IRunnable.h>
 
 #include <memory>
@@ -45,7 +45,7 @@ class ClientApp : public Utils::PublishSubscribe::ISubscriber<std::shared_ptr<co
     core::Tick m_tick = 0;
     bool m_shouldQuit = false;
 
-    Utils::Logging::LoggerSubscribed m_logger{"ClientApp"};
+    Utils::Logging::Logger m_logger{"ClientApp"};
 };
 
 }  // namespace pacman::client

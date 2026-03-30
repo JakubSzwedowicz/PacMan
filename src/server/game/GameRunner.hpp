@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <memory>
 
@@ -33,7 +33,7 @@ class GameRunner {
     std::unique_ptr<phases::Phase> m_currentPhase;
     std::unique_ptr<phases::Phase> m_pendingPhase;
 
-    Utils::Logging::LoggerSubscribed m_logger{"GameRunner"};
+    Utils::Logging::Logger m_logger{"GameRunner"};
 };
 
 }  // namespace pacman::server::game

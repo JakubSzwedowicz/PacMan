@@ -1,7 +1,9 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
+
+#include <string>
 
 #include "client/network/ClientNetwork.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
@@ -15,21 +17,16 @@ class ScreenManager;
 
 namespace pacman::client::screens {
 
-// Shows the pre-game lobby: player list, ready toggle, Start button (host
-// only).
-//
-// Lifecycle:
-//   onEnter → RAII subscription to ClientNetwork events begins at construction
-//   onExit  → subscription ends at destruction
+// Shows the pre-game lobby: player list, ready toggle, Start button (host only).
 //
 // Transitions:
-//   GameStartEvent received → setScreen<LoadingScreen>
-//   ServerShutdownEvent / DisconnectedEvent → setScreen<MenuScreen>
+//   GameStartEvent received → LoadingScreen
+//   ServerShutdownEvent / DisconnectedEvent / Escape → MenuScreen
 class LobbyScreen : public screen::Screen,
                     public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
    public:
-    LobbyScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, core::PlayerId localPlayerId,
-                bool isHost);
+    LobbyScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+                std::string serverAddress, int serverPort, core::PlayerId localPlayerId, bool isHost);
 
     // Screen
     void onEnter() override;
@@ -42,15 +39,20 @@ class LobbyScreen : public screen::Screen,
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
    private:
+    void goToMenu();
+
     screen::ScreenManager &m_screenManager;
     network::ClientNetwork &m_network;
-    core::PlayerId m_localPlayerId;
+    std::string m_mapPath;
+    std::string m_serverAddress;
+    int m_serverPort;
+    [[maybe_unused]] core::PlayerId m_localPlayerId;
     bool m_isHost;
 
     core::protocol::LobbyStatePacket m_lobbyState{};
     bool m_localReady = false;
 
-    Utils::Logging::LoggerSubscribed m_logger{"LobbyScreen"};
+    Utils::Logging::Logger m_logger{"LobbyScreen"};
 };
 
 }  // namespace pacman::client::screens

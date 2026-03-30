@@ -6,16 +6,22 @@
 #include <algorithm>
 
 #include "client/screen/ScreenManager.hpp"
+#include "client/screens/LobbyScreen.hpp"
+#include "client/screens/MenuScreen.hpp"
 
 namespace pacman::client::screens {
 
 ResultsScreen::ResultsScreen(screen::ScreenManager &screenManager, network::ClientNetwork *network,
-                             core::protocol::RoundEndPacket results, core::PlayerId localPlayerId, bool isHost)
+                             core::protocol::RoundEndPacket results, core::PlayerId localPlayerId,
+                             bool isHost, std::string mapPath, std::string serverAddress, int serverPort)
     : m_screenManager(screenManager),
       m_network(network),
       m_results(std::move(results)),
       m_localPlayerId(localPlayerId),
-      m_isHost(isHost) {}
+      m_isHost(isHost),
+      m_mapPath(std::move(mapPath)),
+      m_serverAddress(std::move(serverAddress)),
+      m_serverPort(serverPort) {}
 
 void ResultsScreen::onEnter() { LOG_I("ResultsScreen entered"); }
 void ResultsScreen::onExit() { LOG_I("ResultsScreen exited"); }
@@ -50,18 +56,32 @@ void ResultsScreen::draw(sf::RenderWindow & /*window*/) {
 
     ImGui::Spacing();
     if (ImGui::Button("Wróć do menu")) {
-        if (m_network) m_network->disconnect();
-        // TODO: setScreen<MenuScreen>
+        goToMenu();
     }
 
     if (m_isHost) {
         ImGui::SameLine();
         if (ImGui::Button("Następna runda")) {
-            // TODO: setScreen<LobbyScreen> (reuse existing connection)
+            goToLobby();
         }
     }
 
     ImGui::End();
+}
+
+void ResultsScreen::goToMenu() {
+    if (!m_network) return;
+    m_network->disconnect();
+    m_screenManager.setScreen(
+        std::make_unique<MenuScreen>(m_screenManager, *m_network, m_mapPath, m_serverAddress, m_serverPort));
+}
+
+void ResultsScreen::goToLobby() {
+    if (!m_network) return;
+    // Connection stays alive — host goes back to lobby to start another round.
+    m_screenManager.setScreen(std::make_unique<LobbyScreen>(m_screenManager, *m_network, m_mapPath,
+                                                             m_serverAddress, m_serverPort,
+                                                             m_localPlayerId, m_isHost));
 }
 
 }  // namespace pacman::client::screens

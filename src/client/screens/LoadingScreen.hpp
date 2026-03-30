@@ -1,12 +1,17 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
+
+#include <entt/entt.hpp>
+#include <string>
+#include <unordered_map>
 
 #include "client/network/ClientNetwork.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
 #include "client/screen/Screen.hpp"
 #include "core/Common.hpp"
+#include "core/maps/Map.hpp"
 #include "core/protocol/Packets.hpp"
 
 namespace pacman::client::screen {
@@ -30,8 +35,9 @@ namespace pacman::client::screens {
 class LoadingScreen : public screen::Screen,
                       public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
    public:
-    LoadingScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network,
-                  core::protocol::GameStartPacket gameStart, core::PlayerId localPlayerId);
+    LoadingScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+                  std::string serverAddress, int serverPort, core::protocol::GameStartPacket gameStart,
+                  core::PlayerId localPlayerId, bool isHost);
 
     // Screen
     void onEnter() override;
@@ -44,17 +50,29 @@ class LoadingScreen : public screen::Screen,
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
    private:
-    [[maybe_unused]] screen::ScreenManager &m_screenManager;
+    void spawnEntitiesFromMap();
+    void goToMenu();
+
+    screen::ScreenManager &m_screenManager;
     network::ClientNetwork &m_network;
+    std::string m_mapPath;
+    std::string m_serverAddress;
+    int m_serverPort;
     core::protocol::GameStartPacket m_gameStart;
-    [[maybe_unused]] core::PlayerId m_localPlayerId;
+    core::PlayerId m_localPlayerId;
+    bool m_isHost;
+
+    core::maps::Map m_map;
+    entt::registry m_registry;
+    std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
+    std::array<entt::entity, core::ghostCount> m_ghostEntities{};
 
     bool m_mapParsed = false;
     bool m_assetsLoaded = false;
     bool m_simInitialized = false;
     bool m_readyToPlaySent = false;
 
-    Utils::Logging::LoggerSubscribed m_logger{"LoadingScreen"};
+    Utils::Logging::Logger m_logger{"LoadingScreen"};
 };
 
 }  // namespace pacman::client::screens

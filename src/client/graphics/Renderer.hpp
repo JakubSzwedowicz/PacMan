@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <entt/entt.hpp>
@@ -16,7 +16,7 @@ class Renderer {
     void render(sf::RenderWindow &window, const entt::registry &registry, const core::maps::Map &map);
 
    private:
-    Utils::Logging::LoggerSubscribed m_logger{"Renderer"};
+    Utils::Logging::Logger m_logger{"Renderer"};
 };
 
 }  // namespace pacman::client::graphics

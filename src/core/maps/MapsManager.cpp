@@ -41,4 +41,13 @@ std::expected<Map, std::string> MapsManager::loadFromJson(std::string_view json)
     return map;
 }
 
+std::expected<std::string, std::string> MapsManager::toJson(const Map &map) {
+    auto result = glz::write_json(map);
+    if (!result) {
+        LOG_E("Failed to serialize map '{}' to JSON", map.name);
+        return std::unexpected("Failed to serialize map to JSON");
+    }
+    return std::move(*result);
+}
+
 }  // namespace pacman::core::maps

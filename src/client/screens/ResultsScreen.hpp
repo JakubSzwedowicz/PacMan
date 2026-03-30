@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Utils/Logging/LoggerSubscribed.h>
+#include <Utils/Logging/Logger.h>
+
+#include <string>
 
 #include "client/network/ClientNetwork.hpp"
 #include "client/screen/Screen.hpp"
@@ -22,7 +24,8 @@ class ResultsScreen : public screen::Screen {
    public:
     ResultsScreen(screen::ScreenManager &screenManager,
                   network::ClientNetwork *network,  // nullptr if offline
-                  core::protocol::RoundEndPacket results, core::PlayerId localPlayerId, bool isHost);
+                  core::protocol::RoundEndPacket results, core::PlayerId localPlayerId, bool isHost,
+                  std::string mapPath, std::string serverAddress, int serverPort);
 
     // Screen
     void onEnter() override;
@@ -32,13 +35,19 @@ class ResultsScreen : public screen::Screen {
     void draw(sf::RenderWindow &window) override;
 
    private:
-    [[maybe_unused]] screen::ScreenManager &m_screenManager;
+    void goToMenu();
+    void goToLobby();
+
+    screen::ScreenManager &m_screenManager;
     network::ClientNetwork *m_network;  // non-owning, may be nullptr
     core::protocol::RoundEndPacket m_results;
-    [[maybe_unused]] core::PlayerId m_localPlayerId;
+    core::PlayerId m_localPlayerId;
     bool m_isHost;
+    std::string m_mapPath;
+    std::string m_serverAddress;
+    int m_serverPort;
 
-    Utils::Logging::LoggerSubscribed m_logger{"ResultsScreen"};
+    Utils::Logging::Logger m_logger{"ResultsScreen"};
 };
 
 }  // namespace pacman::client::screens
