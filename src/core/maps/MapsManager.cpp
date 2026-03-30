@@ -40,6 +40,9 @@ std::expected<Map, std::string> MapsManager::loadFromJson(std::string_view json)
         return std::unexpected("Failed to parse map JSON: error code " + std::to_string(static_cast<uint32_t>(ec.ec)));
     }
 
+    map.height = map.tiles.size();
+    map.width = map.tiles.empty() ? 0 : map.tiles[0].size();
+
     auto validation = map.isValid();
     if (!validation.empty()) {
         LOG_E("Invalid map: {}", validation);

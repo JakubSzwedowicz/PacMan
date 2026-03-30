@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <glaze/glaze.hpp>
+
 namespace pacman::core::maps {
 
 using TileRow = std::string;
@@ -96,3 +98,13 @@ struct Map {
 };
 
 }  // namespace pacman::core::maps
+
+// width and height are intentionally excluded — they are derived from tiles
+// in MapsManager::loadFromJson and must never be stored in JSON.
+template <>
+struct glz::meta<pacman::core::maps::Map> {
+    using T = pacman::core::maps::Map;
+    static constexpr auto value =
+        glz::object("name", &T::name, "tileSize", &T::tileSize, "maxPlayers", &T::maxPlayers, "tiles", &T::tiles,
+                    "pacmanSpawns", &T::pacmanSpawns, "ghostSpawns", &T::ghostSpawns);
+};
