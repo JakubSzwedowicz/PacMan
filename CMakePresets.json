@@ -9,6 +9,7 @@
     {
       "name": "base-toolchain",
       "hidden": true,
+      "generator": "Ninja",
       "environment": {
         "VCPKG_ROOT": "${sourceDir}/lib/vcpkg"
       },
@@ -40,7 +41,6 @@
       "name": "debug",
       "displayName": "Debug",
       "description": "Default debug configuration preset",
-      "generator": "Ninja",
       "binaryDir": "build/debug",
       "inherits": "debug-toolchain"
     },
@@ -48,57 +48,69 @@
       "name": "release",
       "displayName": "Release",
       "description": "Default release configuration preset",
-      "generator": "Ninja",
       "binaryDir": "build/release",
       "inherits": "release-toolchain"
     }
   ],
   "buildPresets": [
     {
+      "name": "base-build",
+      "hidden": true,
+      "jobs": 0
+    },
+    {
       "name": "all-debug",
+      "inherits": "base-build",
       "displayName": "Build All (Debug)",
       "configurePreset": "debug",
-      "configuration": "Debug",
-      "jobs": 8
+      "configuration": "Debug"
     },
     {
       "name": "all-release",
+      "inherits": "base-build",
       "displayName": "Build All (Release)",
       "configurePreset": "release",
-      "configuration": "Release",
-      "jobs": 8
+      "configuration": "Release"
     },
     {
       "name": "client-debug",
+      "inherits": "base-build",
       "displayName": "Client Debug Build",
       "configurePreset": "debug",
       "configuration": "Debug",
-      "jobs": 8,
-      "targets": ["PacManClient"]
+      "targets": [
+        "PacManClient"
+      ]
     },
     {
       "name": "client-release",
+      "inherits": "base-build",
       "displayName": "Client Release Build",
       "configurePreset": "release",
       "configuration": "Release",
-      "jobs": 8,
-      "targets": ["PacManClient"]
+      "targets": [
+        "PacManClient"
+      ]
     },
     {
       "name": "server-debug",
+      "inherits": "base-build",
       "displayName": "Server Debug Build",
       "configurePreset": "debug",
       "configuration": "Debug",
-      "jobs": 8,
-      "targets": ["PacManServer"]
+      "targets": [
+        "PacManServer"
+      ]
     },
     {
       "name": "server-release",
+      "inherits": "base-build",
       "displayName": "Server Release Build",
       "configurePreset": "release",
       "configuration": "Release",
-      "jobs": 8,
-      "targets": ["PacManServer"]
+      "targets": [
+        "PacManServer"
+      ]
     }
   ],
   "testPresets": [
