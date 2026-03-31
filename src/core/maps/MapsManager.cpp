@@ -43,6 +43,16 @@ std::expected<Map, std::string> MapsManager::loadFromJson(std::string_view json)
     map.height = map.tiles.size();
     map.width = map.tiles.empty() ? 0 : map.tiles[0].size();
 
+    // Auto-detect the ghost house exit (first 'G' tile found, top-to-bottom).
+    for (size_t r = 0; r < map.height && map.ghostHouseExit.col() == 0 && map.ghostHouseExit.row() == 0; ++r) {
+        for (size_t c = 0; c < map.width; ++c) {
+            if (map.tileTypeAt(c, r) == TileType::GhostDoor) {
+                map.ghostHouseExit = Tile{{c, r}};
+                break;
+            }
+        }
+    }
+
     auto validation = map.isValid();
     if (!validation.empty()) {
         LOG_E("Invalid map: {}", validation);

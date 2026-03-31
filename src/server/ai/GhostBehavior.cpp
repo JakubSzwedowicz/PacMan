@@ -33,18 +33,18 @@ core::maps::Tile tileFromPixel(float x, float y, float tileSize) {
 
 }  // namespace
 
-core::maps::Tile GhostBehavior::nearestPacManTile(const entt::registry &registry, const core::maps::Map &map) {
+core::maps::Tile GhostBehavior::nearestPacManTile(const entt::registry& registry, const core::maps::Map& map) {
     auto view = registry.view<const core::ecs::Position, const core::ecs::PacManTag>();
     for (auto e : view) {
-        const auto &pos = view.get<const core::ecs::Position>(e);
+        const auto& pos = view.get<const core::ecs::Position>(e);
         return tileFromPixel(pos.x, pos.y, map.tileSize);
     }
     return {};  // no PacMan in the registry (Phase 3 / server solo mode)
 }
 
-core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*registry*/, const core::maps::Map &map,
+core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry& /*registry*/, const core::maps::Map& map,
                                                     float ghostX, float ghostY, core::ecs::Direction currentDir,
-                                                    const core::maps::Tile &targetTile) {
+                                                    const core::maps::Tile& targetTile) {
     float ts = map.tileSize;
     auto ghostTile = tileFromPixel(ghostX, ghostY, ts);
 
@@ -62,13 +62,17 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*reg
     core::ecs::Direction best = core::ecs::Direction::None;
     float bestDist = std::numeric_limits<float>::max();
 
-    for (const auto &cand : candidates) {
+    for (const auto& cand : candidates) {
         if (cand.dir == opposite(currentDir)) continue;
 
         int nc = static_cast<int>(ghostTile.col()) + cand.dc;
         int nr = static_cast<int>(ghostTile.row()) + cand.dr;
-        if (nc < 0 || nr < 0) continue;
-        if (map.tileTypeAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) == core::maps::TileType::Wall) continue;
+        if (nc < 0 || nr < 0 || static_cast<core::maps::Tile::Unit>(nc) >= map.width ||
+            static_cast<core::maps::Tile::Unit>(nr) >= map.height)
+            continue;
+        if (map.tileTypeAt(static_cast<core::maps::Tile::Unit>(nc), static_cast<core::maps::Tile::Unit>(nr)) ==
+            core::maps::TileType::Wall)
+            continue;
 
         float dx = static_cast<float>(nc) - static_cast<float>(targetTile.col());
         float dy = static_cast<float>(nr) - static_cast<float>(targetTile.row());
@@ -82,11 +86,14 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*reg
 
     // If completely boxed in (e.g. just spawned), allow reversing.
     if (best == core::ecs::Direction::None) {
-        for (const auto &cand : candidates) {
+        for (const auto& cand : candidates) {
             int nc = static_cast<int>(ghostTile.col()) + cand.dc;
             int nr = static_cast<int>(ghostTile.row()) + cand.dr;
-            if (nc < 0 || nr < 0) continue;
-            if (map.tileTypeAt(static_cast<size_t>(nc), static_cast<size_t>(nr)) != core::maps::TileType::Wall) {
+            if (nc < 0 || nr < 0 || static_cast<core::maps::Tile::Unit>(nc) >= map.width ||
+                static_cast<core::maps::Tile::Unit>(nr) >= map.height)
+                continue;
+            if (map.tileTypeAt(static_cast<core::maps::Tile::Unit>(nc), static_cast<core::maps::Tile::Unit>(nr)) !=
+                core::maps::TileType::Wall) {
                 best = cand.dir;
                 break;
             }
@@ -96,16 +103,16 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry & /*reg
     return best;
 }
 
-core::maps::Tile GhostBehavior::blinkyTarget(const entt::registry &registry, const core::maps::Map &map) {
+core::maps::Tile GhostBehavior::blinkyTarget(const entt::registry& registry, const core::maps::Map& map) {
     return nearestPacManTile(registry, map);
 }
 
-core::maps::Tile GhostBehavior::pinkyTarget(const entt::registry &registry, const core::maps::Map &map) {
+core::maps::Tile GhostBehavior::pinkyTarget(const entt::registry& registry, const core::maps::Map& map) {
     float ts = map.tileSize;
     auto view = registry.view<const core::ecs::Position, const core::ecs::DirectionState, const core::ecs::PacManTag>();
     for (auto e : view) {
-        const auto &pos = view.get<const core::ecs::Position>(e);
-        const auto &dir = view.get<const core::ecs::DirectionState>(e);
+        const auto& pos = view.get<const core::ecs::Position>(e);
+        const auto& dir = view.get<const core::ecs::DirectionState>(e);
 
         int c = static_cast<int>(pos.x / ts);
         int r = static_cast<int>(pos.y / ts);
@@ -135,13 +142,13 @@ core::maps::Tile GhostBehavior::pinkyTarget(const entt::registry &registry, cons
     return nearestPacManTile(registry, map);
 }
 
-core::maps::Tile GhostBehavior::inkyTarget(const entt::registry &registry, const core::maps::Map &map, float blinkyX,
+core::maps::Tile GhostBehavior::inkyTarget(const entt::registry& registry, const core::maps::Map& map, float blinkyX,
                                            float blinkyY) {
     float ts = map.tileSize;
     auto view = registry.view<const core::ecs::Position, const core::ecs::DirectionState, const core::ecs::PacManTag>();
     for (auto e : view) {
-        const auto &pos = view.get<const core::ecs::Position>(e);
-        const auto &dir = view.get<const core::ecs::DirectionState>(e);
+        const auto& pos = view.get<const core::ecs::Position>(e);
+        const auto& dir = view.get<const core::ecs::DirectionState>(e);
 
         int c = static_cast<int>(pos.x / ts);
         int r = static_cast<int>(pos.y / ts);
@@ -179,12 +186,12 @@ core::maps::Tile GhostBehavior::inkyTarget(const entt::registry &registry, const
     return nearestPacManTile(registry, map);
 }
 
-core::maps::Tile GhostBehavior::clydeTarget(const entt::registry &registry, const core::maps::Map &map, float clydeX,
+core::maps::Tile GhostBehavior::clydeTarget(const entt::registry& registry, const core::maps::Map& map, float clydeX,
                                             float clydeY) {
     float ts = map.tileSize;
     auto view = registry.view<const core::ecs::Position, const core::ecs::PacManTag>();
     for (auto e : view) {
-        const auto &pos = view.get<const core::ecs::Position>(e);
+        const auto& pos = view.get<const core::ecs::Position>(e);
 
         float dc = pos.x / ts - clydeX / ts;
         float dr = pos.y / ts - clydeY / ts;

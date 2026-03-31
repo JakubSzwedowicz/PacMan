@@ -1,10 +1,9 @@
 #pragma once
 
 #include <array>
+#include <glaze/glaze.hpp>
 #include <string>
 #include <vector>
-
-#include <glaze/glaze.hpp>
 
 namespace pacman::core::maps {
 
@@ -14,29 +13,42 @@ using TileRow = std::string;
 // The JSON format still stores tiles as a string of chars; this enum is the
 // runtime representation used by all gameplay/rendering code.
 enum class TileType : uint8_t {
-    Wall,        // '#'
-    Empty,       // ' ' or any unrecognised character
-    Pellet,      // '.'
-    PowerPellet, // 'o'
+    Wall,         // '#'
+    Empty,        // ' ' or any unrecognised character
+    Pellet,       // '.'
+    PowerPellet,  // 'o'
+    GhostDoor,    // 'G' — passable only by ghosts; marks the ghost house exit
 };
 
 [[nodiscard]] inline TileType charToTileType(char c) noexcept {
     switch (c) {
-        case '#': return TileType::Wall;
-        case '.': return TileType::Pellet;
-        case 'o': return TileType::PowerPellet;
-        default:  return TileType::Empty;
+        case '#':
+            return TileType::Wall;
+        case '.':
+            return TileType::Pellet;
+        case 'o':
+            return TileType::PowerPellet;
+        case 'G':
+            return TileType::GhostDoor;
+        default:
+            return TileType::Empty;
     }
 }
 
 [[nodiscard]] inline char tileTypeToChar(TileType t) noexcept {
     switch (t) {
-        case TileType::Wall:        return '#';
-        case TileType::Pellet:      return '.';
-        case TileType::PowerPellet: return 'o';
-        case TileType::Empty:       return ' ';
+        case TileType::Wall:
+            return '#';
+        case TileType::Pellet:
+            return '.';
+        case TileType::PowerPellet:
+            return 'o';
+        case TileType::GhostDoor:
+            return 'G';
+        case TileType::Empty:
+            return ' ';
     }
-    return ' '; // unreachable, satisfies compiler
+    return ' ';  // unreachable, satisfies compiler
 }
 
 struct Tile {
@@ -66,6 +78,8 @@ struct Map {
     std::vector<TileRow> tiles;
     std::vector<Tile> pacmanSpawns;
     GhostSpawns ghostSpawns;
+    // Derived in loadFromJson by scanning for the first 'G' tile; {0,0} means no ghost house.
+    Tile ghostHouseExit = {};
 
     [[nodiscard]] std::string isValid() const {
         if (height == 0 || width == 0) {
@@ -119,16 +133,12 @@ struct Map {
     }
 
     // Preferred API — returns a strongly-typed TileType.
-    [[nodiscard]] TileType tileTypeAt(Tile::Unit c, Tile::Unit r) const noexcept {
-        if (r >= height || c >= width) return TileType::Wall;
-        return charToTileType(tiles[r][c]);
-    }
+    // Precondition: c < width && r < height — caller is responsible for bounds checking.
+    [[nodiscard]] TileType tileTypeAt(Tile::Unit c, Tile::Unit r) const noexcept { return charToTileType(tiles[r][c]); }
 
     // Raw char access — kept for AsciiRenderer display output only.
-    [[nodiscard]] char tileAt(Tile::Unit c, Tile::Unit r) const noexcept {
-        if (r >= height || c >= width) return '#';
-        return tiles[r][c];
-    }
+    // Precondition: c < width && r < height — caller is responsible for bounds checking.
+    [[nodiscard]] char tileAt(Tile::Unit c, Tile::Unit r) const noexcept { return tiles[r][c]; }
 };
 
 }  // namespace pacman::core::maps

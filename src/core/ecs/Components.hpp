@@ -41,9 +41,12 @@ struct PlayerState {
 };
 
 struct GhostState {
-    enum class Mode : uint8_t { Chase, Scatter, Frightened, Eaten };
-    Mode mode = Mode::Scatter;
+    enum class Mode : uint8_t { Chase, Scatter, Frightened, Eaten, InHouse, Exiting };
+    Mode mode = Mode::InHouse;
     GhostType type = GhostType::Blinky;
+    // Tile where the last direction decision was made; -1 = no decision yet.
+    int32_t lastDecisionCol = -1;
+    int32_t lastDecisionRow = -1;
 };
 
 struct PacManTag {};

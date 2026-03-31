@@ -19,28 +19,32 @@ void AsciiRenderer::render(const entt::registry &registry, const core::maps::Map
 std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry, const core::maps::Map &map) const {
     // Start with walls; everything else is initially blank.
     std::vector<std::string> grid(map.height, std::string(map.width, ' '));
-    for (size_t r = 0; r < map.height; ++r) {
-        for (size_t c = 0; c < map.width; ++c) {
-            if (map.tileTypeAt(c, r) == core::maps::TileType::Wall) grid[r][c] = '#';
+    for (core::maps::Tile::Unit r = 0; r < map.height; ++r) {
+        for (core::maps::Tile::Unit c = 0; c < map.width; ++c) {
+            const auto tt = map.tileTypeAt(c, r);
+            if (tt == core::maps::TileType::Wall)
+                grid[r][c] = '#';
+            else if (tt == core::maps::TileType::GhostDoor)
+                grid[r][c] = '=';
         }
     }
 
     float ts = map.tileSize;
-    auto toCol = [ts](float x) { return static_cast<size_t>(x / ts); };
-    auto toRow = [ts](float y) { return static_cast<size_t>(y / ts); };
-    auto inBounds = [&](size_t c, size_t r) { return c < map.width && r < map.height; };
+    auto toCol = [ts](float x) { return static_cast<core::maps::Tile::Unit>(x / ts); };
+    auto toRow = [ts](float y) { return static_cast<core::maps::Tile::Unit>(y / ts); };
+    auto inBounds = [&](core::maps::Tile::Unit c, core::maps::Tile::Unit r) { return c < map.width && r < map.height; };
 
     // Pellets
     for (auto e : registry.view<const core::ecs::Position, const core::ecs::PelletTag>()) {
         const auto &pos = registry.get<const core::ecs::Position>(e);
-        size_t c = toCol(pos.x), r = toRow(pos.y);
+        core::maps::Tile::Unit c = toCol(pos.x), r = toRow(pos.y);
         if (inBounds(c, r)) grid[r][c] = '.';
     }
 
     // Power pellets
     for (auto e : registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>()) {
         const auto &pos = registry.get<const core::ecs::Position>(e);
-        size_t c = toCol(pos.x), r = toRow(pos.y);
+        core::maps::Tile::Unit c = toCol(pos.x), r = toRow(pos.y);
         if (inBounds(c, r)) grid[r][c] = 'o';
     }
 
@@ -48,10 +52,10 @@ std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry
     for (auto e : registry.view<const core::ecs::Position, const core::ecs::GhostState, const core::ecs::GhostTag>()) {
         const auto &pos = registry.get<const core::ecs::Position>(e);
         const auto &gs = registry.get<const core::ecs::GhostState>(e);
-        size_t c = toCol(pos.x), r = toRow(pos.y);
+        core::maps::Tile::Unit c = toCol(pos.x), r = toRow(pos.y);
         if (!inBounds(c, r)) continue;
 
-        char ch = 'G';
+        char ch = '?';
         switch (gs.mode) {
             case core::ecs::GhostState::Mode::Frightened:
                 ch = 'F';
@@ -59,7 +63,10 @@ std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry
             case core::ecs::GhostState::Mode::Eaten:
                 ch = 'E';
                 break;
-            default:
+            case core::ecs::GhostState::Mode::InHouse:
+            case core::ecs::GhostState::Mode::Exiting:
+            case core::ecs::GhostState::Mode::Chase:
+            case core::ecs::GhostState::Mode::Scatter:
                 switch (gs.type) {
                     case core::ecs::GhostType::Blinky:
                         ch = 'B';
@@ -74,6 +81,7 @@ std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry
                         ch = 'K';
                         break;
                 }
+                break;
         }
         grid[r][c] = ch;
     }
@@ -81,7 +89,7 @@ std::vector<std::string> AsciiRenderer::buildGrid(const entt::registry &registry
     // PacMan (drawn last — always visible on top)
     for (auto e : registry.view<const core::ecs::Position, const core::ecs::PacManTag>()) {
         const auto &pos = registry.get<const core::ecs::Position>(e);
-        size_t c = toCol(pos.x), r = toRow(pos.y);
+        core::maps::Tile::Unit c = toCol(pos.x), r = toRow(pos.y);
         if (inBounds(c, r)) grid[r][c] = 'C';
     }
 
@@ -92,10 +100,8 @@ void AsciiRenderer::printGrid(const std::vector<std::string> &grid, const core::
     // ANSI: clear screen + move cursor to top-left.
     std::fputs("\033[2J\033[H", stdout);
     std::fprintf(stdout, "Map: %s  (%zux%zu)\n", map.name.c_str(), map.width, map.height);
-    std::fputs(
-        "Legend: # wall  . pellet  o power  C pacman  B/P/I/K ghost  F "
-        "frightened  E eaten\n\n",
-        stdout);
+    std::fputs("Legend: # wall  = ghost door  . pellet  o power  C pacman  B/P/I/K ghost  F frightened  E eaten\n\n",
+               stdout);
     for (const auto &row : grid) {
         std::fputs(row.c_str(), stdout);
         std::fputc('\n', stdout);

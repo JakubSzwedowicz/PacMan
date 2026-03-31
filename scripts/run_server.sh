@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BINARY="$PROJECT_ROOT/build/debug/PacManServer"
+BINARY="$PROJECT_ROOT/build/debug/src/server/PacManServer"
 
 if [[ "${1:-}" == "--build" ]] || [[ ! -f "$BINARY" ]]; then
     echo "Building PacManServer..."
@@ -14,7 +14,7 @@ fi
 CONFIG="${PROJECT_ROOT}/config/server.json"
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --config)
+        --configPath)
             CONFIG="$2"
             shift 2
             ;;
@@ -25,4 +25,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 cd "$PROJECT_ROOT"
-exec "$BINARY" --config "$CONFIG"
+exec "$BINARY" --configPath "$CONFIG"

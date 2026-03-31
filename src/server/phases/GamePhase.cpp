@@ -158,6 +158,10 @@ void GamePhase::spawnEntities() {
         m_playerEntities[pid] = e;
     }
 
+    const bool hasGhostHouse = !(m_map.ghostHouseExit.col() == 0 && m_map.ghostHouseExit.row() == 0);
+    const auto initialGhostMode =
+        hasGhostHouse ? core::ecs::GhostState::Mode::InHouse : core::ecs::GhostState::Mode::Scatter;
+
     auto spawnGhost = [&](core::ecs::GhostType type, const core::maps::Tile &tile) {
         if (tile.col() == 0 && tile.row() == 0) return;
         auto e = m_registry.create();
@@ -166,7 +170,7 @@ void GamePhase::spawnEntities() {
         m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed * 0.75f);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts, ts);
-        m_registry.emplace<core::ecs::GhostState>(e, core::ecs::GhostState::Mode::Scatter, type);
+        m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, type);
         m_registry.emplace<core::ecs::GhostTag>(e);
     };
 
@@ -235,13 +239,13 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
     const float ts = m_map.tileSize;
     for (auto e : m_registry.view<const core::ecs::Position, const core::ecs::PelletTag>()) {
         const auto &pos = m_registry.get<core::ecs::Position>(e);
-        snap.remainingPellets.push_back(
-            core::maps::Tile{{static_cast<size_t>(pos.x / ts), static_cast<size_t>(pos.y / ts)}});
+        snap.remainingPellets.push_back(core::maps::Tile{
+            {static_cast<core::maps::Tile::Unit>(pos.x / ts), static_cast<core::maps::Tile::Unit>(pos.y / ts)}});
     }
     for (auto e : m_registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>()) {
         const auto &pos = m_registry.get<core::ecs::Position>(e);
-        snap.remainingPowerPellets.push_back(
-            core::maps::Tile{{static_cast<size_t>(pos.x / ts), static_cast<size_t>(pos.y / ts)}});
+        snap.remainingPowerPellets.push_back(core::maps::Tile{
+            {static_cast<core::maps::Tile::Unit>(pos.x / ts), static_cast<core::maps::Tile::Unit>(pos.y / ts)}});
     }
 
     return snap;

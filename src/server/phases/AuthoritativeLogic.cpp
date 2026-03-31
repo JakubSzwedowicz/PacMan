@@ -30,13 +30,13 @@ void AuthoritativeLogic::checkPelletPickup(entt::registry& registry, const core:
         const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
 
-        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<core::maps::Tile::Unit>(pacPos.x / ts);
+        const auto pacRow = static_cast<core::maps::Tile::Unit>(pacPos.y / ts);
 
         for (const auto& pellet : pelletView) {
             const auto& pelletPos = pelletView.get<const core::ecs::Position>(pellet);
-            const auto pc = static_cast<size_t>(pelletPos.x / ts);
-            const auto pr = static_cast<size_t>(pelletPos.y / ts);
+            const auto pc = static_cast<core::maps::Tile::Unit>(pelletPos.x / ts);
+            const auto pr = static_cast<core::maps::Tile::Unit>(pelletPos.y / ts);
 
             if (pc == pacCol && pr == pacRow) {
                 state.score += 10;
@@ -65,13 +65,13 @@ bool AuthoritativeLogic::checkPowerPellet(entt::registry& registry, const core::
         const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
 
-        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<core::maps::Tile::Unit>(pacPos.x / ts);
+        const auto pacRow = static_cast<core::maps::Tile::Unit>(pacPos.y / ts);
 
         for (const auto& pp : ppView) {
             const auto& ppPos = ppView.get<const core::ecs::Position>(pp);
-            const auto pc = static_cast<size_t>(ppPos.x / ts);
-            const auto pr = static_cast<size_t>(ppPos.y / ts);
+            const auto pc = static_cast<core::maps::Tile::Unit>(ppPos.x / ts);
+            const auto pr = static_cast<core::maps::Tile::Unit>(ppPos.y / ts);
 
             if (pc == pacCol && pr == pacRow) {
                 state.score += 50;
@@ -100,15 +100,15 @@ void AuthoritativeLogic::checkGhostCollision(entt::registry& registry, const cor
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
         if (state.lives <= 0) continue;
 
-        const auto pacCol = static_cast<size_t>(pacPos.x / ts);
-        const auto pacRow = static_cast<size_t>(pacPos.y / ts);
+        const auto pacCol = static_cast<core::maps::Tile::Unit>(pacPos.x / ts);
+        const auto pacRow = static_cast<core::maps::Tile::Unit>(pacPos.y / ts);
 
         for (const auto& ghost : ghostView) {
             const auto& ghostPos = ghostView.get<const core::ecs::Position>(ghost);
             auto& ghostState = ghostView.get<core::ecs::GhostState>(ghost);
 
-            const auto gc = static_cast<size_t>(ghostPos.x / ts);
-            const auto gr = static_cast<size_t>(ghostPos.y / ts);
+            const auto gc = static_cast<core::maps::Tile::Unit>(ghostPos.x / ts);
+            const auto gr = static_cast<core::maps::Tile::Unit>(ghostPos.y / ts);
 
             if (gc != pacCol || gr != pacRow) continue;
 

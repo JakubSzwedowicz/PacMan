@@ -218,8 +218,8 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
 void GameScreen::spawnEntitiesFromMap() {
     float ts = m_map.tileSize;
 
-    for (int row = 0; row < static_cast<int>(m_map.height); ++row) {
-        for (int col = 0; col < static_cast<int>(m_map.width); ++col) {
+    for (core::maps::Tile::Unit row = 0; row < m_map.height; ++row) {
+        for (core::maps::Tile::Unit col = 0; col < m_map.width; ++col) {
             const auto tileType = m_map.tileTypeAt(col, row);
             const float x = static_cast<float>(col) * ts;
             const float y = static_cast<float>(row) * ts;

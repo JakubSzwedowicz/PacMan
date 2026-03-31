@@ -15,6 +15,7 @@ void resolveWallCollisions(entt::registry &registry, const maps::Map &map) {
     for (auto entity : view) {
         auto &pos = view.get<ecs::Position>(entity);
         const auto &col = view.get<const ecs::Collider>(entity);
+        const bool isGhost = registry.any_of<ecs::GhostTag>(entity);
 
         float left = pos.x;
         float top = pos.y;
@@ -28,7 +29,9 @@ void resolveWallCollisions(entt::registry &registry, const maps::Map &map) {
 
         for (int row = rowMin; row <= rowMax; ++row) {
             for (int c = colMin; c <= colMax; ++c) {
-                if (map.tileTypeAt(c, row) != maps::TileType::Wall) {
+                const auto tt = map.tileTypeAt(static_cast<maps::Tile::Unit>(c), static_cast<maps::Tile::Unit>(row));
+                const bool isWall = (tt == maps::TileType::Wall) || (tt == maps::TileType::GhostDoor && !isGhost);
+                if (!isWall) {
                     continue;
                 }
 

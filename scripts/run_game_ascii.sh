@@ -51,10 +51,10 @@ cd "$PROJECT_ROOT"
 echo "Starting server on port $PORT (ASCII rendering every ${RENDER_INTERVAL}ms)..."
 "$SERVER_BIN" \
     --port "$PORT" \
-    --map_path "$MAP_PATH" \
-    --max_players "$NUM_PLAYERS" \
-    --render_ascii \
-    --render_interval "$RENDER_INTERVAL" &
+    --mapPath "$MAP_PATH" \
+    --maxPlayers "$NUM_PLAYERS" \
+    --renderAscii \
+    --renderInterval "$RENDER_INTERVAL" &
 SERVER_PID=$!
 
 # Kill server when this script exits for any reason.
@@ -68,9 +68,9 @@ CLIENT_PIDS=()
 for ((i = 1; i <= NUM_PLAYERS; i++)); do
     echo "Launching client $i..."
     "$CLIENT_BIN" \
-        --server_address "$SERVER_ADDRESS" \
-        --server_port "$PORT" \
-        --map_path "$MAP_PATH" &
+        --serverAddress "$SERVER_ADDRESS" \
+        --serverPort "$PORT" \
+        --mapPath "$MAP_PATH" &
     CLIENT_PIDS+=($!)
 done
 

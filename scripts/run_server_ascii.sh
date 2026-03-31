@@ -20,7 +20,8 @@ RENDER_INTERVAL="${RENDER_INTERVAL:-500}"
 cd "$PROJECT_ROOT"
 exec "$BINARY" \
     --port "$PORT" \
-    --map_path "$MAP_PATH" \
-    --max_players 0 \
-    --render_ascii \
-    --render_interval "$RENDER_INTERVAL"
+    --mapPath "$MAP_PATH" \
+    --maxPlayers 0 \
+    --renderAscii \
+    --renderInterval "$RENDER_INTERVAL" \
+    --configPath "$PROJECT_ROOT/config/server.json"

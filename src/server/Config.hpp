@@ -29,17 +29,17 @@ struct ServerConfig {
 
     ServerConfig()
         : loggerConfig(m_container.buildConfigParam<Utils::Logging::LoggerConfig>(
-              "logger_config", "Logger configuration", Utils::Logging::LoggerConfig{})),
-          configPath(m_container.buildConfigParam<std::string>("config", "Path to server JSON config file",
+              "loggerConfig", "Logger configuration", Utils::Logging::LoggerConfig{})),
+          configPath(m_container.buildConfigParam<std::string>("configPath", "Path to server JSON config file",
                                                                "config/server.json")),
           port(m_container.buildConfigParam<int>("port", "Server listen port", 7777)),
           mapPath(
-              m_container.buildConfigParam<std::string>("map_path", "Path to map JSON file", "assets/maps/test.json")),
-          maxPlayers(m_container.buildConfigParam<int>("max_players", "Maximum number of players", 4)),
-          tickRate(m_container.buildConfigParam<float>("tick_rate", "Server tick rate in Hz", 60.0f)),
-          renderAscii(m_container.buildConfigParam<bool>("render_ascii", "Enable ASCII rendering to stdout", false)),
+              m_container.buildConfigParam<std::string>("mapPath", "Path to map JSON file", "assets/maps/test.json")),
+          maxPlayers(m_container.buildConfigParam<int>("maxPlayers", "Maximum number of players", 4)),
+          tickRate(m_container.buildConfigParam<float>("tickRate", "Server tick rate in Hz", 60.0f)),
+          renderAscii(m_container.buildConfigParam<bool>("renderAscii", "Enable ASCII rendering to stdout", false)),
           renderInterval(m_container.buildConfigParam<int>(
-              "render_interval", "ASCII render interval in ms (requires render_ascii)", 500)) {}
+              "renderInterval", "ASCII render interval in ms (requires render_ascii)", 500)) {}
 };
 
 }  // namespace pacman::server

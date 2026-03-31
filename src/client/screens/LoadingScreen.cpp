@@ -102,8 +102,8 @@ void LoadingScreen::spawnEntitiesFromMap() {
     const float ts = m_map.tileSize;
 
     // Tiles: walls, pellets, power pellets
-    for (int row = 0; row < static_cast<int>(m_map.height); ++row) {
-        for (int col = 0; col < static_cast<int>(m_map.width); ++col) {
+    for (core::maps::Tile::Unit row = 0; row < m_map.height; ++row) {
+        for (core::maps::Tile::Unit col = 0; col < m_map.width; ++col) {
             const auto tileType = m_map.tileTypeAt(col, row);
             const float x = static_cast<float>(col) * ts;
             const float y = static_cast<float>(row) * ts;
@@ -150,21 +150,25 @@ void LoadingScreen::spawnEntitiesFromMap() {
         core::ecs::GhostType::Blinky, core::ecs::GhostType::Pinky, core::ecs::GhostType::Inky,
         core::ecs::GhostType::Clyde};
 
+    const bool hasGhostHouse = !(m_map.ghostHouseExit.col() == 0 && m_map.ghostHouseExit.row() == 0);
+    const auto initialGhostMode =
+        hasGhostHouse ? core::ecs::GhostState::Mode::InHouse : core::ecs::GhostState::Mode::Scatter;
+
     for (int i = 0; i < core::ghostCount; ++i) {
         const auto &tile = ghostTiles[i];
         if (tile.col() == 0 && tile.row() == 0) {
             m_ghostEntities[i] = entt::null;
             continue;
         }
-        float x = static_cast<float>(tile.col()) * ts;
-        float y = static_cast<float>(tile.row()) * ts;
+        const float x = static_cast<float>(tile.col()) * ts;
+        const float y = static_cast<float>(tile.row()) * ts;
 
         auto e = m_registry.create();
         m_registry.emplace<core::ecs::Position>(e, x, y);
         m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed * 0.75f);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts * 0.9f, ts * 0.9f);
-        m_registry.emplace<core::ecs::GhostState>(e, core::ecs::GhostState::Mode::Scatter, ghostTypes[i]);
+        m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, ghostTypes[i]);
         m_registry.emplace<core::ecs::GhostTag>(e);
         m_ghostEntities[i] = e;
     }

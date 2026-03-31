@@ -5,18 +5,22 @@
 #include <Utils/Config/ConfigProviders/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
 #include <Utils/Providers/FileSourceProvider.h>
+#include <signal.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <thread>
 
 namespace {
 
-pacman::server::app::ServerApp *g_app = nullptr;
+// Only the atomic flag is touched from the signal handler — no logging,
+// no function calls that might hold a mutex.
+std::atomic<bool> *g_running = nullptr;
 
 void signalHandler(int /*sig*/) {
-    if (g_app) g_app->stop();
+    if (g_running) g_running->store(false, std::memory_order_relaxed);
 }
 
 }  // namespace
@@ -36,15 +40,23 @@ void ServerApp::onUpdate(
 }
 
 int ServerApp::main(int argc, char *argv[]) {
-    g_app = this;
-    std::signal(SIGINT, signalHandler);
-    std::signal(SIGTERM, signalHandler);
+    g_running = &m_running;
+    // Use sigaction without SA_RESTART so that blocking syscalls (nanosleep,
+    // ENet's select/poll) return EINTR immediately when the signal fires,
+    // letting the main loop see m_running == false without waiting for the
+    // current sleep/poll to time out on its own.
+    struct sigaction sa {};
+    sa.sa_handler = signalHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGTERM, &sa, nullptr);
 
     LOG_I("PacMan Server starting");
     init(argc, argv);
     run();
 
-    g_app = nullptr;
+    g_running = nullptr;
     return 0;
 }
 
