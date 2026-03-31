@@ -7,9 +7,8 @@
 
 namespace pacman::server::ai {
 
-// Pure stateless functions that compute the target tile and next direction for
-// each ghost personality. All state (registry, map) is passed in; nothing is
-// stored here.
+// Ghost AI behavior: target selection and direction pathfinding.
+// Targets are persistent per phase (Chase/Scatter/InHouse); directions chosen only at junctions.
 //
 // Ghost personalities (Chase-mode targets):
 //   Blinky — nearest PacMan tile (direct chase)
@@ -17,27 +16,40 @@ namespace pacman::server::ai {
 //   Inky   — reflection of Blinky through a point 2 tiles ahead of PacMan
 //   Clyde  — nearest PacMan when >8 tiles away; scatter corner otherwise
 struct GhostBehavior {
-    // Returns the first PacMan's tile, or {0,0} if none exists.
-    [[nodiscard]] static core::maps::Tile nearestPacManTile(const entt::registry &registry, const core::maps::Map &map);
+    // Compute the target tile for a ghost based on its current mode and type.
+    // Called when mode changes (not every frame).
+    [[nodiscard]] static core::maps::Tile selectTargetForMode(
+        core::ecs::GhostState::Mode mode, core::ecs::GhostType type,
+        const entt::registry &registry, const core::maps::Map &map, float blinkyX = 0.0f, float blinkyY = 0.0f);
 
-    // Greedy tile-distance direction choice that never reverses.
+    // Pick a random valid direction (for Frightened mode).
+    [[nodiscard]] static core::ecs::Direction chooseRandomDirection(const core::maps::Map &map, float ghostX,
+                                                                    float ghostY);
+
+    // Greedy tile-distance direction choice toward a target tile.
+    // Prefers not reversing but allows it if no other option.
     // Returns Direction::None if all adjacent tiles are walls.
     [[nodiscard]] static core::ecs::Direction chooseDirection(const entt::registry &registry,
                                                               const core::maps::Map &map, float ghostX, float ghostY,
                                                               core::ecs::Direction currentDir,
                                                               const core::maps::Tile &targetTile);
 
+    // Helper: returns first PacMan's tile, or {0,0} if none exists.
+    [[nodiscard]] static core::maps::Tile nearestPacManTile(const entt::registry &registry, const core::maps::Map &map);
+
+    // Target functions for each ghost (used by selectTargetForMode).
     [[nodiscard]] static core::maps::Tile blinkyTarget(const entt::registry &registry, const core::maps::Map &map);
 
     [[nodiscard]] static core::maps::Tile pinkyTarget(const entt::registry &registry, const core::maps::Map &map);
 
-    // blinkyX/blinkyY — current pixel position of Blinky for the vector calculation.
     [[nodiscard]] static core::maps::Tile inkyTarget(const entt::registry &registry, const core::maps::Map &map,
                                                      float blinkyX, float blinkyY);
 
-    // clydeX/clydeY — current pixel position of Clyde for the distance check.
     [[nodiscard]] static core::maps::Tile clydeTarget(const entt::registry &registry, const core::maps::Map &map,
                                                       float clydeX, float clydeY);
+
+    // Scatter corners: northeast, northwest, southwest, southeast.
+    [[nodiscard]] static core::maps::Tile scatterTarget(core::ecs::GhostType type, const core::maps::Map &map);
 };
 
 }  // namespace pacman::server::ai

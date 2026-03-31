@@ -24,10 +24,12 @@ core::ecs::Direction opposite(core::ecs::Direction d) {
     }
 }
 
+// Center-of-entity tile: entity is centered in its tile.
+// This matches AISystem::update's tile-entry detection formula.
 core::maps::Tile tileFromPixel(float x, float y, float tileSize) {
     core::maps::Tile t;
-    t.pos[0] = static_cast<core::maps::Tile::Unit>(x / tileSize);
-    t.pos[1] = static_cast<core::maps::Tile::Unit>(y / tileSize);
+    t.pos[0] = static_cast<core::maps::Tile::Unit>((x + tileSize * 0.5f) / tileSize);
+    t.pos[1] = static_cast<core::maps::Tile::Unit>((y + tileSize * 0.5f) / tileSize);
     return t;
 }
 
@@ -61,10 +63,10 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry& /*regi
 
     core::ecs::Direction best = core::ecs::Direction::None;
     float bestDist = std::numeric_limits<float>::max();
+    core::ecs::Direction reverseOption = core::ecs::Direction::None;
+    float reverseDist = std::numeric_limits<float>::max();
 
     for (const auto& cand : candidates) {
-        if (cand.dir == opposite(currentDir)) continue;
-
         int nc = static_cast<int>(ghostTile.col()) + cand.dc;
         int nr = static_cast<int>(ghostTile.row()) + cand.dr;
         if (nc < 0 || nr < 0 || static_cast<core::maps::Tile::Unit>(nc) >= map.width ||
@@ -78,29 +80,124 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry& /*regi
         float dy = static_cast<float>(nr) - static_cast<float>(targetTile.row());
         float dist = dx * dx + dy * dy;
 
-        if (dist < bestDist) {
-            bestDist = dist;
-            best = cand.dir;
-        }
-    }
-
-    // If completely boxed in (e.g. just spawned), allow reversing.
-    if (best == core::ecs::Direction::None) {
-        for (const auto& cand : candidates) {
-            int nc = static_cast<int>(ghostTile.col()) + cand.dc;
-            int nr = static_cast<int>(ghostTile.row()) + cand.dr;
-            if (nc < 0 || nr < 0 || static_cast<core::maps::Tile::Unit>(nc) >= map.width ||
-                static_cast<core::maps::Tile::Unit>(nr) >= map.height)
-                continue;
-            if (map.tileTypeAt(static_cast<core::maps::Tile::Unit>(nc), static_cast<core::maps::Tile::Unit>(nr)) !=
-                core::maps::TileType::Wall) {
+        if (cand.dir == opposite(currentDir)) {
+            // Track reversal option but prefer forward direction
+            if (dist < reverseDist) {
+                reverseDist = dist;
+                reverseOption = cand.dir;
+            }
+        } else {
+            if (dist < bestDist) {
+                bestDist = dist;
                 best = cand.dir;
-                break;
             }
         }
     }
 
-    return best;
+    // Prefer forward direction, but allow reversal if no forward option
+    return (best != core::ecs::Direction::None) ? best : reverseOption;
+}
+
+core::ecs::Direction GhostBehavior::chooseRandomDirection(const core::maps::Map& map, float ghostX, float ghostY) {
+    float ts = map.tileSize;
+    auto ghostTile = tileFromPixel(ghostX, ghostY, ts);
+
+    struct Candidate {
+        core::ecs::Direction dir;
+        int dc, dr;
+    };
+    static constexpr std::array<Candidate, 4> candidates{{
+        {core::ecs::Direction::Up, 0, -1},
+        {core::ecs::Direction::Down, 0, 1},
+        {core::ecs::Direction::Left, -1, 0},
+        {core::ecs::Direction::Right, 1, 0},
+    }};
+
+    std::array<core::ecs::Direction, 4> validDirs;
+    size_t validCount = 0;
+
+    for (const auto& cand : candidates) {
+        int nc = static_cast<int>(ghostTile.col()) + cand.dc;
+        int nr = static_cast<int>(ghostTile.row()) + cand.dr;
+        if (nc < 0 || nr < 0 || static_cast<core::maps::Tile::Unit>(nc) >= map.width ||
+            static_cast<core::maps::Tile::Unit>(nr) >= map.height)
+            continue;
+        if (map.tileTypeAt(static_cast<core::maps::Tile::Unit>(nc), static_cast<core::maps::Tile::Unit>(nr)) ==
+            core::maps::TileType::Wall)
+            continue;
+
+        validDirs[validCount++] = cand.dir;
+    }
+
+    if (validCount == 0) {
+        return core::ecs::Direction::None;
+    }
+
+    // Pick random valid direction (Frightened mode).
+    // Uses C standard rand(); consider upgrading to <random> if better PRNG is needed.
+    size_t choice = rand() % validCount;
+    return validDirs[choice];
+}
+
+core::maps::Tile GhostBehavior::selectTargetForMode(core::ecs::GhostState::Mode mode, core::ecs::GhostType type,
+                                                    const entt::registry& registry, const core::maps::Map& map,
+                                                    float blinkyX, float blinkyY) {
+    switch (mode) {
+        case core::ecs::GhostState::Mode::Chase:
+            switch (type) {
+                case core::ecs::GhostType::Blinky:
+                    return blinkyTarget(registry, map);
+                case core::ecs::GhostType::Pinky:
+                    return pinkyTarget(registry, map);
+                case core::ecs::GhostType::Inky:
+                    return inkyTarget(registry, map, blinkyX, blinkyY);
+                case core::ecs::GhostType::Clyde:
+                    return clydeTarget(registry, map, blinkyX, blinkyY);
+            }
+            break;
+        case core::ecs::GhostState::Mode::Scatter:
+            return scatterTarget(type, map);
+        case core::ecs::GhostState::Mode::InHouse:
+            // Target: ghost house exit. AISystem uses this for pathfinding.
+            return map.ghostHouseExit;
+        case core::ecs::GhostState::Mode::Exiting:
+            // Target: tile directly above the exit. Map validation (isValid) ensures
+            // the tile above the exit is passable, so ghosts can escape reliably.
+            return core::maps::Tile{
+                {map.ghostHouseExit.col(), map.ghostHouseExit.row() > 0 ? map.ghostHouseExit.row() - 1 : 0}};
+        case core::ecs::GhostState::Mode::Frightened:
+        case core::ecs::GhostState::Mode::Eaten:
+            // These modes don't use persistent targets; random/home direction instead
+            return {};
+    }
+    return {};
+}
+
+core::maps::Tile GhostBehavior::scatterTarget(core::ecs::GhostType type, const core::maps::Map& map) {
+    core::maps::Tile t;
+    switch (type) {
+        case core::ecs::GhostType::Blinky:
+            // top-right corner
+            t.pos[0] = map.width > 0 ? map.width - 1 : 0;
+            t.pos[1] = 0;
+            break;
+        case core::ecs::GhostType::Pinky:
+            // top-left corner
+            t.pos[0] = 0;
+            t.pos[1] = 0;
+            break;
+        case core::ecs::GhostType::Inky:
+            // bottom-right corner
+            t.pos[0] = map.width > 0 ? map.width - 1 : 0;
+            t.pos[1] = map.height > 0 ? map.height - 1 : 0;
+            break;
+        case core::ecs::GhostType::Clyde:
+            // bottom-left corner
+            t.pos[0] = 0;
+            t.pos[1] = map.height > 0 ? map.height - 1 : 0;
+            break;
+    }
+    return t;
 }
 
 core::maps::Tile GhostBehavior::blinkyTarget(const entt::registry& registry, const core::maps::Map& map) {

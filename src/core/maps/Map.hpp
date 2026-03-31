@@ -129,6 +129,20 @@ struct Map {
         if (auto r = checkGhost(ghostSpawns.inky, "Inky"); !r.empty()) return r;
         if (auto r = checkGhost(ghostSpawns.clyde, "Clyde"); !r.empty()) return r;
 
+        // Validate ghost house exit: if it exists, the tile directly above must be passable.
+        // Ghosts exit by moving up from the door, so this must be a valid escape route.
+        if (ghostHouseExit.col() != 0 || ghostHouseExit.row() != 0) {
+            if (ghostHouseExit.row() == 0) {
+                return "Ghost house exit (" + std::to_string(ghostHouseExit.col()) + ", " +
+                       std::to_string(ghostHouseExit.row()) + ") cannot be at the top of the map";
+            }
+            auto exitAbove = Tile{{ghostHouseExit.col(), ghostHouseExit.row() - 1}};
+            if (!emptyField(exitAbove.col(), exitAbove.row())) {
+                return "Ghost house exit requires a passable tile directly above (" +
+                       std::to_string(exitAbove.col()) + ", " + std::to_string(exitAbove.row()) + ")";
+            }
+        }
+
         return {};
     }
 

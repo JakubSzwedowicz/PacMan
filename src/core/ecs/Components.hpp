@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "core/Common.hpp"
+#include "core/maps/Map.hpp"
 
 namespace pacman::core::ecs {
 
@@ -78,6 +79,10 @@ struct GhostState {
     }
     Mode mode = Mode::InHouse;
     GhostType type = GhostType::Blinky;
+    // Persistent target tile for current phase (Chase/Scatter/InHouse).
+    // Updated only on phase transitions, not every frame.
+    // For Frightened mode, this is unused (random direction instead).
+    maps::Tile targetTile = {};
     // Tile where the last direction decision was made; -1 = no decision yet.
     int32_t lastDecisionCol = -1;
     int32_t lastDecisionRow = -1;
