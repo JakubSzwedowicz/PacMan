@@ -184,7 +184,8 @@ void GamePhase::spawnEntities() {
         m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed * 0.75f);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts, ts);
-        m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, type);
+        auto &gs = m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, type);
+        gs.spawnTile = tile;  // Remember spawn position for eaten ghost return
         m_registry.emplace<core::ecs::GhostTag>(e);
     };
 

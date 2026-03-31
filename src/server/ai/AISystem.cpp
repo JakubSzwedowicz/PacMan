@@ -101,6 +101,23 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
             }
         }
 
+        // --- Eaten: route ghost back to spawn house ---
+        if (ghostState.mode == core::ecs::GhostState::Mode::Eaten) {
+            if (col == static_cast<int32_t>(ghostState.spawnTile.col()) &&
+                row == static_cast<int32_t>(ghostState.spawnTile.row())) {
+                // Reached spawn — transition back to InHouse.
+                ghostState.mode = core::ecs::GhostState::Mode::InHouse;
+                ghostState.targetTile = map.ghostHouseExit;
+                LOG_D("Ghost {} (Eaten) returned to spawn, InHouse mode", toString(ghostState.type));
+                // Fall through to direction selection
+            } else {
+                // Still routing home: pathfind toward spawn tile.
+                dirState.next = GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current,
+                                                                ghostState.spawnTile);
+                continue;
+            }
+        }
+
         // --- Regular modes: Chase, Scatter, Frightened ---
         // Update mode based on phase timer, and update target if mode changed.
         auto oldMode = ghostState.mode;
@@ -123,7 +140,7 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
             // Frightened: random valid direction each junction.
             dirState.next = GhostBehavior::chooseRandomDirection(map, pos.x, pos.y);
         } else if (ghostState.mode == core::ecs::GhostState::Mode::Eaten) {
-            // TODO: route eaten ghost back to spawn house; for now, stop moving.
+            // Should not reach here (handled above), but skip if we do.
             continue;
         } else {
             // Chase or Scatter: use persistent target.

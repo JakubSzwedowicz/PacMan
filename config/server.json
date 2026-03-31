@@ -4,6 +4,6 @@
     "maxPlayers": 4,
     "tickRate": 60.0,
     "loggerConfig": {
-        "globalLogLevel": 0
+        "globalLogLevel": 1
     }
 }
