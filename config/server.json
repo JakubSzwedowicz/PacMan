@@ -1,9 +1,9 @@
 {
-    "port": 7777,
+    "port": 7771,
     "mapPath": "assets/maps/test.json",
     "maxPlayers": 4,
     "tickRate": 60.0,
     "loggerConfig": {
-        "globalLogLevel": 3
+        "globalLogLevel": 0
     }
 }

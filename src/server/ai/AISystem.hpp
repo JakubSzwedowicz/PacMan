@@ -18,7 +18,7 @@ class AISystem {
     AISystem();
 
     // Call once per server tick after MovementSystem has run.
-    void update(entt::registry &registry, const core::maps::Map &map, float dt);
+    void update(entt::registry& registry, const core::maps::Map& map, float dt);
 
     // Called by GamePhase when any player eats a power-pellet.
     void onPowerPelletEaten();

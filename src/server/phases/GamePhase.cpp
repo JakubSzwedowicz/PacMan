@@ -77,6 +77,20 @@ PhaseRequest GamePhase::update(float dt) {
 
     applyPendingInputs();
     m_simulation.update(m_registry, dt, m_map);
+
+    const float ts = m_map.tileSize;
+    for (auto e : m_registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>()) {
+        const auto &pos = m_registry.get<const core::ecs::Position>(e);
+        auto &ps = m_registry.get<core::ecs::PlayerState>(e);
+        const auto col = static_cast<int32_t>((pos.x + ts * 0.5f) / ts);
+        const auto row = static_cast<int32_t>((pos.y + ts * 0.5f) / ts);
+        if (col != ps.lastTileCol || row != ps.lastTileRow) {
+            ps.lastTileCol = col;
+            ps.lastTileRow = row;
+            LOG_D("PacMan tile ({},{}) pos=({:.1f},{:.1f})", col, row, pos.x, pos.y);
+        }
+    }
+
     m_aiSystem.update(m_registry, m_map, dt);
 
     auto events = m_rules.applyRules(m_registry, m_map);

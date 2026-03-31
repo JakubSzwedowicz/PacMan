@@ -13,14 +13,10 @@ if [[ "${1:-}" == "--build" ]] || [[ ! -f "$BINARY" ]]; then
     shift 2>/dev/null || true
 fi
 
-PORT="${PORT:-7777}"
-MAP_PATH="${MAP_PATH:-assets/maps/test.json}"
 RENDER_INTERVAL="${RENDER_INTERVAL:-500}"
 
 cd "$PROJECT_ROOT"
 exec "$BINARY" \
-    --port "$PORT" \
-    --mapPath "$MAP_PATH" \
     --maxPlayers 0 \
     --renderAscii \
     --renderInterval "$RENDER_INTERVAL" \

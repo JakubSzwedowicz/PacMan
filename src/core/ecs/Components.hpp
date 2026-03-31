@@ -10,6 +10,20 @@ enum class Direction : uint8_t { Up, Down, Left, Right, None };
 
 enum class GhostType : uint8_t { Blinky = 0, Pinky = 1, Inky = 2, Clyde = 3 };
 
+[[nodiscard]] inline const char* toString(GhostType t) noexcept {
+    switch (t) {
+        case GhostType::Blinky:
+            return "Blinky";
+        case GhostType::Pinky:
+            return "Pinky";
+        case GhostType::Inky:
+            return "Inky";
+        case GhostType::Clyde:
+            return "Clyde";
+    }
+    return "Unknown";
+}
+
 struct Input {
     core::Tick tick;
     Direction dir;
@@ -38,10 +52,30 @@ struct PlayerState {
     int score = 0;
     int lives = 3;
     bool isPowered = false;
+    int32_t lastTileCol = -1;
+    int32_t lastTileRow = -1;
 };
 
 struct GhostState {
     enum class Mode : uint8_t { Chase, Scatter, Frightened, Eaten, InHouse, Exiting };
+
+    [[nodiscard]] static const char* toString(Mode m) noexcept {
+        switch (m) {
+            case Mode::Chase:
+                return "Chase";
+            case Mode::Scatter:
+                return "Scatter";
+            case Mode::Frightened:
+                return "Frightened";
+            case Mode::Eaten:
+                return "Eaten";
+            case Mode::InHouse:
+                return "InHouse";
+            case Mode::Exiting:
+                return "Exiting";
+        }
+        return "Unknown";
+    }
     Mode mode = Mode::InHouse;
     GhostType type = GhostType::Blinky;
     // Tile where the last direction decision was made; -1 = no decision yet.

@@ -2,8 +2,6 @@
 
 #include <Utils/Logging/LoggerMacros.h>
 
-#include <cstdint>
-
 #include "core/ecs/Components.hpp"
 #include "server/ai/GhostBehavior.hpp"
 
@@ -52,6 +50,9 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
         if (col == ghostState.lastDecisionCol && row == ghostState.lastDecisionRow) continue;
         ghostState.lastDecisionCol = col;
         ghostState.lastDecisionRow = row;
+
+        LOG_D("Ghost {} ({}) tile ({},{}) pos=({:.1f},{:.1f})", toString(ghostState.type),
+              core::ecs::GhostState::toString(ghostState.mode), col, row, pos.x, pos.y);
 
         // --- InHouse: navigate toward the ghost door then exit ---
         if (ghostState.mode == core::ecs::GhostState::Mode::InHouse) {
