@@ -35,7 +35,6 @@ void ClientApp::init(int argc, char* argv[]) {
 
     m_configManager = std::move(manager);
 
-    // Window depends on config — constructed here, stored as optional member.
     m_window.emplace("PacMan", static_cast<unsigned int>(m_config->windowWidth.get()),
                      static_cast<unsigned int>(m_config->windowHeight.get()));
 

@@ -11,11 +11,11 @@ namespace pacman::client::graphics {
 
 Renderer::Renderer() { LOG_I("Renderer created"); }
 
-void Renderer::render(sf::RenderWindow &window, const entt::registry &registry, const core::maps::Map &map) {
+void Renderer::render(sf::RenderWindow& window, const entt::registry& registry, const core::maps::Map& map) {
     float ts = map.tileSize;
 
-    for (int row = 0; row < static_cast<int>(map.height); ++row) {
-        for (int col = 0; col < static_cast<int>(map.width); ++col) {
+    for (int row = 0; row < static_cast<int>(map.height); row++) {
+        for (int col = 0; col < static_cast<int>(map.width); col++) {
             const auto tileType = map.tileTypeAt(col, row);
             if (tileType == core::maps::TileType::Wall) {
                 sf::RectangleShape rect({ts, ts});
@@ -42,8 +42,8 @@ void Renderer::render(sf::RenderWindow &window, const entt::registry &registry, 
 
     auto pacmanView = registry.view<const core::ecs::Position, const core::ecs::Collider, const core::ecs::PacManTag>();
     for (auto entity : pacmanView) {
-        const auto &pos = pacmanView.get<const core::ecs::Position>(entity);
-        const auto &col = pacmanView.get<const core::ecs::Collider>(entity);
+        const auto& pos = pacmanView.get<const core::ecs::Position>(entity);
+        const auto& col = pacmanView.get<const core::ecs::Collider>(entity);
         float radius = col.width / 2.0f;
         sf::CircleShape shape(radius);
         shape.setPosition({pos.x, pos.y});
@@ -53,8 +53,8 @@ void Renderer::render(sf::RenderWindow &window, const entt::registry &registry, 
 
     auto ghostView = registry.view<const core::ecs::Position, const core::ecs::Collider, const core::ecs::GhostTag>();
     for (auto entity : ghostView) {
-        const auto &pos = ghostView.get<const core::ecs::Position>(entity);
-        const auto &col = ghostView.get<const core::ecs::Collider>(entity);
+        const auto& pos = ghostView.get<const core::ecs::Position>(entity);
+        const auto& col = ghostView.get<const core::ecs::Collider>(entity);
         float radius = col.width / 2.0f;
         sf::CircleShape shape(radius);
         shape.setPosition({pos.x, pos.y});

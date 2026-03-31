@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Logging/LogLevel.h>
 #include <Utils/Config/ConfigParameters/ConfigParameter.h>
 #include <Utils/Config/ConfigParameters/ConfigParametersContainer.h>
 #include <Utils/Logging/LoggerConfig.h>
@@ -26,7 +27,10 @@ struct ClientConfig {
 
     ClientConfig()
         : loggerConfig(m_container.buildConfigParam<Utils::Logging::LoggerConfig>(
-              "loggerConfig", "Logger configuration", Utils::Logging::LoggerConfig{})),
+              "loggerConfig", "Logger configuration",
+              Utils::Logging::LoggerConfig{.filename = "clientLog.txt",
+                                           .globalLogLevel = Utils::Logging::LogLevel::INFO,
+                                           .loggersLogLevels = {}})),
           configPath(m_container.buildConfigParam<std::string>("configPath", "Path to client JSON config file",
                                                                "config/client.json")),
           windowWidth(m_container.buildConfigParam<int>("windowWidth", "Window width in pixels", 800)),

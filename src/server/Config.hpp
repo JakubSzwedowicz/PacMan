@@ -29,7 +29,10 @@ struct ServerConfig {
 
     ServerConfig()
         : loggerConfig(m_container.buildConfigParam<Utils::Logging::LoggerConfig>(
-              "loggerConfig", "Logger configuration", Utils::Logging::LoggerConfig{})),
+              "loggerConfig", "Logger configuration",
+              Utils::Logging::LoggerConfig{.filename = "serverLog.txt",
+                                           .globalLogLevel = Utils::Logging::LogLevel::INFO,
+                                           .loggersLogLevels = {}})),
           configPath(m_container.buildConfigParam<std::string>("configPath", "Path to server JSON config file",
                                                                "config/server.json")),
           port(m_container.buildConfigParam<int>("port", "Server listen port", 7777)),

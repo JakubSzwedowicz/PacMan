@@ -52,8 +52,8 @@ int ServerApp::main(int argc, char *argv[]) {
     sigaction(SIGINT, &sa, nullptr);
     sigaction(SIGTERM, &sa, nullptr);
 
-    LOG_I("PacMan Server starting");
     init(argc, argv);
+    LOG_I("PacMan Server initialized");
     run();
 
     g_running = nullptr;
@@ -61,21 +61,30 @@ int ServerApp::main(int argc, char *argv[]) {
 }
 
 void ServerApp::init(int argc, char *argv[]) {
-    LOG_I("ServerApp initializing");
     using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ServerConfig>;
     using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ServerConfig>;
     using Manager = Utils::Config::ConfigManager<ServerConfig, CLIProvider, JsonProvider>;
 
-    auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("");
-    auto *fileSourcePtr = fileSource.get();
+    // Extract configPath from CLI args (default: config/server.json).
+    std::string configPath = "config/server.json";
+    for (int i = 1; i < argc - 1; ++i) {
+        if (std::string(argv[i]) == "--configPath") {
+            configPath = argv[i + 1];
+            break;
+        }
+    }
+
+    // Create FileSourceProvider with the correct path BEFORE ConfigManager
+    // so loggers created during resolve use the correct config from JSON.
+    auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>(configPath);
 
     auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
                                              std::make_unique<JsonProvider>(std::move(fileSource)));
-
-    fileSourcePtr->setPath(m_config->configPath.get());
     manager->run();
 
     m_configManager = std::move(manager);
+
+    LOG_I("ServerApp initializing");
 
     // Freeze game settings from the resolved config. Config hot-reload will not
     // affect the running game session — only the server loop timing (tickDt).

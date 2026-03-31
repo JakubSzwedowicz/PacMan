@@ -4,6 +4,7 @@
     "maxPlayers": 4,
     "tickRate": 60.0,
     "loggerConfig": {
+        "filename": "serverLog.txt",
         "globalLogLevel": 1
     }
 }

@@ -21,7 +21,7 @@ static std::string serverBinaryPath() {
     return (std::filesystem::path(buf).parent_path() / "PacManServer").string();
 }
 
-MenuScreen::MenuScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
+MenuScreen::MenuScreen(screen::ScreenManager& screenManager, network::ClientNetwork& network, std::string mapPath,
                        std::string serverAddress, int serverPort)
     : m_screenManager(screenManager),
       m_network(network),
@@ -32,15 +32,15 @@ MenuScreen::MenuScreen(screen::ScreenManager &screenManager, network::ClientNetw
 void MenuScreen::onEnter() { LOG_I("MenuScreen entered"); }
 void MenuScreen::onExit() { LOG_I("MenuScreen exited"); }
 
-void MenuScreen::handleEvent(const sf::Event &event) {
-    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
+void MenuScreen::handleEvent(const sf::Event& event) {
+    if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
         if (key->code == sf::Keyboard::Key::Escape) m_shouldQuit = true;
     }
 }
 
 void MenuScreen::update(float /*dt*/) {}
 
-void MenuScreen::draw(sf::RenderWindow & /*window*/) {
+void MenuScreen::draw(sf::RenderWindow& /*window*/) {
     ImGui::SetNextWindowPos(ImVec2(200, 150), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     ImGui::Begin("PacMan", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
@@ -74,7 +74,7 @@ void MenuScreen::hostGame() {
     std::vector<std::string> args{
         "--port",
         std::to_string(m_serverPort),
-        "--map_path",
+        "--mapPath",
         m_mapPath,
     };
 

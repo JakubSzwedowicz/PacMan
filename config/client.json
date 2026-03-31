@@ -3,6 +3,10 @@
     "windowHeight": 600,
     "playerName": "Player",
     "serverAddress": "127.0.0.1",
-    "serverPort": 7777,
-    "mapPath": "assets/maps/test.json"
+    "serverPort": 7771,
+    "mapPath": "assets/maps/test.json",
+    "loggerConfig": {
+        "filename": "clientLog.txt",
+        "globalLogLevel": 1
+    }
 }
