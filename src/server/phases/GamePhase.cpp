@@ -213,9 +213,9 @@ void GamePhase::broadcastSnapshot() { m_network.broadcastSnapshot(buildSnapshot(
 bool GamePhase::isRoundOver() const {
     if (m_players.empty()) return false;
 
-    bool noPellets = m_registry.view<const core::ecs::PelletTag>().empty() &&
-                     m_registry.view<const core::ecs::PowerPelletTag>().empty();
-    if (noPellets) return true;
+    if (m_registry.view<const core::ecs::PelletTag>().empty() &&
+        m_registry.view<const core::ecs::PowerPelletTag>().empty())
+        return true;
 
     for (auto e : m_registry.view<const core::ecs::PlayerState, const core::ecs::PacManTag>()) {
         if (m_registry.get<const core::ecs::PlayerState>(e).lives > 0) return false;
@@ -224,7 +224,9 @@ bool GamePhase::isRoundOver() const {
 }
 
 void GamePhase::endRound() {
-    LOG_I("Round over (tick={})", m_tick);
+    const bool noPellets = m_registry.view<const core::ecs::PelletTag>().empty() &&
+                           m_registry.view<const core::ecs::PowerPelletTag>().empty();
+    LOG_I("Round over (tick={}) — reason: {}", m_tick, noPellets ? "all pellets eaten" : "all players out of lives");
     m_network.broadcastRoundEnd(buildRoundEnd());
     m_pendingRequest = ReturnToLobbyRequest{};
 }

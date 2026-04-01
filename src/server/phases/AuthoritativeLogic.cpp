@@ -119,7 +119,11 @@ void AuthoritativeLogic::checkGhostCollision(entt::registry& registry, const cor
             } else if (ghostState.mode != core::ecs::GhostState::Mode::Eaten) {
                 state.lives--;
                 state.isPowered = false;
-                LOG_I("Ghost caught player, lives={}", state.lives);
+                if (state.lives > 0) {
+                    LOG_I("Ghost caught player, lives remaining={}", state.lives);
+                } else {
+                    LOG_I("Ghost caught player — game over");
+                }
             }
         }
     }

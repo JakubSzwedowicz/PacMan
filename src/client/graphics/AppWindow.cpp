@@ -44,11 +44,13 @@ void AppWindow::renderFrame(sf::Time dt, const std::function<void(sf::RenderWind
 bool AppWindow::isOpen() const { return m_window.isOpen(); }
 
 void AppWindow::shutdown() {
-    if (m_imguiInitialized) {
-        ImGui::SFML::Shutdown();
-        m_imguiInitialized = false;
-        LOG_I("AppWindow shut down");
-    }
+    if (!m_imguiInitialized) return;
+    // Close the window first so SFML doesn't try to restore ImGui's X11 cursor
+    // after ImGui::SFML::Shutdown() has already freed it (BadCursor X error).
+    if (m_window.isOpen()) m_window.close();
+    ImGui::SFML::Shutdown();
+    m_imguiInitialized = false;
+    LOG_I("AppWindow shut down");
 }
 
 }  // namespace pacman::client::graphics

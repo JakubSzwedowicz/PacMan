@@ -22,7 +22,7 @@ namespace pacman::server::phases {
 
 class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<network::events::ServerNetworkEvent> {
    public:
-    GamePhase(network::ServerNetwork &network, core::maps::Map map, std::vector<core::protocol::PlayerInfo> players,
+    GamePhase(network::ServerNetwork& network, core::maps::Map map, std::vector<core::protocol::PlayerInfo> players,
               bool renderAscii, int renderIntervalMs);
 
     // Phase
@@ -31,11 +31,11 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     PhaseRequest update(float dt) override;
 
     // ISubscriber<ServerNetworkEvent>
-    void onUpdate(const network::events::ServerNetworkEvent &event) override;
+    void onUpdate(const network::events::ServerNetworkEvent& event) override;
 
    private:
     void handleDisconnect(core::PlayerId id);
-    void handleInput(const core::protocol::PlayerInputPacket &packet);
+    void handleInput(const core::protocol::PlayerInputPacket& packet);
 
     void spawnEntities();
     void applyPendingInputs();
@@ -45,7 +45,7 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     [[nodiscard]] core::protocol::GameSnapshotPacket buildSnapshot() const;
     [[nodiscard]] core::protocol::RoundEndPacket buildRoundEnd() const;
 
-    network::ServerNetwork &m_network;
+    network::ServerNetwork& m_network;
     core::maps::Map m_map;
 
     // Set by endRound(); drained by update().
@@ -73,7 +73,7 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     float m_renderInterval = 0.5f;
     float m_renderAccumulator = 0.0f;
 
-    Utils::Logging::Logger m_logger{"GamePhase"};
+    mutable Utils::Logging::Logger m_logger{"GamePhase"};
 };
 
 }  // namespace pacman::server::phases

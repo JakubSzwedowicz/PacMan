@@ -5,6 +5,6 @@
     "tickRate": 60.0,
     "loggerConfig": {
         "filename": "serverLog.txt",
-        "globalLogLevel": 1
+        "globalLogLevel": 0
     }
 }

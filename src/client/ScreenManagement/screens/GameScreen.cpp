@@ -3,7 +3,7 @@
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
 
-#include <unordered_set>
+#include <set>
 #include <vector>
 
 #include "core/ecs/Components.hpp"
@@ -17,11 +17,9 @@ using namespace network::events;
 // Constructors
 // ---------------------------------------------------------------------------
 
-GameScreen::GameScreen(network::ClientNetwork &network) : m_network(network) {
-    m_ghostEntities.fill(entt::null);
-}
+GameScreen::GameScreen(network::ClientNetwork& network) : m_network(network) { m_ghostEntities.fill(entt::null); }
 
-GameScreen::GameScreen(network::ClientNetwork &network, entt::registry &&registry, core::maps::Map map,
+GameScreen::GameScreen(network::ClientNetwork& network, entt::registry&& registry, core::maps::Map map,
                        std::unordered_map<core::PlayerId, entt::entity> playerEntities,
                        std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId,
                        bool isHost)
@@ -65,8 +63,9 @@ void GameScreen::onExit() {
     m_localPlayer = entt::null;
 }
 
-screen::ScreenRequest GameScreen::update(float dt, const input::InputSnapshot &input) {
+screen::ScreenRequest GameScreen::update(float dt, const input::InputSnapshot& input) {
     if (input.escapePressed) {
+        LOG_I("Escape pressed — returning to menu");
         if (m_networked) m_network.disconnect();
         queueRequest(screen::OpenMenuRequest{});
     }
@@ -87,7 +86,7 @@ screen::ScreenRequest GameScreen::update(float dt, const input::InputSnapshot &i
     return takeQueuedRequest();
 }
 
-void GameScreen::draw(sf::RenderWindow &window) {
+void GameScreen::draw(sf::RenderWindow& window) {
     m_renderer.render(window, m_registry, m_map);
 
     ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiCond_Always);
@@ -97,7 +96,7 @@ void GameScreen::draw(sf::RenderWindow &window) {
                      ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
 
     if (m_localPlayer != entt::null) {
-        auto *ps = m_registry.try_get<core::ecs::PlayerState>(m_localPlayer);
+        auto* ps = m_registry.try_get<core::ecs::PlayerState>(m_localPlayer);
         if (ps) {
             ImGui::Text("Score: %d", ps->score);
             ImGui::Text("Lives: %d", ps->lives);
@@ -112,21 +111,21 @@ void GameScreen::draw(sf::RenderWindow &window) {
 // ISubscriber<ClientNetworkEvent>
 // ---------------------------------------------------------------------------
 
-void GameScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(pacman::overloaded{[this](const GameSnapshotEvent &e) { applySnapshot(e.packet); },
-                                  [this](const RoundEndEvent &e) {
+void GameScreen::onUpdate(const ClientNetworkEvent& event) {
+    std::visit(pacman::overloaded{[this](const GameSnapshotEvent& e) { applySnapshot(e.packet); },
+                                  [this](const RoundEndEvent& e) {
                                       LOG_I("Round ended — transitioning to ResultsScreen");
                                       queueRequest(screen::OpenResultsRequest{e.packet, m_localPlayerId, m_isHost});
                                   },
-                                  [this](const DisconnectedEvent &) {
+                                  [this](const DisconnectedEvent&) {
                                       LOG_I("Disconnected during game");
                                       queueRequest(screen::OpenMenuRequest{});
                                   },
-                                  [this](const ServerShutdownEvent &e) {
+                                  [this](const ServerShutdownEvent& e) {
                                       LOG_I("Server shutdown during game: {}", e.packet.reason);
                                       queueRequest(screen::OpenMenuRequest{});
                                   },
-                                  [](const auto &) {}},
+                                  [](const auto&) {}},
                event);
 }
 
@@ -134,66 +133,58 @@ void GameScreen::onUpdate(const ClientNetworkEvent &event) {
 // Private helpers
 // ---------------------------------------------------------------------------
 
-void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket &snap) {
-    for (const auto &state : snap.players) {
+void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
+    for (const auto& state : snap.players) {
         auto it = m_playerEntities.find(state.id);
         if (it == m_playerEntities.end()) continue;
         entt::entity e = it->second;
 
-        auto *pos = m_registry.try_get<core::ecs::Position>(e);
-        if (pos) {
-            pos->x = state.x;
-            pos->y = state.y;
-        }
-
-        auto *ps = m_registry.try_get<core::ecs::PlayerState>(e);
-        if (ps) {
-            ps->score = state.score;
-            ps->lives = state.lives;
-        }
-
-        auto *ds = m_registry.try_get<core::ecs::DirectionState>(e);
-        if (ds) ds->current = state.dir;
+        auto [pos, ps, ds] =
+            m_registry.try_get<core::ecs::Position, core::ecs::PlayerState, core::ecs::DirectionState>(e);
+        if (!pos || !ps || !ds) continue;
+        pos->x = state.x;
+        pos->y = state.y;
+        ps->score = state.score;
+        ps->lives = state.lives;
+        ds->current = state.dir;
     }
 
     for (int i = 0; i < core::ghostCount; ++i) {
         entt::entity e = m_ghostEntities[i];
         if (e == entt::null) continue;
-        const auto &gs = snap.ghosts[i];
+        const auto& gs = snap.ghosts[i];
 
-        auto *pos = m_registry.try_get<core::ecs::Position>(e);
-        if (pos) {
-            pos->x = gs.x;
-            pos->y = gs.y;
-        }
-
-        auto *ghostState = m_registry.try_get<core::ecs::GhostState>(e);
-        if (ghostState) ghostState->mode = static_cast<core::ecs::GhostState::Mode>(gs.mode);
-
-        auto *ds = m_registry.try_get<core::ecs::DirectionState>(e);
-        if (ds) ds->current = gs.dir;
+        auto [pos, ghostState, ds] =
+            m_registry.try_get<core::ecs::Position, core::ecs::GhostState, core::ecs::DirectionState>(e);
+        if (!pos || !ghostState || !ds) continue;
+        pos->x = gs.x;
+        pos->y = gs.y;
+        ghostState->mode = static_cast<core::ecs::GhostState::Mode>(gs.mode);
+        ds->current = gs.dir;
     }
 
     // Reconcile pellets: destroy client-side entities absent from the server's remaining list.
     const float ts = m_map.tileSize;
-    auto reconcilePellets = [&](auto tag, const std::vector<core::maps::Tile> &remaining) {
-        using Tag = decltype(tag);
-        std::unordered_set<uint64_t> surviving;
-        surviving.reserve(remaining.size());
-        for (const auto &tile : remaining) surviving.insert((static_cast<uint64_t>(tile.col()) << 32) | tile.row());
+    auto reconcilePellets = [&]<typename Tag>(const std::vector<core::maps::Tile>& remaining) {
+        using Key = std::pair<core::maps::Tile::Unit, core::maps::Tile::Unit>;
+        std::set<Key> surviving;
+        for (const auto& tile : remaining) surviving.emplace(tile.col(), tile.row());
 
         std::vector<entt::entity> toDestroy;
         for (auto e : m_registry.view<core::ecs::Position, Tag>()) {
-            const auto &pos = m_registry.get<core::ecs::Position>(e);
-            auto col = static_cast<uint64_t>(pos.x / ts);
-            auto row = static_cast<uint64_t>(pos.y / ts);
-            if (!surviving.count((col << 32) | row)) toDestroy.push_back(e);
+            const auto& pos = m_registry.get<core::ecs::Position>(e);
+            Key key{static_cast<core::maps::Tile::Unit>(pos.x / ts),
+                    static_cast<core::maps::Tile::Unit>(pos.y / ts)};
+            if (!surviving.count(key)) toDestroy.push_back(e);
         }
-        for (auto e : toDestroy) m_registry.destroy(e);
+        if (!toDestroy.empty()) {
+            LOG_D("Reconcile: destroying {} pellet entities (server has {})", toDestroy.size(), remaining.size());
+        }
+        m_registry.destroy(toDestroy.cbegin(), toDestroy.cend());
     };
 
-    reconcilePellets(core::ecs::PelletTag{}, snap.remainingPellets);
-    reconcilePellets(core::ecs::PowerPelletTag{}, snap.remainingPowerPellets);
+    reconcilePellets.operator()<core::ecs::PelletTag>(snap.remainingPellets);
+    reconcilePellets.operator()<core::ecs::PowerPelletTag>(snap.remainingPowerPellets);
 }
 
 void GameScreen::spawnEntitiesFromMap() {
@@ -222,7 +213,7 @@ void GameScreen::spawnEntitiesFromMap() {
     }
 
     if (!m_map.pacmanSpawns.empty()) {
-        const auto &spawn = m_map.pacmanSpawns[0];
+        const auto& spawn = m_map.pacmanSpawns[0];
         float x = static_cast<float>(spawn.col()) * ts;
         float y = static_cast<float>(spawn.row()) * ts;
 

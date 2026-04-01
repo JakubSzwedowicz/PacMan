@@ -7,6 +7,6 @@
     "mapPath": "assets/maps/test.json",
     "loggerConfig": {
         "filename": "clientLog.txt",
-        "globalLogLevel": 1
+        "globalLogLevel": 0
     }
 }

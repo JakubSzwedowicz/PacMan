@@ -14,30 +14,38 @@ Renderer::Renderer() { LOG_I("Renderer created"); }
 void Renderer::render(sf::RenderWindow& window, const entt::registry& registry, const core::maps::Map& map) {
     float ts = map.tileSize;
 
+    // Walls — drawn from the static map grid (never change)
     for (int row = 0; row < static_cast<int>(map.height); row++) {
         for (int col = 0; col < static_cast<int>(map.width); col++) {
-            const auto tileType = map.tileTypeAt(col, row);
-            if (tileType == core::maps::TileType::Wall) {
+            if (map.tileTypeAt(col, row) == core::maps::TileType::Wall) {
                 sf::RectangleShape rect({ts, ts});
                 rect.setPosition({static_cast<float>(col) * ts, static_cast<float>(row) * ts});
                 rect.setFillColor(sf::Color(0, 0, 139));
                 window.draw(rect);
-            } else if (tileType == core::maps::TileType::Pellet) {
-                float radius = ts * 0.1f;
-                sf::CircleShape dot(radius);
-                dot.setPosition({static_cast<float>(col) * ts + ts / 2.0f - radius,
-                                 static_cast<float>(row) * ts + ts / 2.0f - radius});
-                dot.setFillColor(sf::Color::Yellow);
-                window.draw(dot);
-            } else if (tileType == core::maps::TileType::PowerPellet) {
-                float radius = ts * 0.25f;
-                sf::CircleShape pellet(radius);
-                pellet.setPosition({static_cast<float>(col) * ts + ts / 2.0f - radius,
-                                    static_cast<float>(row) * ts + ts / 2.0f - radius});
-                pellet.setFillColor(sf::Color::Yellow);
-                window.draw(pellet);
             }
         }
+    }
+
+    // Pellets — drawn from ECS so they disappear when eaten
+    auto pelletView = registry.view<const core::ecs::Position, const core::ecs::PelletTag>();
+    for (auto entity : pelletView) {
+        const auto& pos = pelletView.get<const core::ecs::Position>(entity);
+        float radius = ts * 0.1f;
+        sf::CircleShape dot(radius);
+        dot.setPosition({pos.x + ts / 2.0f - radius, pos.y + ts / 2.0f - radius});
+        dot.setFillColor(sf::Color::Yellow);
+        window.draw(dot);
+    }
+
+    // Power pellets — drawn from ECS so they disappear when eaten
+    auto powerPelletView = registry.view<const core::ecs::Position, const core::ecs::PowerPelletTag>();
+    for (auto entity : powerPelletView) {
+        const auto& pos = powerPelletView.get<const core::ecs::Position>(entity);
+        float radius = ts * 0.25f;
+        sf::CircleShape pellet(radius);
+        pellet.setPosition({pos.x + ts / 2.0f - radius, pos.y + ts / 2.0f - radius});
+        pellet.setFillColor(sf::Color::Yellow);
+        window.draw(pellet);
     }
 
     auto pacmanView = registry.view<const core::ecs::Position, const core::ecs::Collider, const core::ecs::PacManTag>();

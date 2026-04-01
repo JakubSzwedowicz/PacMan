@@ -50,9 +50,8 @@ void ClientApp::run() {
 
         m_appWindow->pollEvents([&inputMapper](const sf::Event& event) { inputMapper.feed(event); });
 
-        auto input = inputMapper.snapshot(tick);
-
         while (accumulator >= core::tickDt) {
+            auto input = inputMapper.snapshot(tick);
             m_screenManager.update(core::tickDt, input);
             ++tick;
             accumulator -= core::tickDt;
