@@ -1,17 +1,14 @@
 #pragma once
 
 #include <Utils/Logging/Logger.h>
-#include <Utils/Providers/QueuedResourceProvider.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
 
 #include <cstdint>
-#include <memory>
 
-#include "core/Common.hpp"
 #include "core/network/ENetSourceProvider.hpp"
-#include "core/network/RawNetworkMessage.hpp"
 #include "core/protocol/Packets.hpp"
+#include "server/network/NetworkEventParser.hpp"
 #include "server/network/NetworkEvents.hpp"
 
 namespace pacman::server::network {
@@ -19,18 +16,17 @@ namespace pacman::server::network {
 // Bridges ENet ↔ pub/sub.
 //
 // Receive path (IRunnable::run(), once per tick):
-//   ENetSourceProvider (ISourceProvider) → NetworkEventParser (IParser)
-//   → QueuedResourceProvider drains all events per tick
-//   → ServerNetwork publishes each to ISubscriber<ServerNetworkEvent>
+//   ENetSourceProvider::run() drains ENet events into its internal queue.
+//   NetworkEventParser converts each RawNetworkMessage into a ServerNetworkEvent.
+//   ServerNetwork publishes each event to ISubscriber<ServerNetworkEvent>.
 //
-// Send path: sendTo / broadcast delegate directly to ENetSourceProvider.
+// Send path: sendTo / broadcast delegate directly to m_enetSource.
 //
 // Active phases subscribe via ISubscriber<ServerNetworkEvent> RAII.
-// In a future multithreaded phase, run() can be moved to its own thread.
 class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerNetworkEvent>,
                       public Utils::Runnables::IRunnable {
    public:
-    ServerNetwork();
+    ServerNetwork() = default;
     ~ServerNetwork();
 
     ServerNetwork(const ServerNetwork &) = delete;
@@ -54,11 +50,8 @@ class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerN
     void run() override;
 
    private:
-    using EventProvider =
-        Utils::Providers::QueuedResourceProvider<events::ServerNetworkEvent, core::network::RawNetworkMessage>;
-
-    std::unique_ptr<EventProvider> m_eventProvider;
-    core::network::ENetSourceProvider *m_enetSource = nullptr;  // non-owning; owned by m_eventProvider
+    core::network::ENetSourceProvider m_enetSource;
+    NetworkEventParser m_parser;
 
     Utils::Logging::Logger m_logger{"ServerNetwork"};
 };

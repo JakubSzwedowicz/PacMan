@@ -1,16 +1,14 @@
 #pragma once
 
 #include <Utils/Logging/Logger.h>
-#include <Utils/Providers/QueuedResourceProvider.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 #include <Utils/Runnables/IRunnable.h>
 
-#include <memory>
 #include <string>
 
+#include "client/network/ClientNetworkEventParser.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
 #include "core/network/ENetSourceProvider.hpp"
-#include "core/network/RawNetworkMessage.hpp"
 #include "core/protocol/Packets.hpp"
 
 namespace pacman::client::network {
@@ -18,7 +16,7 @@ namespace pacman::client::network {
 class ClientNetwork : public Utils::PublishSubscribe::IPublisher<events::ClientNetworkEvent>,
                       public Utils::Runnables::IRunnable {
    public:
-    ClientNetwork();
+    ClientNetwork() = default;
     ~ClientNetwork();
 
     ClientNetwork(const ClientNetwork&) = delete;
@@ -36,11 +34,8 @@ class ClientNetwork : public Utils::PublishSubscribe::IPublisher<events::ClientN
     void sendInput(const core::protocol::PlayerInputPacket& packet);
 
    private:
-    using EventProvider =
-        Utils::Providers::QueuedResourceProvider<events::ClientNetworkEvent, core::network::RawNetworkMessage>;
-
-    std::unique_ptr<EventProvider> m_eventProvider;
-    core::network::ENetSourceProvider* m_enetSource = nullptr;
+    core::network::ENetSourceProvider m_enetSource;
+    ClientNetworkEventParser m_parser;
 
     Utils::Logging::Logger m_logger{"ClientNetwork"};
 };
