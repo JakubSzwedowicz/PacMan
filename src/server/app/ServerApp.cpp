@@ -1,10 +1,6 @@
 #include "server/app/ServerApp.hpp"
 
-#include <Utils/Config/ConfigManager.h>
-#include <Utils/Config/ConfigProviders/CLIConfigProvider.h>
-#include <Utils/Config/ConfigProviders/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
-#include <Utils/Providers/FileSourceProvider.h>
 #include <signal.h>
 
 #include <algorithm>
@@ -13,12 +9,11 @@
 #include <csignal>
 #include <thread>
 
+#include "core/ConfigUtils.hpp"
+
 namespace {
 
-// Only the atomic flag is touched from the signal handler — no logging,
-// no function calls that might hold a mutex.
-std::atomic<bool> *g_running = nullptr;
-
+std::atomic<bool>* g_running = nullptr;
 void signalHandler(int /*sig*/) {
     if (g_running) g_running->store(false, std::memory_order_relaxed);
 }
@@ -28,7 +23,7 @@ void signalHandler(int /*sig*/) {
 namespace pacman::server::app {
 
 void ServerApp::onUpdate(
-    const std::shared_ptr<const ServerConfig> &config) {  // It doesn't set any mutex yet but it will be once the app
+    const std::shared_ptr<const ServerConfig>& config) {  // It doesn't set any mutex yet but it will be once the app
                                                           // becomes multithreaded. If ever...
     m_config = config;
 
@@ -39,13 +34,13 @@ void ServerApp::onUpdate(
     };
 }
 
-int ServerApp::main(int argc, char *argv[]) {
+int ServerApp::main(int argc, char* argv[]) {
     g_running = &m_running;
     // Use sigaction without SA_RESTART so that blocking syscalls (nanosleep,
     // ENet's select/poll) return EINTR immediately when the signal fires,
     // letting the main loop see m_running == false without waiting for the
     // current sleep/poll to time out on its own.
-    struct sigaction sa {};
+    struct sigaction sa{};
     sa.sa_handler = signalHandler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
@@ -60,29 +55,8 @@ int ServerApp::main(int argc, char *argv[]) {
     return 0;
 }
 
-void ServerApp::init(int argc, char *argv[]) {
-    using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ServerConfig>;
-    using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ServerConfig>;
-    using Manager = Utils::Config::ConfigManager<ServerConfig, CLIProvider, JsonProvider>;
-
-    // Extract configPath from CLI args (default: config/server.json).
-    std::string configPath = "config/server.json";
-    for (int i = 1; i < argc - 1; ++i) {
-        if (std::string(argv[i]) == "--configPath") {
-            configPath = argv[i + 1];
-            break;
-        }
-    }
-
-    // Create FileSourceProvider with the correct path BEFORE ConfigManager
-    // so loggers created during resolve use the correct config from JSON.
-    auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>(configPath);
-
-    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
-                                             std::make_unique<JsonProvider>(std::move(fileSource)));
-    manager->run();
-
-    m_configManager = std::move(manager);
+void ServerApp::init(int argc, char* argv[]) {
+    m_configManager = core::initializeConfigManager<ServerConfig>(argc, argv, "config/server.json");
 
     LOG_I("ServerApp initializing");
 
@@ -122,7 +96,7 @@ void ServerApp::run() {
     LOG_I("Server loop ended (tick={})", m_tick);
 }
 
-float ServerApp::advanceClock(Clock::time_point &last, Clock::time_point now) const {
+float ServerApp::advanceClock(Clock::time_point& last, Clock::time_point now) const {
     const float elapsed = std::chrono::duration<float>(now - last).count();
     last = now;
     return std::min(elapsed, 0.1f);
@@ -133,7 +107,7 @@ void ServerApp::pumpConfigAndNetwork() {
     m_network.run();
 }
 
-void ServerApp::stepSimulation(float &accumulator) {
+void ServerApp::stepSimulation(float& accumulator) {
     const float dt = m_loopSettings.tickDt;
     while (accumulator >= dt) {
         m_gameRunner->update(dt);

@@ -1,15 +1,12 @@
 #include "client/ClientApp.hpp"
 
-#include <Utils/Config/ConfigManager.h>
-#include <Utils/Config/ConfigProviders/CLIConfigProvider.h>
-#include <Utils/Config/ConfigProviders/JsonConfigProvider.h>
 #include <Utils/Logging/LoggerMacros.h>
-#include <Utils/Providers/FileSourceProvider.h>
 
 #include <SFML/System/Clock.hpp>
 
 #include "client/screens/GameScreen.hpp"
 #include "client/screens/MenuScreen.hpp"
+#include "core/ConfigUtils.hpp"
 
 namespace pacman::client {
 
@@ -20,20 +17,7 @@ int ClientApp::main(int argc, char* argv[]) {
 }
 
 void ClientApp::init(int argc, char* argv[]) {
-    using CLIProvider = Utils::Config::ConfigProviders::CLIConfigProvider<ClientConfig>;
-    using JsonProvider = Utils::Config::ConfigProviders::JsonConfigProvider<ClientConfig>;
-    using Manager = Utils::Config::ConfigManager<ClientConfig, CLIProvider, JsonProvider>;
-
-    auto fileSource = std::make_unique<Utils::Providers::FileSourceProvider>("config/client.json");
-    auto* fileSourcePtr = fileSource.get();
-
-    auto manager = std::make_unique<Manager>(std::make_unique<CLIProvider>(argc, argv),
-                                             std::make_unique<JsonProvider>(std::move(fileSource)));
-
-    fileSourcePtr->setPath(m_config->configPath.get());
-    manager->run();
-
-    m_configManager = std::move(manager);
+    m_configManager = core::initializeConfigManager<ClientConfig>(argc, argv, "config/client.json");
 
     m_window.emplace("PacMan", static_cast<unsigned int>(m_config->windowWidth.get()),
                      static_cast<unsigned int>(m_config->windowHeight.get()));
