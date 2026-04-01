@@ -1,4 +1,4 @@
-#include "client/screens/MenuScreen.hpp"
+#include "client/ScreenManagement/screens/MenuScreen.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
@@ -6,9 +6,6 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
-
-#include "client/screen/ScreenManager.hpp"
-#include "client/screens/LobbyScreen.hpp"
 
 namespace pacman::client::screens {
 
@@ -21,24 +18,16 @@ static std::string serverBinaryPath() {
     return (std::filesystem::path(buf).parent_path() / "PacManServer").string();
 }
 
-MenuScreen::MenuScreen(screen::ScreenManager& screenManager, network::ClientNetwork& network, std::string mapPath,
-                       std::string serverAddress, int serverPort)
-    : m_screenManager(screenManager),
-      m_network(network),
-      m_mapPath(std::move(mapPath)),
-      m_serverAddress(std::move(serverAddress)),
-      m_serverPort(serverPort) {}
+MenuScreen::MenuScreen(network::ClientNetwork& network, ProcessSpawner& spawner)
+    : m_network(network), m_spawner(spawner) {}
 
 void MenuScreen::onEnter() { LOG_I("MenuScreen entered"); }
 void MenuScreen::onExit() { LOG_I("MenuScreen exited"); }
 
-void MenuScreen::handleEvent(const sf::Event& event) {
-    if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Escape) m_shouldQuit = true;
-    }
+screen::ScreenRequest MenuScreen::update(float /*dt*/, const input::InputSnapshot& input) {
+    if (input.escapePressed) queueRequest(screen::QuitAppRequest{});
+    return takeQueuedRequest();
 }
-
-void MenuScreen::update(float /*dt*/) {}
 
 void MenuScreen::draw(sf::RenderWindow& /*window*/) {
     ImGui::SetNextWindowPos(ImVec2(200, 150), ImGuiCond_FirstUseEver);
@@ -62,20 +51,20 @@ void MenuScreen::draw(sf::RenderWindow& /*window*/) {
 
     ImGui::Spacing();
     ImGui::SetCursorPosX(buttonX);
-    if (ImGui::Button("Quit", ImVec2(buttonWidth, 40))) m_shouldQuit = true;
+    if (ImGui::Button("Quit", ImVec2(buttonWidth, 40))) queueRequest(screen::QuitAppRequest{});
 
     ImGui::End();
 }
 
 void MenuScreen::hostGame() {
-    LOG_I("Hosting game on port {}", m_serverPort);
+    LOG_I("Hosting game on port {}", config().serverPort.get());
 
     auto serverBin = serverBinaryPath();
     std::vector<std::string> args{
         "--port",
-        std::to_string(m_serverPort),
+        std::to_string(config().serverPort.get()),
         "--mapPath",
-        m_mapPath,
+        config().mapPath.get(),
     };
 
     if (!m_spawner.spawn(serverBin, args)) {
@@ -86,32 +75,26 @@ void MenuScreen::hostGame() {
     // Give the server a moment to bind its port before we connect.
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    if (!m_network.connect("127.0.0.1", static_cast<uint16_t>(m_serverPort))) {
-        LOG_E("Failed to connect to local server on port {}", m_serverPort);
+    if (!m_network.connect("127.0.0.1", static_cast<uint16_t>(config().serverPort.get()))) {
+        LOG_E("Failed to connect to local server on port {}", config().serverPort.get());
         m_spawner.kill();
         return;
     }
 
     LOG_I("Connected to local server");
-    m_screenManager.setScreen(std::make_unique<LobbyScreen>(m_screenManager, m_network, m_mapPath, m_serverAddress,
-                                                            m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
-                                                            true /*isHost*/));
+    queueRequest(screen::OpenLobbyRequest{0 /*localPlayerId — filled by GameStart*/, true /*isHost*/});
 }
 
 void MenuScreen::joinGame() {
-    LOG_I("Joining game at {}:{}", m_serverAddress, m_serverPort);
+    LOG_I("Joining game at {}:{}", config().serverAddress.get(), config().serverPort.get());
 
-    if (!m_network.connect(m_serverAddress, static_cast<uint16_t>(m_serverPort))) {
-        LOG_E("Failed to connect to {}:{}", m_serverAddress, m_serverPort);
+    if (!m_network.connect(config().serverAddress.get(), static_cast<uint16_t>(config().serverPort.get()))) {
+        LOG_E("Failed to connect to {}:{}", config().serverAddress.get(), config().serverPort.get());
         return;
     }
 
     LOG_I("Connected to server");
-    m_screenManager.setScreen(std::make_unique<LobbyScreen>(m_screenManager, m_network, m_mapPath, m_serverAddress,
-                                                            m_serverPort, 0 /*localPlayerId — filled by GameStart*/,
-                                                            false /*isHost*/));
+    queueRequest(screen::OpenLobbyRequest{0 /*localPlayerId — filled by GameStart*/, false /*isHost*/});
 }
-
-bool MenuScreen::shouldQuit() const { return m_shouldQuit; }
 
 }  // namespace pacman::client::screens

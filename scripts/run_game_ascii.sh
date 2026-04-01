@@ -18,8 +18,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SERVER_BIN="$PROJECT_ROOT/build/debug/PacManServer"
-CLIENT_BIN="$PROJECT_ROOT/build/debug/PacManClient"
+SERVER_BIN="$PROJECT_ROOT/build/debug/src/server/PacManServer"
+CLIENT_BIN="$PROJECT_ROOT/build/debug/src/client/PacManClient"
 
 # ---- argument parsing -------------------------------------------------------
 NUM_PLAYERS=1
@@ -36,7 +36,7 @@ done
 # ---- build if requested or binary missing -----------------------------------
 if $DO_BUILD || [[ ! -f "$SERVER_BIN" ]] || [[ ! -f "$CLIENT_BIN" ]]; then
     echo "Building all targets..."
-    cmake --workflow --preset all-debug --fresh
+    cmake --workflow --preset all-debug
 fi
 
 # ---- config -----------------------------------------------------------------

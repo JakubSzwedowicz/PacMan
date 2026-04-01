@@ -7,13 +7,9 @@
 
 #include "client/network/ClientNetwork.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
-#include "client/screen/Screen.hpp"
+#include "client/ScreenManagement/Screen.hpp"
 #include "core/Common.hpp"
 #include "core/protocol/Packets.hpp"
-
-namespace pacman::client::screen {
-class ScreenManager;
-}
 
 namespace pacman::client::screens {
 
@@ -25,27 +21,21 @@ namespace pacman::client::screens {
 class LobbyScreen : public screen::Screen,
                     public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
    public:
-    LobbyScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
-                std::string serverAddress, int serverPort, core::PlayerId localPlayerId, bool isHost);
+    using screen::Screen::onUpdate;
+
+    LobbyScreen(network::ClientNetwork &network, core::PlayerId localPlayerId, bool isHost);
 
     // Screen
     void onEnter() override;
     void onExit() override;
-    void handleEvent(const sf::Event &event) override;
-    void update(float dt) override;
+    screen::ScreenRequest update(float dt, const input::InputSnapshot &input) override;
     void draw(sf::RenderWindow &window) override;
 
     // ISubscriber<ClientNetworkEvent>
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
    private:
-    void goToMenu();
-
-    screen::ScreenManager &m_screenManager;
     network::ClientNetwork &m_network;
-    std::string m_mapPath;
-    std::string m_serverAddress;
-    int m_serverPort;
     [[maybe_unused]] core::PlayerId m_localPlayerId;
     bool m_isHost;
 

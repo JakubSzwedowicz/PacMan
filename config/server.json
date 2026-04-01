@@ -1,7 +1,7 @@
 {
     "port": 7771,
     "mapPath": "assets/maps/test.json",
-    "maxPlayers": 4,
+    "maxPlayers": 1,
     "tickRate": 60.0,
     "loggerConfig": {
         "filename": "serverLog.txt",

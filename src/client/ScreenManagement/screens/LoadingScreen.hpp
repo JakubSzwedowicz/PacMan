@@ -7,16 +7,12 @@
 #include <string>
 #include <unordered_map>
 
+#include "client/ScreenManagement/Screen.hpp"
 #include "client/network/ClientNetwork.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
-#include "client/screen/Screen.hpp"
 #include "core/Common.hpp"
 #include "core/maps/Map.hpp"
 #include "core/protocol/Packets.hpp"
-
-namespace pacman::client::screen {
-class ScreenManager;
-}
 
 namespace pacman::client::screens {
 
@@ -35,29 +31,24 @@ namespace pacman::client::screens {
 class LoadingScreen : public screen::Screen,
                       public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
    public:
-    LoadingScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
-                  std::string serverAddress, int serverPort, core::protocol::GameStartPacket gameStart,
+    using screen::Screen::onUpdate;
+
+    LoadingScreen(network::ClientNetwork& network, core::protocol::GameStartPacket gameStart,
                   core::PlayerId localPlayerId, bool isHost);
 
     // Screen
     void onEnter() override;
     void onExit() override;
-    void handleEvent(const sf::Event &event) override;
-    void update(float dt) override;
-    void draw(sf::RenderWindow &window) override;
+    screen::ScreenRequest update(float dt, const input::InputSnapshot& input) override;
+    void draw(sf::RenderWindow& window) override;
 
     // ISubscriber<ClientNetworkEvent>
-    void onUpdate(const network::events::ClientNetworkEvent &event) override;
+    void onUpdate(const network::events::ClientNetworkEvent& event) override;
 
    private:
     void spawnEntitiesFromMap();
-    void goToMenu();
 
-    screen::ScreenManager &m_screenManager;
-    network::ClientNetwork &m_network;
-    std::string m_mapPath;
-    std::string m_serverAddress;
-    int m_serverPort;
+    network::ClientNetwork& m_network;
     core::protocol::GameStartPacket m_gameStart;
     core::PlayerId m_localPlayerId;
     bool m_isHost;
@@ -71,6 +62,7 @@ class LoadingScreen : public screen::Screen,
     bool m_assetsLoaded = false;
     bool m_simInitialized = false;
     bool m_readyToPlaySent = false;
+    bool m_firstSnapshotReceived = false;
 
     Utils::Logging::Logger m_logger{"LoadingScreen"};
 };

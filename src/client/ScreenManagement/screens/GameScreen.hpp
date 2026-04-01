@@ -10,37 +10,30 @@
 #include "client/graphics/Renderer.hpp"
 #include "client/network/ClientNetwork.hpp"
 #include "client/network/ClientNetworkEvents.hpp"
-#include "client/screen/Screen.hpp"
+#include "client/ScreenManagement/Screen.hpp"
 #include "core/Common.hpp"
 #include "core/maps/Map.hpp"
 #include "core/simulation/Simulation.hpp"
-
-namespace pacman::client::screen {
-class ScreenManager;
-}
 
 namespace pacman::client::screens {
 
 class GameScreen : public screen::Screen,
                    public Utils::PublishSubscribe::ISubscriber<network::events::ClientNetworkEvent> {
    public:
+    using screen::Screen::onUpdate;
+
     // Standalone (offline) constructor — loads map from file on onEnter.
-    GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
-               std::string serverAddress, int serverPort);
+    explicit GameScreen(network::ClientNetwork &network);
 
     // Networked constructor — receives pre-populated registry from LoadingScreen.
-    GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, entt::registry &&registry,
-               core::maps::Map map, std::unordered_map<core::PlayerId, entt::entity> playerEntities,
-               std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId, bool isHost,
-               std::string mapPath, std::string serverAddress, int serverPort);
+    GameScreen(network::ClientNetwork &network, entt::registry &&registry, core::maps::Map map,
+               std::unordered_map<core::PlayerId, entt::entity> playerEntities,
+               std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId, bool isHost);
 
     void onEnter() override;
     void onExit() override;
-    void handleEvent(const sf::Event &event) override;
-    void update(float dt) override;
+    screen::ScreenRequest update(float dt, const input::InputSnapshot &input) override;
     void draw(sf::RenderWindow &window) override;
-
-    void setLastInput(const core::ecs::Input &input);
 
     // ISubscriber<ClientNetworkEvent>
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
@@ -48,13 +41,8 @@ class GameScreen : public screen::Screen,
    private:
     void spawnEntitiesFromMap();
     void applySnapshot(const core::protocol::GameSnapshotPacket &snap);
-    void goToMenu();
 
-    screen::ScreenManager &m_screenManager;
     network::ClientNetwork &m_network;
-    std::string m_mapPath;
-    std::string m_serverAddress;
-    int m_serverPort;
 
     entt::registry m_registry;
     core::maps::Map m_map;
@@ -69,7 +57,6 @@ class GameScreen : public screen::Screen,
     std::array<entt::entity, core::ghostCount> m_ghostEntities{};
 
     entt::entity m_localPlayer = entt::null;
-    core::ecs::Input m_lastInput{0, core::ecs::Direction::None};
 
     Utils::Logging::Logger m_logger{"GameScreen"};
 };

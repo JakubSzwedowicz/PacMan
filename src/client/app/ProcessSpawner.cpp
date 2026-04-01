@@ -1,4 +1,4 @@
-#include "client/ProcessSpawner.hpp"
+#include "client/app/ProcessSpawner.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
 #include <sys/types.h>
@@ -10,9 +10,9 @@
 
 namespace pacman::client {
 
-ProcessSpawner::ProcessSpawner(ProcessSpawner &&o) noexcept : m_pid(o.m_pid) { o.m_pid = -1; }
+ProcessSpawner::ProcessSpawner(ProcessSpawner&& o) noexcept : m_pid(o.m_pid) { o.m_pid = -1; }
 
-ProcessSpawner &ProcessSpawner::operator=(ProcessSpawner &&o) noexcept {
+ProcessSpawner& ProcessSpawner::operator=(ProcessSpawner&& o) noexcept {
     if (this != &o) {
         m_pid = o.m_pid;
         o.m_pid = -1;
@@ -20,9 +20,10 @@ ProcessSpawner &ProcessSpawner::operator=(ProcessSpawner &&o) noexcept {
     return *this;
 }
 
-bool ProcessSpawner::spawn(const std::string &executable, const std::vector<std::string> &args) {
+bool ProcessSpawner::spawn(const std::string& executable, const std::vector<std::string>& args) {
     if (m_pid > 0 && isRunning()) {
-        LOG_W("spawn() called while child {} is still running", m_pid);
+        LOG_W("spawn() called while child {} is still running — killing it first", m_pid);
+        kill();
     }
 
     m_pid = ::fork();
@@ -34,16 +35,15 @@ bool ProcessSpawner::spawn(const std::string &executable, const std::vector<std:
 
     if (m_pid == 0) {
         // Child process — build argv and exec
-        std::vector<const char *> argv;
+        std::vector<const char*> argv;
         argv.reserve(args.size() + 2);
         argv.push_back(executable.c_str());
-        for (const auto &a : args) argv.push_back(a.c_str());
+        for (const auto& a : args) argv.push_back(a.c_str());
         argv.push_back(nullptr);
-        ::execvp(executable.c_str(), const_cast<char *const *>(argv.data()));
+        ::execvp(executable.c_str(), const_cast<char* const*>(argv.data()));
         ::_exit(127);  // exec failed
     }
 
-    // Parent
     LOG_I("Spawned '{}' as pid {}", executable, m_pid);
     return true;
 }

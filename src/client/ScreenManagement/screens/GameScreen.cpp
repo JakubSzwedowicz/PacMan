@@ -1,4 +1,4 @@
-#include "client/screens/GameScreen.hpp"
+#include "client/ScreenManagement/screens/GameScreen.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
@@ -6,9 +6,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "client/screen/ScreenManager.hpp"
-#include "client/screens/MenuScreen.hpp"
-#include "client/screens/ResultsScreen.hpp"
 #include "core/ecs/Components.hpp"
 #include "core/maps/MapsManager.hpp"
 
@@ -20,25 +17,15 @@ using namespace network::events;
 // Constructors
 // ---------------------------------------------------------------------------
 
-GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, std::string mapPath,
-                       std::string serverAddress, int serverPort)
-    : m_screenManager(screenManager),
-      m_network(network),
-      m_mapPath(std::move(mapPath)),
-      m_serverAddress(std::move(serverAddress)),
-      m_serverPort(serverPort) {
+GameScreen::GameScreen(network::ClientNetwork &network) : m_network(network) {
     m_ghostEntities.fill(entt::null);
 }
 
-GameScreen::GameScreen(screen::ScreenManager &screenManager, network::ClientNetwork &network, entt::registry &&registry,
-                       core::maps::Map map, std::unordered_map<core::PlayerId, entt::entity> playerEntities,
+GameScreen::GameScreen(network::ClientNetwork &network, entt::registry &&registry, core::maps::Map map,
+                       std::unordered_map<core::PlayerId, entt::entity> playerEntities,
                        std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId,
-                       bool isHost, std::string mapPath, std::string serverAddress, int serverPort)
-    : m_screenManager(screenManager),
-      m_network(network),
-      m_mapPath(std::move(mapPath)),
-      m_serverAddress(std::move(serverAddress)),
-      m_serverPort(serverPort),
+                       bool isHost)
+    : m_network(network),
       m_registry(std::move(registry)),
       m_map(std::move(map)),
       m_networked(true),
@@ -60,11 +47,11 @@ void GameScreen::onEnter() {
         return;
     }
 
-    LOG_I("GameScreen entered (offline), loading map: {}", m_mapPath);
-    auto result = core::maps::MapsManager::loadFromFile(m_mapPath);
+    LOG_I("GameScreen entered (offline), loading map: {}", config().mapPath.get());
+    auto result = core::maps::MapsManager::loadFromFile(config().mapPath.get());
     if (!result) {
         LOG_E("Failed to load map: {}", result.error());
-        goToMenu();
+        queueRequest(screen::OpenMenuRequest{});
         return;
     }
     m_map = std::move(*result);
@@ -78,28 +65,26 @@ void GameScreen::onExit() {
     m_localPlayer = entt::null;
 }
 
-void GameScreen::handleEvent(const sf::Event &event) {
-    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Escape) {
-            if (m_networked) m_network.disconnect();
-            goToMenu();
-        }
+screen::ScreenRequest GameScreen::update(float dt, const input::InputSnapshot &input) {
+    if (input.escapePressed) {
+        if (m_networked) m_network.disconnect();
+        queueRequest(screen::OpenMenuRequest{});
     }
-}
 
-void GameScreen::update(float dt) {
     if (m_networked) {
         // Send local input to server; simulation runs on the server side.
         if (m_localPlayer != entt::null) {
-            core::protocol::PlayerInputPacket pkt{m_lastInput.tick, m_localPlayerId, m_lastInput.dir};
+            core::protocol::PlayerInputPacket pkt{input.tick, m_localPlayerId, input.direction};
             m_network.sendInput(pkt);
         }
-        return;
+        return takeQueuedRequest();
     }
 
     // Offline / standalone: run simulation locally.
-    m_simulation.applyInput(m_registry, m_localPlayer, m_lastInput);
+    core::ecs::Input localInput{input.tick, input.direction};
+    m_simulation.applyInput(m_registry, m_localPlayer, localInput);
     m_simulation.update(m_registry, dt, m_map);
+    return takeQueuedRequest();
 }
 
 void GameScreen::draw(sf::RenderWindow &window) {
@@ -123,8 +108,6 @@ void GameScreen::draw(sf::RenderWindow &window) {
     ImGui::End();
 }
 
-void GameScreen::setLastInput(const core::ecs::Input &input) { m_lastInput = input; }
-
 // ---------------------------------------------------------------------------
 // ISubscriber<ClientNetworkEvent>
 // ---------------------------------------------------------------------------
@@ -133,17 +116,15 @@ void GameScreen::onUpdate(const ClientNetworkEvent &event) {
     std::visit(pacman::overloaded{[this](const GameSnapshotEvent &e) { applySnapshot(e.packet); },
                                   [this](const RoundEndEvent &e) {
                                       LOG_I("Round ended — transitioning to ResultsScreen");
-                                      m_screenManager.setScreen(std::make_unique<ResultsScreen>(
-                                          m_screenManager, &m_network, e.packet, m_localPlayerId, m_isHost, m_mapPath,
-                                          m_serverAddress, m_serverPort));
+                                      queueRequest(screen::OpenResultsRequest{e.packet, m_localPlayerId, m_isHost});
                                   },
                                   [this](const DisconnectedEvent &) {
                                       LOG_I("Disconnected during game");
-                                      goToMenu();
+                                      queueRequest(screen::OpenMenuRequest{});
                                   },
                                   [this](const ServerShutdownEvent &e) {
                                       LOG_I("Server shutdown during game: {}", e.packet.reason);
-                                      goToMenu();
+                                      queueRequest(screen::OpenMenuRequest{});
                                   },
                                   [](const auto &) {}},
                event);
@@ -253,11 +234,6 @@ void GameScreen::spawnEntitiesFromMap() {
         m_registry.emplace<core::ecs::PlayerState>(m_localPlayer);
         m_registry.emplace<core::ecs::PacManTag>(m_localPlayer);
     }
-}
-
-void GameScreen::goToMenu() {
-    m_screenManager.setScreen(
-        std::make_unique<MenuScreen>(m_screenManager, m_network, m_mapPath, m_serverAddress, m_serverPort));
 }
 
 }  // namespace pacman::client::screens

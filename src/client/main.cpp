@@ -1,4 +1,4 @@
-#include "client/ClientApp.hpp"
+#include "client/app/ClientApp.hpp"
 
 int main(int argc, char *argv[]) {
     pacman::client::ClientApp app;

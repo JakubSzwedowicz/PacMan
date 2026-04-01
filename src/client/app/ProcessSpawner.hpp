@@ -8,21 +8,20 @@
 namespace pacman::client {
 
 // Spawns and manages a single child process (e.g., PacManServer).
-// Uses fork()+execvp() on Linux. The child is orphaned on destruction
-// (no SIGTERM sent automatically) — call kill() for an explicit teardown.
+// Uses fork()+execvp() on Linux.
 class ProcessSpawner {
    public:
     ProcessSpawner() = default;
-    ~ProcessSpawner() = default;
+    ~ProcessSpawner() { kill(); }
 
-    ProcessSpawner(const ProcessSpawner &) = delete;
-    ProcessSpawner &operator=(const ProcessSpawner &) = delete;
-    ProcessSpawner(ProcessSpawner &&) noexcept;
-    ProcessSpawner &operator=(ProcessSpawner &&) noexcept;
+    ProcessSpawner(const ProcessSpawner&) = delete;
+    ProcessSpawner& operator=(const ProcessSpawner&) = delete;
+    ProcessSpawner(ProcessSpawner&&) noexcept;
+    ProcessSpawner& operator=(ProcessSpawner&&) noexcept;
 
     // Forks and exec's the given executable with args.
     // Returns false if fork/execvp fails.
-    [[nodiscard]] bool spawn(const std::string &executable, const std::vector<std::string> &args);
+    [[nodiscard]] bool spawn(const std::string& executable, const std::vector<std::string>& args);
 
     // Sends SIGTERM to the child and waits for it to exit.
     void kill();
