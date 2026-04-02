@@ -110,6 +110,8 @@ void LoadingScreen::onUpdate(const ClientNetworkEvent &event) {
 
 void LoadingScreen::spawnEntitiesFromMap() {
     const float ts = m_map.tileSize;
+    const float playerSpeed = core::speedForTileSize(ts);
+    const float ghostSpeed = playerSpeed * 0.75f;
 
     // Tiles: walls, pellets, power pellets
     for (core::maps::Tile::Unit row = 0; row < m_map.height; ++row) {
@@ -144,7 +146,7 @@ void LoadingScreen::spawnEntitiesFromMap() {
 
         auto e = m_registry.create();
         m_registry.emplace<core::ecs::Position>(e, x, y);
-        m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed);
+        m_registry.emplace<core::ecs::Velocity>(e, playerSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts * 0.9f, ts * 0.9f);
         auto& playerState = m_registry.emplace<core::ecs::PlayerState>(e);
@@ -176,7 +178,7 @@ void LoadingScreen::spawnEntitiesFromMap() {
 
         auto e = m_registry.create();
         m_registry.emplace<core::ecs::Position>(e, x, y);
-        m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed * 0.75f);
+        m_registry.emplace<core::ecs::Velocity>(e, ghostSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts * 0.9f, ts * 0.9f);
         m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, ghostTypes[i]);

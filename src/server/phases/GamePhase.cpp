@@ -158,6 +158,8 @@ void GamePhase::handleInput(const core::protocol::PlayerInputPacket &packet) {
 
 void GamePhase::spawnEntities() {
     float ts = m_map.tileSize;
+    const float playerSpeed = core::speedForTileSize(ts);
+    const float ghostSpeed = playerSpeed * 0.75f;
 
     for (size_t r = 0; r < m_map.height; ++r) {
         for (size_t c = 0; c < m_map.width; ++c) {
@@ -181,7 +183,7 @@ void GamePhase::spawnEntities() {
         auto e = m_registry.create();
         m_registry.emplace<core::ecs::Position>(e, static_cast<float>(spawn.col()) * ts,
                                                 static_cast<float>(spawn.row()) * ts);
-        m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed);
+        m_registry.emplace<core::ecs::Velocity>(e, playerSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts, ts);
         auto& playerState = m_registry.emplace<core::ecs::PlayerState>(e);
@@ -200,7 +202,7 @@ void GamePhase::spawnEntities() {
         auto e = m_registry.create();
         m_registry.emplace<core::ecs::Position>(e, static_cast<float>(tile.col()) * ts,
                                                 static_cast<float>(tile.row()) * ts);
-        m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed * 0.75f);
+        m_registry.emplace<core::ecs::Velocity>(e, ghostSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts, ts);
         auto &gs = m_registry.emplace<core::ecs::GhostState>(e, initialGhostMode, type);

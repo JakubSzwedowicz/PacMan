@@ -309,6 +309,7 @@ void GameScreen::updateRemoteEntities() {
 
 void GameScreen::spawnEntitiesFromMap() {
     float ts = m_map.tileSize;
+    const float playerSpeed = core::speedForTileSize(ts);
 
     for (core::maps::Tile::Unit row = 0; row < m_map.height; ++row) {
         for (core::maps::Tile::Unit col = 0; col < m_map.width; ++col) {
@@ -339,7 +340,7 @@ void GameScreen::spawnEntitiesFromMap() {
 
         m_localPlayer = m_registry.create();
         m_registry.emplace<core::ecs::Position>(m_localPlayer, x, y);
-        m_registry.emplace<core::ecs::Velocity>(m_localPlayer, core::defaultSpeed);
+        m_registry.emplace<core::ecs::Velocity>(m_localPlayer, playerSpeed);
         m_registry.emplace<core::ecs::DirectionState>(m_localPlayer);
         m_registry.emplace<core::ecs::Collider>(m_localPlayer, ts * 0.9f, ts * 0.9f);
         auto& playerState = m_registry.emplace<core::ecs::PlayerState>(m_localPlayer);
