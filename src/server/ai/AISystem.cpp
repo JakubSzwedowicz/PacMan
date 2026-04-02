@@ -43,6 +43,31 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
         const auto& pos = updateView.get<const core::ecs::Position>(e);
         auto& dirState = updateView.get<core::ecs::DirectionState>(e);
         auto& ghostState = updateView.get<core::ecs::GhostState>(e);
+        auto oldMode = ghostState.mode;
+
+        if (frightenedStarted &&
+            (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
+             ghostState.mode == core::ecs::GhostState::Mode::Scatter)) {
+            ghostState.mode = core::ecs::GhostState::Mode::Frightened;
+        } else if (frightenedEnded && ghostState.mode == core::ecs::GhostState::Mode::Frightened) {
+            ghostState.mode = regularMode;
+        } else if (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
+                   ghostState.mode == core::ecs::GhostState::Mode::Scatter) {
+            ghostState.mode = regularMode;
+        }
+
+        if (ghostState.mode != oldMode) {
+            if (ghostState.mode != core::ecs::GhostState::Mode::Frightened &&
+                ghostState.mode != core::ecs::GhostState::Mode::Eaten) {
+                ghostState.targetTile = GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type, registry,
+                                                                           map, blinkyX, blinkyY);
+            }
+            // Force a direction decision immediately when the mode changes so
+            // frightened/recovery transitions are not delayed until the next
+            // tile entry.
+            ghostState.lastDecisionCol = -1;
+            ghostState.lastDecisionRow = -1;
+        }
 
         // Use center-of-entity tile: decisions fire when the ghost's centre
         // crosses a tile boundary. This gives ~ts/2 hysteresis.
@@ -122,34 +147,10 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
             }
         }
 
-        // --- Regular modes: Chase, Scatter, Frightened ---
-        // Frightened is an event-driven transition. Ghosts that respawn during
-        // the frightened window should resume normal house behavior instead of
-        // being forced back into frightened by a global per-tick override.
-        auto oldMode = ghostState.mode;
-
-        if (frightenedStarted &&
-            (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
-             ghostState.mode == core::ecs::GhostState::Mode::Scatter)) {
-            ghostState.mode = core::ecs::GhostState::Mode::Frightened;
-        } else if (frightenedEnded && ghostState.mode == core::ecs::GhostState::Mode::Frightened) {
-            ghostState.mode = regularMode;
-        } else if (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
-                   ghostState.mode == core::ecs::GhostState::Mode::Scatter) {
-            ghostState.mode = regularMode;
-        }
-
-        // If mode changed, recalculate persistent target.
-        if (ghostState.mode != oldMode && ghostState.mode != core::ecs::GhostState::Mode::Eaten &&
-            ghostState.mode != core::ecs::GhostState::Mode::Frightened) {
-            ghostState.targetTile =
-                GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type, registry, map, blinkyX, blinkyY);
-        }
-
         // Pick direction based on current mode.
         if (ghostState.mode == core::ecs::GhostState::Mode::Frightened) {
             // Frightened: random valid direction each junction.
-            dirState.next = GhostBehavior::chooseRandomDirection(map, pos.x, pos.y);
+            dirState.next = GhostBehavior::chooseRandomDirection(map, pos.x, pos.y, dirState.current);
         } else if (ghostState.mode == core::ecs::GhostState::Mode::Eaten) {
             // Should not reach here (handled above), but skip if we do.
             continue;

@@ -38,8 +38,8 @@ struct ClientConfig {
           playerName(m_container.buildConfigParam<std::string>("playerName", "Player display name", "Player")),
           serverAddress(m_container.buildConfigParam<std::string>("serverAddress", "Server IP address", "127.0.0.1")),
           serverPort(m_container.buildConfigParam<int>("serverPort", "Server port number", 7777)),
-          mapPath(
-              m_container.buildConfigParam<std::string>("mapPath", "Path to map JSON file", "assets/maps/test.json")) {}
+          mapPath(m_container.buildConfigParam<std::string>("mapPath", "Path to map JSON file",
+                                                            "assets/maps/classic.json")) {}
 };
 
 }  // namespace pacman::client

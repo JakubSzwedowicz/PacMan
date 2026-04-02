@@ -2,7 +2,7 @@ namespace pacman.proto;
 
 enum Direction : ubyte { Up = 0, Down = 1, Left = 2, Right = 3, None = 4 }
 enum GhostType : ubyte { Blinky = 0, Pinky = 1, Inky = 2, Clyde = 3 }
-enum GhostMode : ubyte { Chase = 0, Scatter = 1, Frightened = 2, Eaten = 3 }
+enum GhostMode : ubyte { Chase = 0, Scatter = 1, Frightened = 2, Eaten = 3, InHouse = 4, Exiting = 5 }
 
 table PlayerInfoFB {
     id        : uint32;

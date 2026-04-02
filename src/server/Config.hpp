@@ -36,8 +36,8 @@ struct ServerConfig {
           configPath(m_container.buildConfigParam<std::string>("configPath", "Path to server JSON config file",
                                                                "config/server.json")),
           port(m_container.buildConfigParam<int>("port", "Server listen port", 7777)),
-          mapPath(
-              m_container.buildConfigParam<std::string>("mapPath", "Path to map JSON file", "assets/maps/test.json")),
+          mapPath(m_container.buildConfigParam<std::string>("mapPath", "Path to map JSON file",
+                                                            "assets/maps/classic.json")),
           maxPlayers(m_container.buildConfigParam<int>("maxPlayers", "Maximum number of players", 4)),
           tickRate(m_container.buildConfigParam<float>("tickRate", "Server tick rate in Hz", 60.0f)),
           renderAscii(m_container.buildConfigParam<bool>("renderAscii", "Enable ASCII rendering to stdout", false)),

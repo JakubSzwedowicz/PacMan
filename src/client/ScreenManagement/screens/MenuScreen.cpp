@@ -1,5 +1,6 @@
 #include "client/ScreenManagement/screens/MenuScreen.hpp"
 
+#include <algorithm>
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
 
@@ -33,18 +34,24 @@ screen::ScreenRequest MenuScreen::update(float /*dt*/, const input::InputSnapsho
     return takeQueuedRequest();
 }
 
-void MenuScreen::draw(sf::RenderWindow& /*window*/) {
-    ImGui::SetNextWindowPos(ImVec2(200, 150), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+void MenuScreen::draw(sf::RenderWindow& window) {
+    const auto size = window.getSize();
+    const float panelWidth = std::min(400.0f, std::max(320.0f, static_cast<float>(size.x) - 32.0f));
+    const float panelHeight = std::min(300.0f, std::max(260.0f, static_cast<float>(size.y) - 32.0f));
+
+    ImGui::SetNextWindowPos(ImVec2((static_cast<float>(size.x) - panelWidth) * 0.5f,
+                                   (static_cast<float>(size.y) - panelHeight) * 0.5f),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(panelWidth, panelHeight), ImGuiCond_Always);
     ImGui::Begin("PacMan", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-    ImGui::SetCursorPosX((400 - ImGui::CalcTextSize("PacMan").x) / 2.0f);
+    ImGui::SetCursorPosX((panelWidth - ImGui::CalcTextSize("PacMan").x) * 0.5f);
     ImGui::Text("PacMan");
     ImGui::Separator();
     ImGui::Spacing();
 
-    float buttonWidth = 200.0f;
-    float buttonX = (400 - buttonWidth) / 2.0f;
+    const float buttonWidth = std::min(220.0f, panelWidth - 48.0f);
+    const float buttonX = (panelWidth - buttonWidth) * 0.5f;
 
     ImGui::SetCursorPosX(buttonX);
     if (ImGui::Button("Host Game", ImVec2(buttonWidth, 40))) hostGame();

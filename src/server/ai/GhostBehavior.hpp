@@ -24,7 +24,8 @@ struct GhostBehavior {
 
     // Pick a random valid direction (for Frightened mode).
     [[nodiscard]] static core::ecs::Direction chooseRandomDirection(const core::maps::Map &map, float ghostX,
-                                                                    float ghostY);
+                                                                    float ghostY,
+                                                                    core::ecs::Direction currentDir);
 
     // Greedy tile-distance direction choice toward a target tile.
     // Prefers not reversing but allows it if no other option.

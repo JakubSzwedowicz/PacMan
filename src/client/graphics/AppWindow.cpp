@@ -1,6 +1,7 @@
 #include "client/graphics/AppWindow.hpp"
 
 #include <Utils/Logging/LoggerMacros.h>
+#include <SFML/Graphics/View.hpp>
 #include <imgui-SFML.h>
 
 namespace pacman::client::graphics {
@@ -21,6 +22,11 @@ void AppWindow::pollEvents(const std::function<void(const sf::Event&)>& callback
         if (event->is<sf::Event::Closed>()) {
             m_window.close();
             continue;
+        }
+        if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+            m_window.setView(sf::View(sf::FloatRect(
+                sf::Vector2f(0.0f, 0.0f),
+                sf::Vector2f(static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)))));
         }
         if (m_imguiInitialized) {
             ImGui::SFML::ProcessEvent(m_window, *event);

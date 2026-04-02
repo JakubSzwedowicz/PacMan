@@ -7,6 +7,7 @@
 
 #include "client/input/InputManager.hpp"
 #include "core/ConfigUtils.hpp"
+#include "core/maps/MapsManager.hpp"
 
 namespace pacman::client {
 
@@ -23,8 +24,18 @@ void ClientApp::init(int argc, char* argv[]) {
         throw std::runtime_error("Client configuration was not resolved");
     }
 
-    m_appWindow.emplace("PacMan", static_cast<unsigned int>(m_config->windowWidth.get()),
-                        static_cast<unsigned int>(m_config->windowHeight.get()));
+    unsigned int windowWidth = static_cast<unsigned int>(m_config->windowWidth.get());
+    unsigned int windowHeight = static_cast<unsigned int>(m_config->windowHeight.get());
+
+    if (auto mapResult = core::maps::MapsManager::loadFromFile(m_config->mapPath.get()); mapResult) {
+        windowWidth = static_cast<unsigned int>(mapResult->width * mapResult->tileSize);
+        windowHeight = static_cast<unsigned int>(mapResult->height * mapResult->tileSize);
+    } else {
+        LOG_W("Falling back to configured window size because map '{}' could not be loaded: {}", m_config->mapPath.get(),
+              mapResult.error());
+    }
+
+    m_appWindow.emplace("PacMan", windowWidth, windowHeight);
 
     m_screenManager.requestScreen(screen::OpenMenuRequest{});
 

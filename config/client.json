@@ -4,7 +4,7 @@
     "playerName": "Player",
     "serverAddress": "127.0.0.1",
     "serverPort": 7771,
-    "mapPath": "assets/maps/test.json",
+    "mapPath": "assets/maps/classic.json",
     "loggerConfig": {
         "filename": "clientLog.txt",
         "globalLogLevel": 0

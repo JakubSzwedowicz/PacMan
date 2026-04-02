@@ -24,9 +24,15 @@ screen::ScreenRequest ResultsScreen::update(float /*dt*/, const input::InputSnap
     return takeQueuedRequest();
 }
 
-void ResultsScreen::draw(sf::RenderWindow & /*window*/) {
-    ImGui::SetNextWindowPos(ImVec2(150, 100), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+void ResultsScreen::draw(sf::RenderWindow &window) {
+    const auto size = window.getSize();
+    const float panelWidth = std::min(500.0f, std::max(360.0f, static_cast<float>(size.x) - 32.0f));
+    const float panelHeight = std::min(400.0f, std::max(280.0f, static_cast<float>(size.y) - 32.0f));
+
+    ImGui::SetNextWindowPos(ImVec2((static_cast<float>(size.x) - panelWidth) * 0.5f,
+                                   (static_cast<float>(size.y) - panelHeight) * 0.5f),
+                            ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(panelWidth, panelHeight), ImGuiCond_Always);
     ImGui::Begin("Koniec rundy");
 
     // Sort players by score descending for display

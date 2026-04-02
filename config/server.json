@@ -1,6 +1,6 @@
 {
     "port": 7771,
-    "mapPath": "assets/maps/test.json",
+    "mapPath": "assets/maps/classic.json",
     "maxPlayers": 1,
     "tickRate": 60.0,
     "loggerConfig": {

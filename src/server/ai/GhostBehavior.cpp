@@ -98,7 +98,8 @@ core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry& /*regi
     return (best != core::ecs::Direction::None) ? best : reverseOption;
 }
 
-core::ecs::Direction GhostBehavior::chooseRandomDirection(const core::maps::Map& map, float ghostX, float ghostY) {
+core::ecs::Direction GhostBehavior::chooseRandomDirection(const core::maps::Map& map, float ghostX, float ghostY,
+                                                          core::ecs::Direction currentDir) {
     float ts = map.tileSize;
     auto ghostTile = tileFromPixel(ghostX, ghostY, ts);
 
@@ -115,6 +116,8 @@ core::ecs::Direction GhostBehavior::chooseRandomDirection(const core::maps::Map&
 
     std::array<core::ecs::Direction, 4> validDirs;
     size_t validCount = 0;
+    std::array<core::ecs::Direction, 4> reverseDirs;
+    size_t reverseCount = 0;
 
     for (const auto& cand : candidates) {
         int nc = static_cast<int>(ghostTile.col()) + cand.dc;
@@ -126,15 +129,23 @@ core::ecs::Direction GhostBehavior::chooseRandomDirection(const core::maps::Map&
             core::maps::TileType::Wall)
             continue;
 
-        validDirs[validCount++] = cand.dir;
+        if (cand.dir == opposite(currentDir)) {
+            reverseDirs[reverseCount++] = cand.dir;
+        } else {
+            validDirs[validCount++] = cand.dir;
+        }
     }
 
     if (validCount == 0) {
-        return core::ecs::Direction::None;
+        if (reverseCount == 0) {
+            return core::ecs::Direction::None;
+        }
+        size_t choice = rand() % reverseCount;
+        return reverseDirs[choice];
     }
 
-    // Pick random valid direction (Frightened mode).
-    // Uses C standard rand(); consider upgrading to <random> if better PRNG is needed.
+    // Pick a random valid non-reversing direction when possible. Allow reversal
+    // only when there is no other exit from the current tile.
     size_t choice = rand() % validCount;
     return validDirs[choice];
 }

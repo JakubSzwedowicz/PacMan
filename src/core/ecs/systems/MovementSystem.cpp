@@ -8,7 +8,7 @@ namespace pacman::core::ecs::systems {
 
 namespace {
 
-void updateMovementForEntity(entt::registry &registry, entt::entity entity, float dt) {
+void updateMovementForEntity(entt::registry &registry, entt::entity entity, float dt, float tileSize) {
     auto *pos = registry.try_get<ecs::Position>(entity);
     auto *vel = registry.try_get<const ecs::Velocity>(entity);
     auto *dir = registry.try_get<ecs::DirectionState>(entity);
@@ -18,11 +18,10 @@ void updateMovementForEntity(entt::registry &registry, entt::entity entity, floa
     // when the direction changes (prevents floating-point drift accumulation).
     if (dir->next != Direction::None) {
         if (dir->next != dir->current) {
-            constexpr float kTileSize = 32.0f;
             if (dir->next == Direction::Up || dir->next == Direction::Down) {
-                pos->x = std::floor(pos->x / kTileSize + 0.5f) * kTileSize;
+                pos->x = std::floor(pos->x / tileSize + 0.5f) * tileSize;
             } else {
-                pos->y = std::floor(pos->y / kTileSize + 0.5f) * kTileSize;
+                pos->y = std::floor(pos->y / tileSize + 0.5f) * tileSize;
             }
         }
         dir->current = dir->next;
@@ -54,16 +53,16 @@ void updateMovementForEntity(entt::registry &registry, entt::entity entity, floa
 
 }  // namespace
 
-void updateMovement(entt::registry &registry, float dt) {
+void updateMovement(entt::registry &registry, float dt, const maps::Map &map) {
     auto view = registry.view<ecs::Position, const ecs::Velocity, ecs::DirectionState>();
     for (auto entity : view) {
-        updateMovementForEntity(registry, entity, dt);
+        updateMovementForEntity(registry, entity, dt, map.tileSize);
     }
 }
 
-void updateMovement(entt::registry &registry, entt::entity entity, float dt) {
+void updateMovement(entt::registry &registry, entt::entity entity, float dt, const maps::Map &map) {
     if (!registry.valid(entity)) return;
-    updateMovementForEntity(registry, entity, dt);
+    updateMovementForEntity(registry, entity, dt, map.tileSize);
 }
 
 }  // namespace pacman::core::ecs::systems
