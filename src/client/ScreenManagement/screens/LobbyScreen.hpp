@@ -38,6 +38,7 @@ class LobbyScreen : public screen::Screen,
     network::ClientNetwork &m_network;
     [[maybe_unused]] core::PlayerId m_localPlayerId;
     bool m_isHost;
+    bool m_hostDetermined = false;  // set once first LobbyStatePacket arrives
 
     core::protocol::LobbyStatePacket m_lobbyState{};
     bool m_localReady = false;

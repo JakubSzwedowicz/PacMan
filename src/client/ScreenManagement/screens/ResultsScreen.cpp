@@ -7,12 +7,8 @@
 
 namespace pacman::client::screens {
 
-ResultsScreen::ResultsScreen(network::ClientNetwork *network, core::protocol::RoundEndPacket results,
-                             core::PlayerId localPlayerId, bool isHost)
-    : m_network(network),
-      m_results(std::move(results)),
-      m_localPlayerId(localPlayerId),
-      m_isHost(isHost) {}
+ResultsScreen::ResultsScreen(network::ClientNetwork *network, core::protocol::RoundEndPacket results)
+    : m_network(network), m_results(std::move(results)) {}
 
 void ResultsScreen::onEnter() { LOG_I("ResultsScreen entered"); }
 void ResultsScreen::onExit() { LOG_I("ResultsScreen exited"); }
@@ -60,13 +56,6 @@ void ResultsScreen::draw(sf::RenderWindow &window) {
     if (ImGui::Button("Wróć do menu")) {
         if (m_network) m_network->disconnect();
         queueRequest(screen::OpenMenuRequest{});
-    }
-
-    if (m_isHost) {
-        ImGui::SameLine();
-        if (ImGui::Button("Następna runda")) {
-            queueRequest(screen::OpenLobbyRequest{m_localPlayerId, m_isHost});
-        }
     }
 
     ImGui::End();

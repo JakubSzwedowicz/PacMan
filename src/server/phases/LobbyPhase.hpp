@@ -33,7 +33,6 @@ class LobbyPhase : public Phase, public Utils::PublishSubscribe::ISubscriber<net
     void handleLobbyReady(core::PlayerId id, bool ready);
 
     void broadcastLobbyState();
-    [[nodiscard]] bool allPlayersReady() const;
     [[nodiscard]] core::PlayerId hostPlayerId() const;
     void requestStartGame();
 

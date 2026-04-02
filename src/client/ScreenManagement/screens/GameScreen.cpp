@@ -148,9 +148,37 @@ void GameScreen::onUpdate(const ClientNetworkEvent& event) {
 // ---------------------------------------------------------------------------
 
 void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
+    // Remove entities for players no longer present in the snapshot (disconnected mid-game).
+    {
+        std::set<core::PlayerId> snapshotIds;
+        for (const auto& state : snap.players) snapshotIds.insert(state.id);
+        for (auto it = m_playerEntities.begin(); it != m_playerEntities.end();) {
+            if (it->second != entt::null && it->first != m_localPlayerId && !snapshotIds.count(it->first)) {
+                LOG_I("Player {} absent from snapshot — removing entity", it->first);
+                m_remoteSnapshots.erase(it->second);
+                if (m_registry.valid(it->second)) m_registry.destroy(it->second);
+                it = m_playerEntities.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
     for (const auto& state : snap.players) {
         auto it = m_playerEntities.find(state.id);
         if (it == m_playerEntities.end()) continue;
+
+        // Player just ran out of lives: remove their visual entity but keep the
+        // map entry (entt::null) so it isn't mistaken for a disconnection.
+        if (!state.alive && it->second != entt::null) {
+            LOG_I("Player {} out of lives — removing from map", state.id);
+            m_remoteSnapshots.erase(it->second);
+            if (m_registry.valid(it->second)) m_registry.destroy(it->second);
+            if (it->second == m_localPlayer) m_localPlayer = entt::null;
+            it->second = entt::null;
+        }
+
+        if (it->second == entt::null) continue;  // dead or already removed
         entt::entity e = it->second;
 
         auto [pos, ps, ds] =

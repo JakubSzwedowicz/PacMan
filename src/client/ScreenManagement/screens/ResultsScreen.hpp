@@ -11,15 +11,12 @@
 
 namespace pacman::client::screens {
 
-// Shows the end-of-round ranking table.
-// Host sees [Next Round] (→ LobbyScreen); all players see [Back to Menu].
-//
+// Shows the end-of-round ranking table with a [Back to Menu] button.
 // This screen is fully static — no network events expected after RoundEnd.
-// The connection stays alive so the host can restart from lobby.
 class ResultsScreen : public screen::Screen {
    public:
     ResultsScreen(network::ClientNetwork *network,  // nullptr if offline
-                  core::protocol::RoundEndPacket results, core::PlayerId localPlayerId, bool isHost);
+                  core::protocol::RoundEndPacket results);
 
     // Screen
     void onEnter() override;
@@ -30,8 +27,6 @@ class ResultsScreen : public screen::Screen {
    private:
     network::ClientNetwork *m_network;  // non-owning, may be nullptr
     core::protocol::RoundEndPacket m_results;
-    core::PlayerId m_localPlayerId;
-    bool m_isHost;
 
     Utils::Logging::Logger m_logger{"ResultsScreen"};
 };

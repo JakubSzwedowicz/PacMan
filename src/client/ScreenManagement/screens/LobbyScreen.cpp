@@ -50,16 +50,15 @@ void LobbyScreen::draw(sf::RenderWindow &window) {
     ImGui::EndTable();
 
     ImGui::Spacing();
-    const char *label = m_localReady ? "Nie gotowy" : "Gotowy";
-    if (ImGui::Button(label)) {
-        m_localReady = !m_localReady;
-        m_network.sendLobbyReady(m_localReady);
-    }
-
     if (m_isHost) {
-        ImGui::SameLine();
-        if (ImGui::Button("Rozpocznij") && m_localReady) {
+        if (ImGui::Button("Rozpocznij")) {
             m_network.sendLobbyReady(true);
+        }
+    } else {
+        const char *label = m_localReady ? "Nie gotowy" : "Gotowy";
+        if (ImGui::Button(label)) {
+            m_localReady = !m_localReady;
+            m_network.sendLobbyReady(m_localReady);
         }
     }
 
@@ -67,7 +66,16 @@ void LobbyScreen::draw(sf::RenderWindow &window) {
 }
 
 void LobbyScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(pacman::overloaded{[this](const LobbyStateEvent &e) { m_lobbyState = e.packet; },
+    std::visit(pacman::overloaded{[this](const LobbyStateEvent &e) {
+                                      // If we haven't yet determined host status and we're the only
+                                      // player in the first state we receive, we are the host
+                                      // (handles the case where the server was started from terminal).
+                                      if (!m_hostDetermined) {
+                                          if (!m_isHost && e.packet.players.size() == 1) m_isHost = true;
+                                          m_hostDetermined = true;
+                                      }
+                                      m_lobbyState = e.packet;
+                                  },
                                   [this](const GameStartEvent &e) {
                                       LOG_I("GameStart received — transitioning to LoadingScreen");
                                       queueRequest(screen::OpenLoadingRequest{

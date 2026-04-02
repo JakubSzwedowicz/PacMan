@@ -94,7 +94,8 @@ void LobbyPhase::handleLobbyReady(core::PlayerId id, bool ready) {
             break;
         }
     }
-    if (id == hostPlayerId() && allPlayersReady() && m_playerCount > 0) {
+    // Game starts when the host explicitly sends ready=true — no waiting for all players.
+    if (ready && id == hostPlayerId() && m_playerCount > 0) {
         requestStartGame();
     }
 }
@@ -105,13 +106,6 @@ void LobbyPhase::broadcastLobbyState() {
         if (slot.connected) pkt.players.push_back({slot.id, slot.name, true, slot.ready});
     }
     m_network.sendLobbyState(pkt);
-}
-
-bool LobbyPhase::allPlayersReady() const {
-    for (int i = 0; i < m_playerCount; ++i) {
-        if (m_slots[i].connected && !m_slots[i].ready) return false;
-    }
-    return true;
 }
 
 core::PlayerId LobbyPhase::hostPlayerId() const {

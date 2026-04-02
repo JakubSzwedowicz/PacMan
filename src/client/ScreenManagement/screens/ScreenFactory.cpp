@@ -36,8 +36,7 @@ std::unique_ptr<screen::Screen> createScreen(screen::ScreenRequest request, netw
                                                     std::move(req.initialSnapshot), req.localPlayerId, req.isHost);
             },
             [&](screen::OpenResultsRequest& req) -> std::unique_ptr<screen::Screen> {
-                return std::make_unique<ResultsScreen>(&network, std::move(req.results), req.localPlayerId,
-                                                       req.isHost);
+                return std::make_unique<ResultsScreen>(&network, std::move(req.results));
             },
         },
         request);
