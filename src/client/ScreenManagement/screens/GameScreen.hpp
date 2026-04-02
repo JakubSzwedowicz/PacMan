@@ -4,6 +4,7 @@
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <entt/entt.hpp>
+#include <array>
 #include <string>
 #include <unordered_map>
 
@@ -39,8 +40,15 @@ class GameScreen : public screen::Screen,
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
    private:
+    struct SnapshotTarget {
+        float x = 0.0f;
+        float y = 0.0f;
+        bool initialized = false;
+    };
+
     void spawnEntitiesFromMap();
     void applySnapshot(const core::protocol::GameSnapshotPacket &snap);
+    void smoothTowardsSnapshots(float dt);
 
     network::ClientNetwork &m_network;
 
@@ -55,6 +63,7 @@ class GameScreen : public screen::Screen,
     bool m_isHost = false;
     std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
     std::array<entt::entity, core::ghostCount> m_ghostEntities{};
+    std::unordered_map<entt::entity, SnapshotTarget> m_snapshotTargets;
 
     entt::entity m_localPlayer = entt::null;
 

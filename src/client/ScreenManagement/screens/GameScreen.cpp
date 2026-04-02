@@ -3,6 +3,7 @@
 #include <Utils/Logging/LoggerMacros.h>
 #include <imgui.h>
 
+#include <algorithm>
 #include <set>
 #include <vector>
 
@@ -60,6 +61,7 @@ void GameScreen::onEnter() {
 void GameScreen::onExit() {
     LOG_I("GameScreen exited");
     m_registry.clear();
+    m_snapshotTargets.clear();
     m_localPlayer = entt::null;
 }
 
@@ -76,6 +78,7 @@ screen::ScreenRequest GameScreen::update(float dt, const input::InputSnapshot& i
             core::protocol::PlayerInputPacket pkt{input.tick, m_localPlayerId, input.direction};
             m_network.sendInput(pkt);
         }
+        smoothTowardsSnapshots(dt);
         return takeQueuedRequest();
     }
 
@@ -134,6 +137,27 @@ void GameScreen::onUpdate(const ClientNetworkEvent& event) {
 // ---------------------------------------------------------------------------
 
 void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
+    const auto updateTarget = [this](entt::entity e, core::ecs::Position& pos, float x, float y) {
+        auto& target = m_snapshotTargets[e];
+        if (!target.initialized) {
+            pos.x = x;
+            pos.y = y;
+            target = SnapshotTarget{x, y, true};
+            return;
+        }
+
+        constexpr float kSnapDistance = 48.0f;
+        const float dx = x - pos.x;
+        const float dy = y - pos.y;
+        if ((dx * dx + dy * dy) > (kSnapDistance * kSnapDistance)) {
+            pos.x = x;
+            pos.y = y;
+        }
+        target.x = x;
+        target.y = y;
+        target.initialized = true;
+    };
+
     for (const auto& state : snap.players) {
         auto it = m_playerEntities.find(state.id);
         if (it == m_playerEntities.end()) continue;
@@ -142,8 +166,7 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
         auto [pos, ps, ds] =
             m_registry.try_get<core::ecs::Position, core::ecs::PlayerState, core::ecs::DirectionState>(e);
         if (!pos || !ps || !ds) continue;
-        pos->x = state.x;
-        pos->y = state.y;
+        updateTarget(e, *pos, state.x, state.y);
         ps->score = state.score;
         ps->lives = state.lives;
         ds->current = state.dir;
@@ -157,8 +180,7 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
         auto [pos, ghostState, ds] =
             m_registry.try_get<core::ecs::Position, core::ecs::GhostState, core::ecs::DirectionState>(e);
         if (!pos || !ghostState || !ds) continue;
-        pos->x = gs.x;
-        pos->y = gs.y;
+        updateTarget(e, *pos, gs.x, gs.y);
         ghostState->mode = static_cast<core::ecs::GhostState::Mode>(gs.mode);
         ds->current = gs.dir;
     }
@@ -185,6 +207,20 @@ void GameScreen::applySnapshot(const core::protocol::GameSnapshotPacket& snap) {
 
     reconcilePellets.operator()<core::ecs::PelletTag>(snap.remainingPellets);
     reconcilePellets.operator()<core::ecs::PowerPelletTag>(snap.remainingPowerPellets);
+}
+
+void GameScreen::smoothTowardsSnapshots(float dt) {
+    constexpr float kCatchUpRate = 12.0f;
+    const float alpha = std::clamp(dt * kCatchUpRate, 0.0f, 1.0f);
+
+    for (auto [entity, target] : m_snapshotTargets) {
+        if (!target.initialized || !m_registry.valid(entity)) continue;
+        auto* pos = m_registry.try_get<core::ecs::Position>(entity);
+        if (!pos) continue;
+
+        pos->x += (target.x - pos->x) * alpha;
+        pos->y += (target.y - pos->y) * alpha;
+    }
 }
 
 void GameScreen::spawnEntitiesFromMap() {

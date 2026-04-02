@@ -17,12 +17,16 @@ class GhostPhaseTimer {
 
     [[nodiscard]] bool isScatter() const { return !m_frightened && m_inScatter; }
     [[nodiscard]] bool isFrightened() const { return m_frightened; }
+    [[nodiscard]] bool consumeFrightenedStarted();
+    [[nodiscard]] bool consumeFrightenedEnded();
 
    private:
     float m_phaseTimer = 7.0f;  // seconds until next scatter/chase flip
     bool m_inScatter = true;
     float m_frightenedTimer = 0.0f;
     bool m_frightened = false;
+    bool m_frightenedStarted = false;
+    bool m_frightenedEnded = false;
 };
 
 }  // namespace pacman::server::ai

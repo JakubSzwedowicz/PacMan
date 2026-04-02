@@ -11,17 +11,10 @@ AISystem::AISystem() { LOG_I("AISystem created"); }
 
 void AISystem::update(entt::registry& registry, const core::maps::Map& map, float dt) {
     m_phaseTimer.update(dt);
-
-    // Ghost AI architecture:
-    // - Targets are PERSISTENT per phase (Chase/Scatter/InHouse), stored in GhostState::targetTile
-    // - Direction decisions only happen at JUNCTIONS (tile entries), not every frame
-    // - Special modes (InHouse/Exiting) have hardcoded escape logic
-    // - Regular modes (Chase/Scatter/Frightened):
-    //   * Chase/Scatter: greedy pathfinding toward persistent target
-    //   * Frightened: random valid direction each junction
-    //   * Eaten: TODO - route back to spawn house
-    // - Mode changes (triggered by phase timer or events) update the persistent target
-    // - Events that change targets: spawn, mode transition, power pellet eaten
+    const bool frightenedStarted = m_phaseTimer.consumeFrightenedStarted();
+    const bool frightenedEnded = m_phaseTimer.consumeFrightenedEnded();
+    const auto regularMode =
+        m_phaseTimer.isScatter() ? core::ecs::GhostState::Mode::Scatter : core::ecs::GhostState::Mode::Chase;
 
     const float ts = map.tileSize;
     const bool hasGhostHouse = !(map.ghostHouseExit.col() == 0 && map.ghostHouseExit.row() == 0);
@@ -73,15 +66,15 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
             } else if (row <= exitRow) {
                 // Reached the door — begin exiting (going up).
                 ghostState.mode = core::ecs::GhostState::Mode::Exiting;
-                ghostState.targetTile = core::maps::Tile{
-                    {static_cast<core::maps::Tile::Unit>(exitCol),
-                     exitRow > 0 ? static_cast<core::maps::Tile::Unit>(exitRow - 1) : 0}};
+                ghostState.targetTile =
+                    core::maps::Tile{{static_cast<core::maps::Tile::Unit>(exitCol),
+                                      exitRow > 0 ? static_cast<core::maps::Tile::Unit>(exitRow - 1) : 0}};
                 dirState.next = core::ecs::Direction::Up;
                 continue;
             } else {
                 // Still inside: steer toward the exit.
-                dirState.next = GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current,
-                                                                map.ghostHouseExit);
+                dirState.next =
+                    GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current, map.ghostHouseExit);
                 continue;
             }
         }
@@ -92,8 +85,8 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
                 // Past the door — transition to Chase/Scatter based on phase.
                 ghostState.mode = m_phaseTimer.isScatter() ? core::ecs::GhostState::Mode::Scatter
                                                            : core::ecs::GhostState::Mode::Chase;
-                ghostState.targetTile = GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type,
-                                                                            registry, map, blinkyX, blinkyY);
+                ghostState.targetTile = GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type, registry,
+                                                                           map, blinkyX, blinkyY);
                 // Fall through to direction selection
             } else {
                 dirState.next = core::ecs::Direction::Up;
@@ -105,34 +98,52 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
         if (ghostState.mode == core::ecs::GhostState::Mode::Eaten) {
             if (col == static_cast<int32_t>(ghostState.spawnTile.col()) &&
                 row == static_cast<int32_t>(ghostState.spawnTile.row())) {
-                // Reached spawn — transition back to InHouse.
-                ghostState.mode = core::ecs::GhostState::Mode::InHouse;
-                ghostState.targetTile = map.ghostHouseExit;
-                LOG_D("Ghost {} (Eaten) returned to spawn, InHouse mode", toString(ghostState.type));
-                // Fall through to direction selection
+                // Reached spawn — resume the house exit flow without allowing the
+                // global phase timer to immediately overwrite the special state.
+                if (hasGhostHouse) {
+                    ghostState.mode = core::ecs::GhostState::Mode::InHouse;
+                    ghostState.targetTile = map.ghostHouseExit;
+                    ghostState.lastDecisionCol = col;
+                    ghostState.lastDecisionRow = row;
+                    dirState.next = GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current,
+                                                                   map.ghostHouseExit);
+                    LOG_D("Ghost {} (Eaten) returned to spawn, InHouse mode", toString(ghostState.type));
+                    continue;
+                }
+
+                ghostState.mode = regularMode;
+                ghostState.targetTile = GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type, registry,
+                                                                           map, blinkyX, blinkyY);
             } else {
                 // Still routing home: pathfind toward spawn tile.
-                dirState.next = GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current,
-                                                                ghostState.spawnTile);
+                dirState.next =
+                    GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current, ghostState.spawnTile);
                 continue;
             }
         }
 
         // --- Regular modes: Chase, Scatter, Frightened ---
-        // Update mode based on phase timer, and update target if mode changed.
+        // Frightened is an event-driven transition. Ghosts that respawn during
+        // the frightened window should resume normal house behavior instead of
+        // being forced back into frightened by a global per-tick override.
         auto oldMode = ghostState.mode;
 
-        if (m_phaseTimer.isFrightened()) {
+        if (frightenedStarted &&
+            (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
+             ghostState.mode == core::ecs::GhostState::Mode::Scatter)) {
             ghostState.mode = core::ecs::GhostState::Mode::Frightened;
-        } else if (ghostState.mode != core::ecs::GhostState::Mode::Eaten) {
-            ghostState.mode = m_phaseTimer.isScatter() ? core::ecs::GhostState::Mode::Scatter
-                                                       : core::ecs::GhostState::Mode::Chase;
+        } else if (frightenedEnded && ghostState.mode == core::ecs::GhostState::Mode::Frightened) {
+            ghostState.mode = regularMode;
+        } else if (ghostState.mode == core::ecs::GhostState::Mode::Chase ||
+                   ghostState.mode == core::ecs::GhostState::Mode::Scatter) {
+            ghostState.mode = regularMode;
         }
 
         // If mode changed, recalculate persistent target.
-        if (ghostState.mode != oldMode && ghostState.mode != core::ecs::GhostState::Mode::Eaten) {
-            ghostState.targetTile = GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type,
-                                                                        registry, map, blinkyX, blinkyY);
+        if (ghostState.mode != oldMode && ghostState.mode != core::ecs::GhostState::Mode::Eaten &&
+            ghostState.mode != core::ecs::GhostState::Mode::Frightened) {
+            ghostState.targetTile =
+                GhostBehavior::selectTargetForMode(ghostState.mode, ghostState.type, registry, map, blinkyX, blinkyY);
         }
 
         // Pick direction based on current mode.
@@ -144,8 +155,8 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
             continue;
         } else {
             // Chase or Scatter: use persistent target.
-            dirState.next = GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current,
-                                                            ghostState.targetTile);
+            dirState.next =
+                GhostBehavior::chooseDirection(registry, map, pos.x, pos.y, dirState.current, ghostState.targetTile);
         }
     }
 }
