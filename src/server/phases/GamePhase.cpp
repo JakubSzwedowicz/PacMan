@@ -2,6 +2,8 @@
 
 #include <Utils/Logging/LoggerMacros.h>
 
+#include <algorithm>
+
 #include "core/Common.hpp"
 #include "core/ecs/Components.hpp"
 #include "core/maps/MapsManager.hpp"
@@ -128,10 +130,23 @@ PhaseRequest GamePhase::update(float dt) {
 
 void GamePhase::handleDisconnect(core::PlayerId id) {
     LOG_I("Player {} disconnected mid-game", id);
+
     auto it = m_playerEntities.find(id);
     if (it != m_playerEntities.end()) {
         m_registry.destroy(it->second);
         m_playerEntities.erase(it);
+    }
+    m_pendingInputs.erase(id);
+    std::erase_if(m_players, [id](const core::protocol::PlayerInfo& player) { return player.id == id; });
+
+    if (!m_allReady && m_readyCount >= m_players.size()) {
+        m_allReady = true;
+        LOG_I("Remaining players ready after disconnect — simulation starting");
+    }
+
+    if (m_playerEntities.empty()) {
+        LOG_I("No active players remain — returning to lobby");
+        m_pendingRequest = ReturnToLobbyRequest{};
     }
 }
 

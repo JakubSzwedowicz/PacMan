@@ -32,10 +32,11 @@ void LobbyScreen::draw(sf::RenderWindow & /*window*/) {
     ImGui::TableSetupColumn("Gracz");
     ImGui::TableSetupColumn("Status");
     ImGui::TableHeadersRow();
-    for (const auto &p : m_lobbyState.players) {
+    for (size_t i = 0; i < m_lobbyState.players.size(); ++i) {
+        const auto &p = m_lobbyState.players[i];
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        ImGui::Text("%s%s", p.name.c_str(), p.id == 1 ? " (Host)" : "");
+        ImGui::Text("%s%s", p.name.c_str(), i == 0 ? " (Host)" : "");
         ImGui::TableSetColumnIndex(1);
         ImGui::Text("%s", p.ready ? "Gotowy" : "Czeka");
     }

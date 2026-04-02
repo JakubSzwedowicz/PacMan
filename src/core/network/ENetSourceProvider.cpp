@@ -21,6 +21,11 @@ ENetSourceProvider::ENetSourceProvider() : m_impl(std::make_unique<Impl>()) {}
 ENetSourceProvider::~ENetSourceProvider() { stop(); }
 
 bool ENetSourceProvider::startServer(uint16_t port, int maxClients) {
+    m_queue = {};
+    m_impl->peers.clear();
+    m_impl->serverPeer = nullptr;
+    m_impl->nextPeerId = 1;
+
     if (enet_initialize() != 0) {
         LOG_E("enet_initialize() failed");
         return false;
@@ -40,6 +45,11 @@ bool ENetSourceProvider::startServer(uint16_t port, int maxClients) {
 }
 
 bool ENetSourceProvider::connectToServer(const std::string &host, uint16_t port) {
+    m_queue = {};
+    m_impl->peers.clear();
+    m_impl->serverPeer = nullptr;
+    m_impl->nextPeerId = 1;
+
     if (enet_initialize() != 0) {
         LOG_E("enet_initialize() failed");
         return false;
@@ -69,7 +79,9 @@ bool ENetSourceProvider::connectToServer(const std::string &host, uint16_t port)
     }
     ENetEvent event;
     if (enet_host_service(m_impl->host, &event, 5000) > 0 && event.type == ENET_EVENT_TYPE_CONNECT) {
-        // Assign peerId=1 to the server peer (consistent with server-side: nextPeerId starts at 1)
+        // In client mode we intentionally reset nextPeerId on every connect so
+        // the connected server always occupies peerId=1 for the lifetime of
+        // this session.
         uint32_t id = m_impl->nextPeerId++;
         m_impl->peers[id] = m_impl->serverPeer;
         m_impl->serverPeer->data = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
@@ -89,12 +101,46 @@ bool ENetSourceProvider::connectToServer(const std::string &host, uint16_t port)
 void ENetSourceProvider::stop() {
     if (!m_impl->active) return;
     m_impl->active = false;
+
+    if (m_impl->host) {
+        if (m_impl->serverPeer) {
+            enet_peer_disconnect(m_impl->serverPeer, 0);
+
+            ENetEvent event;
+            bool disconnected = false;
+            while (enet_host_service(m_impl->host, &event, 100) > 0) {
+                switch (event.type) {
+                    case ENET_EVENT_TYPE_RECEIVE:
+                        enet_packet_destroy(event.packet);
+                        break;
+                    case ENET_EVENT_TYPE_DISCONNECT:
+                        if (event.peer == m_impl->serverPeer) disconnected = true;
+                        break;
+                    default:
+                        break;
+                }
+                if (disconnected) break;
+            }
+            if (!disconnected) {
+                enet_peer_reset(m_impl->serverPeer);
+            }
+        } else {
+            for (auto &[id, peer] : m_impl->peers) {
+                (void)id;
+                enet_peer_disconnect(peer, 0);
+            }
+            enet_host_flush(m_impl->host);
+        }
+    }
+
     m_impl->peers.clear();
     if (m_impl->host) {
         enet_host_destroy(m_impl->host);
         m_impl->host = nullptr;
     }
     m_impl->serverPeer = nullptr;
+    m_impl->nextPeerId = 1;
+    m_queue = {};
     enet_deinitialize();
     LOG_I("ENetSourceProvider stopped");
 }

@@ -4,6 +4,7 @@
 #include <imgui.h>
 
 #include <chrono>
+#include <cstring>
 #include <filesystem>
 #include <thread>
 
@@ -21,7 +22,10 @@ static std::string serverBinaryPath() {
 MenuScreen::MenuScreen(network::ClientNetwork& network, ProcessSpawner& spawner)
     : m_network(network), m_spawner(spawner) {}
 
-void MenuScreen::onEnter() { LOG_I("MenuScreen entered"); }
+void MenuScreen::onEnter() {
+    std::snprintf(m_serverAddressBuffer.data(), m_serverAddressBuffer.size(), "%s", config().serverAddress.get().c_str());
+    LOG_I("MenuScreen entered");
+}
 void MenuScreen::onExit() { LOG_I("MenuScreen exited"); }
 
 screen::ScreenRequest MenuScreen::update(float /*dt*/, const input::InputSnapshot& input) {
@@ -48,6 +52,12 @@ void MenuScreen::draw(sf::RenderWindow& /*window*/) {
     ImGui::Spacing();
     ImGui::SetCursorPosX(buttonX);
     if (ImGui::Button("Join Game", ImVec2(buttonWidth, 40))) joinGame();
+
+    ImGui::Spacing();
+    ImGui::SetCursorPosX(buttonX);
+    ImGui::PushItemWidth(buttonWidth);
+    ImGui::InputText("Server IP", m_serverAddressBuffer.data(), m_serverAddressBuffer.size());
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
     ImGui::SetCursorPosX(buttonX);
@@ -86,10 +96,11 @@ void MenuScreen::hostGame() {
 }
 
 void MenuScreen::joinGame() {
-    LOG_I("Joining game at {}:{}", config().serverAddress.get(), config().serverPort.get());
+    const std::string address = m_serverAddressBuffer.data();
+    LOG_I("Joining game at {}:{}", address, config().serverPort.get());
 
-    if (!m_network.connect(config().serverAddress.get(), static_cast<uint16_t>(config().serverPort.get()))) {
-        LOG_E("Failed to connect to {}:{}", config().serverAddress.get(), config().serverPort.get());
+    if (!m_network.connect(address, static_cast<uint16_t>(config().serverPort.get()))) {
+        LOG_E("Failed to connect to {}:{}", address, config().serverPort.get());
         return;
     }
 

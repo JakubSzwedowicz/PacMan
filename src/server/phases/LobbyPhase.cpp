@@ -59,9 +59,11 @@ void LobbyPhase::handleConnect(core::PlayerId id) {
     }
 
     LOG_I("Player {} connected", id);
-    for (auto &slot : m_slots) {
+    for (size_t i = 0; i < m_slots.size(); ++i) {
+        auto &slot = m_slots[i];
         if (!slot.connected) {
             slot.id = id;
+            slot.name = "Player" + std::to_string(i + 1);
             slot.connected = true;
             slot.ready = false;
             m_playerCount++;
@@ -92,8 +94,7 @@ void LobbyPhase::handleLobbyReady(core::PlayerId id, bool ready) {
             break;
         }
     }
-    // Convention: id==1 is the host (first peer to connect).
-    if (id == 1 && allPlayersReady() && m_playerCount > 0) {
+    if (id == hostPlayerId() && allPlayersReady() && m_playerCount > 0) {
         requestStartGame();
     }
 }
@@ -111,6 +112,13 @@ bool LobbyPhase::allPlayersReady() const {
         if (m_slots[i].connected && !m_slots[i].ready) return false;
     }
     return true;
+}
+
+core::PlayerId LobbyPhase::hostPlayerId() const {
+    for (const auto &slot : m_slots) {
+        if (slot.connected) return slot.id;
+    }
+    return 0;
 }
 
 void LobbyPhase::requestStartGame() {
