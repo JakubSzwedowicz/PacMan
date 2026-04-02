@@ -95,7 +95,7 @@ PhaseRequest GamePhase::update(float dt) {
 
     m_aiSystem.update(m_registry, m_map, dt);
 
-    auto events = m_rules.applyRules(m_registry, m_map);
+    auto events = m_rules.applyRules(m_registry, m_map, dt);
     if (events.powerPelletEaten) {
         m_aiSystem.onPowerPelletEaten();
     }
@@ -182,7 +182,8 @@ void GamePhase::spawnEntities() {
         m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts, ts);
-        m_registry.emplace<core::ecs::PlayerState>(e);
+        auto& playerState = m_registry.emplace<core::ecs::PlayerState>(e);
+        playerState.spawnTile = spawn;
         m_registry.emplace<core::ecs::PacManTag>(e);
         m_playerEntities[pid] = e;
     }

@@ -136,7 +136,8 @@ void LoadingScreen::spawnEntitiesFromMap() {
         m_registry.emplace<core::ecs::Velocity>(e, core::defaultSpeed);
         m_registry.emplace<core::ecs::DirectionState>(e);
         m_registry.emplace<core::ecs::Collider>(e, ts * 0.9f, ts * 0.9f);
-        m_registry.emplace<core::ecs::PlayerState>(e);
+        auto& playerState = m_registry.emplace<core::ecs::PlayerState>(e);
+        playerState.spawnTile = spawn;
         m_registry.emplace<core::ecs::PacManTag>(e);
         m_playerEntities[pid] = e;
     }

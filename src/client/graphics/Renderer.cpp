@@ -9,6 +9,40 @@
 
 namespace pacman::client::graphics {
 
+namespace {
+
+sf::Color ghostColor(const core::ecs::GhostState& ghostState) {
+    using Mode = core::ecs::GhostState::Mode;
+    using Type = core::ecs::GhostType;
+
+    switch (ghostState.mode) {
+        case Mode::Frightened:
+            return sf::Color(40, 90, 255);
+        case Mode::Eaten:
+            return sf::Color(230, 230, 255);
+        case Mode::InHouse:
+        case Mode::Exiting:
+        case Mode::Chase:
+        case Mode::Scatter:
+            break;
+    }
+
+    switch (ghostState.type) {
+        case Type::Blinky:
+            return sf::Color(255, 0, 0);
+        case Type::Pinky:
+            return sf::Color(255, 105, 180);
+        case Type::Inky:
+            return sf::Color(0, 255, 255);
+        case Type::Clyde:
+            return sf::Color(255, 165, 0);
+    }
+
+    return sf::Color::Red;
+}
+
+}  // namespace
+
 Renderer::Renderer() { LOG_I("Renderer created"); }
 
 void Renderer::render(sf::RenderWindow& window, const entt::registry& registry, const core::maps::Map& map) {
@@ -59,14 +93,17 @@ void Renderer::render(sf::RenderWindow& window, const entt::registry& registry, 
         window.draw(shape);
     }
 
-    auto ghostView = registry.view<const core::ecs::Position, const core::ecs::Collider, const core::ecs::GhostTag>();
+    auto ghostView =
+        registry.view<const core::ecs::Position, const core::ecs::Collider, const core::ecs::GhostState,
+                      const core::ecs::GhostTag>();
     for (auto entity : ghostView) {
         const auto& pos = ghostView.get<const core::ecs::Position>(entity);
         const auto& col = ghostView.get<const core::ecs::Collider>(entity);
+        const auto& ghostState = ghostView.get<const core::ecs::GhostState>(entity);
         float radius = col.width / 2.0f;
         sf::CircleShape shape(radius);
         shape.setPosition({pos.x, pos.y});
-        shape.setFillColor(sf::Color::Red);
+        shape.setFillColor(ghostColor(ghostState));
         window.draw(shape);
     }
 }

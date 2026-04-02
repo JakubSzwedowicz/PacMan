@@ -52,7 +52,8 @@ struct Collider {
 struct PlayerState {
     int score = 0;
     int lives = 3;
-    bool isPowered = false;
+    float invulnerableSeconds = 0.0f;
+    maps::Tile spawnTile = {};
     int32_t lastTileCol = -1;
     int32_t lastTileRow = -1;
 };

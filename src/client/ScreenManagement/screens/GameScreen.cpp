@@ -222,7 +222,8 @@ void GameScreen::spawnEntitiesFromMap() {
         m_registry.emplace<core::ecs::Velocity>(m_localPlayer, core::defaultSpeed);
         m_registry.emplace<core::ecs::DirectionState>(m_localPlayer);
         m_registry.emplace<core::ecs::Collider>(m_localPlayer, ts * 0.9f, ts * 0.9f);
-        m_registry.emplace<core::ecs::PlayerState>(m_localPlayer);
+        auto& playerState = m_registry.emplace<core::ecs::PlayerState>(m_localPlayer);
+        playerState.spawnTile = spawn;
         m_registry.emplace<core::ecs::PacManTag>(m_localPlayer);
     }
 }

@@ -20,9 +20,10 @@ class AuthoritativeLogic {
    public:
     AuthoritativeLogic();
 
-    RuleEvents applyRules(entt::registry &registry, const core::maps::Map &map);
+    RuleEvents applyRules(entt::registry &registry, const core::maps::Map &map, float dt);
 
    private:
+    void updatePlayerTimers(entt::registry &registry, float dt);
     void checkPelletPickup(entt::registry &registry, const core::maps::Map &map);
     bool checkPowerPellet(entt::registry &registry, const core::maps::Map &map);
     void checkGhostCollision(entt::registry &registry, const core::maps::Map &map);

@@ -2,20 +2,36 @@
 
 #include <Utils/Logging/LoggerMacros.h>
 
+#include <algorithm>
 #include <vector>
 
 #include "core/ecs/Components.hpp"
 
 namespace pacman::server::phases {
 
+namespace {
+constexpr float hitInvulnerabilitySeconds = 2.0f;
+}
+
 AuthoritativeLogic::AuthoritativeLogic() {}
 
-RuleEvents AuthoritativeLogic::applyRules(entt::registry& registry, const core::maps::Map& map) {
+RuleEvents AuthoritativeLogic::applyRules(entt::registry& registry, const core::maps::Map& map, float dt) {
     RuleEvents events;
+    updatePlayerTimers(registry, dt);
     checkPelletPickup(registry, map);
     events.powerPelletEaten = checkPowerPellet(registry, map);
     checkGhostCollision(registry, map);
     return events;
+}
+
+void AuthoritativeLogic::updatePlayerTimers(entt::registry& registry, float dt) {
+    auto view = registry.view<core::ecs::PlayerState, const core::ecs::PacManTag>();
+    for (auto player : view) {
+        auto& state = view.get<core::ecs::PlayerState>(player);
+        if (state.invulnerableSeconds > 0.0f) {
+            state.invulnerableSeconds = std::max(0.0f, state.invulnerableSeconds - dt);
+        }
+    }
 }
 
 void AuthoritativeLogic::checkPelletPickup(entt::registry& registry, const core::maps::Map& map) {
@@ -75,7 +91,6 @@ bool AuthoritativeLogic::checkPowerPellet(entt::registry& registry, const core::
 
             if (pc == pacCol && pr == pacRow) {
                 state.score += 50;
-                state.isPowered = true;
                 toDestroy.push_back(pp);
                 eaten = true;
                 LOG_I("Player ate power pellet at ({},{})", pc, pr);
@@ -92,13 +107,16 @@ bool AuthoritativeLogic::checkPowerPellet(entt::registry& registry, const core::
 void AuthoritativeLogic::checkGhostCollision(entt::registry& registry, const core::maps::Map& map) {
     const float ts = map.tileSize;
 
-    const auto pacView = registry.view<const core::ecs::Position, core::ecs::PlayerState, const core::ecs::PacManTag>();
+    const auto pacView = registry.view<core::ecs::Position, core::ecs::PlayerState, core::ecs::DirectionState,
+                                       const core::ecs::PacManTag>();
     const auto ghostView = registry.view<const core::ecs::Position, core::ecs::GhostState, const core::ecs::GhostTag>();
 
     for (const auto& pac : pacView) {
-        const auto& pacPos = pacView.get<const core::ecs::Position>(pac);
+        auto& pacPos = pacView.get<core::ecs::Position>(pac);
         auto& state = pacView.get<core::ecs::PlayerState>(pac);
+        auto& direction = pacView.get<core::ecs::DirectionState>(pac);
         if (state.lives <= 0) continue;
+        if (state.invulnerableSeconds > 0.0f) continue;
 
         const auto pacCol = static_cast<core::maps::Tile::Unit>(pacPos.x / ts);
         const auto pacRow = static_cast<core::maps::Tile::Unit>(pacPos.y / ts);
@@ -118,12 +136,17 @@ void AuthoritativeLogic::checkGhostCollision(entt::registry& registry, const cor
                 LOG_I("Player ate ghost, score={}", state.score);
             } else if (ghostState.mode != core::ecs::GhostState::Mode::Eaten) {
                 state.lives--;
-                state.isPowered = false;
+                state.invulnerableSeconds = state.lives > 0 ? hitInvulnerabilitySeconds : 0.0f;
+                pacPos.x = static_cast<float>(state.spawnTile.col()) * ts;
+                pacPos.y = static_cast<float>(state.spawnTile.row()) * ts;
+                direction.current = core::ecs::Direction::None;
+                direction.next = core::ecs::Direction::None;
                 if (state.lives > 0) {
                     LOG_I("Ghost caught player, lives remaining={}", state.lives);
                 } else {
                     LOG_I("Ghost caught player — game over");
                 }
+                break;
             }
         }
     }
