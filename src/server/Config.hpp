@@ -26,6 +26,8 @@ struct ServerConfig {
     ConfigParameter<bool> renderAscii;
     // render_interval — CLI: --render-interval (only valid with --render-ascii)
     ConfigParameter<int> renderInterval;
+    // CLI-only: fd to write "PORT=<n>\n" to after binding (set by ProcessSpawner via --notifyFd).
+    ConfigParameter<int> notifyFd;
 
     ServerConfig()
         : loggerConfig(m_container.buildConfigParam<Utils::Logging::LoggerConfig>(
@@ -42,7 +44,9 @@ struct ServerConfig {
           tickRate(m_container.buildConfigParam<float>("tickRate", "Server tick rate in Hz", 60.0f)),
           renderAscii(m_container.buildConfigParam<bool>("renderAscii", "Enable ASCII rendering to stdout", false)),
           renderInterval(m_container.buildConfigParam<int>(
-              "renderInterval", "ASCII render interval in ms (requires render_ascii)", 500)) {}
+              "renderInterval", "ASCII render interval in ms (requires render_ascii)", 500)),
+          notifyFd(m_container.buildConfigParam<int>(
+              "notifyFd", "fd to write bound port to after startup (-1 = disabled)", -1)) {}
 };
 
 }  // namespace pacman::server
@@ -53,5 +57,5 @@ struct glz::meta<pacman::server::ServerConfig> {
     static constexpr auto value =
         glz::object("loggerConfig", &T::loggerConfig, "configPath", &T::configPath, "port", &T::port, "mapPath",
                     &T::mapPath, "maxPlayers", &T::maxPlayers, "tickRate", &T::tickRate, "renderAscii", &T::renderAscii,
-                    "renderInterval", &T::renderInterval);
+                    "renderInterval", &T::renderInterval, "notifyFd", &T::notifyFd);
 };

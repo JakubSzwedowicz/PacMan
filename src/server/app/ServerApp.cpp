@@ -2,11 +2,13 @@
 
 #include <Utils/Logging/LoggerMacros.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <string>
 #include <thread>
 
 #include "core/ConfigUtils.hpp"
@@ -77,8 +79,16 @@ void ServerApp::run() {
         LOG_E("Failed to start network on port {}", m_config->port.get());
         return;
     }
+    // Notify the spawning client of the actual bound port via the inherited fd.
+    const int notifyFd = m_config->notifyFd.get();
+    if (notifyFd >= 0) {
+        const std::string msg = "PORT=" + std::to_string(m_network.boundPort()) + "\n";
+        ::write(notifyFd, msg.data(), msg.size());
+        ::close(notifyFd);
+    }
+
     m_running = true;
-    LOG_I("Server loop starting at {}Hz", m_config->tickRate.get());
+    LOG_I("Server loop starting at {}Hz (port={})", m_config->tickRate.get(), m_network.boundPort());
 
     auto lastTime = Clock::now();
     float accumulator = 0.0f;

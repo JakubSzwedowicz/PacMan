@@ -37,6 +37,7 @@ class ServerNetwork : public Utils::PublishSubscribe::IPublisher<events::ServerN
     [[nodiscard]] bool start(uint16_t port, int maxClients);
     void stop();
     [[nodiscard]] bool isRunning() const;
+    [[nodiscard]] uint16_t boundPort() const;
 
     // Outgoing (implementations added in Phase 4)
     void sendLobbyState(const core::protocol::LobbyStatePacket &packet);

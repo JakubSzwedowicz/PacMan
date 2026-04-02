@@ -147,6 +147,10 @@ void ENetSourceProvider::stop() {
 
 bool ENetSourceProvider::isActive() const { return m_impl->active; }
 
+uint16_t ENetSourceProvider::boundPort() const {
+    return m_impl->host ? m_impl->host->address.port : 0;
+}
+
 void ENetSourceProvider::run() {
     if (!m_impl->active || !m_impl->host) return;
 

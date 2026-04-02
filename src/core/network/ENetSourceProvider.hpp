@@ -41,6 +41,10 @@ class ENetSourceProvider : public Utils::Providers::ISourceProvider<RawNetworkMe
 
     [[nodiscard]] bool isActive() const;
 
+    // Returns the port the ENet host is actually bound to.
+    // For server mode with port=0 this is the OS-assigned ephemeral port.
+    [[nodiscard]] uint16_t boundPort() const;
+
     // ISourceProvider
     void run() override;
     [[nodiscard]] std::optional<RawNetworkMessage> poll() override;

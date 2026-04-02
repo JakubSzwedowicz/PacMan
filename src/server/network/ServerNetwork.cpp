@@ -17,6 +17,8 @@ void ServerNetwork::stop() { m_enetSource.stop(); }
 
 bool ServerNetwork::isRunning() const { return m_enetSource.isActive(); }
 
+uint16_t ServerNetwork::boundPort() const { return m_enetSource.boundPort(); }
+
 void ServerNetwork::run() {
     m_enetSource.run();
     while (auto raw = m_enetSource.poll()) publish(m_parser.parse(std::move(*raw)));

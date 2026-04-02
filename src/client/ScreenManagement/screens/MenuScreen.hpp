@@ -2,7 +2,7 @@
 
 #include <Utils/Logging/Logger.h>
 
-#include <array>
+#include <string>
 
 #include "client/app/ProcessSpawner.hpp"
 #include "client/network/ClientNetwork.hpp"
@@ -25,7 +25,8 @@ class MenuScreen : public screen::Screen {
 
     network::ClientNetwork &m_network;
     ProcessSpawner &m_spawner;
-    std::array<char, 256> m_serverAddressBuffer{};
+    std::string m_serverAddress;
+    std::string m_serverPort;
     Utils::Logging::Logger m_logger{"MenuScreen"};
 };
 
