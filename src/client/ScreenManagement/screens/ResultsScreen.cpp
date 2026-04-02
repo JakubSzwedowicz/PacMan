@@ -43,7 +43,8 @@ void ResultsScreen::draw(sf::RenderWindow & /*window*/) {
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("%zu.", i + 1);
         ImGui::TableSetColumnIndex(1);
-        ImGui::Text("Gracz %u", scores[i].id);
+        ImGui::Text("%s", scores[i].name.empty() ? ("Gracz " + std::to_string(scores[i].id)).c_str()
+                                                 : scores[i].name.c_str());
         ImGui::TableSetColumnIndex(2);
         ImGui::Text("%d pkt", scores[i].score);
     }

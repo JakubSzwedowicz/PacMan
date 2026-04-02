@@ -27,6 +27,7 @@ struct PlayerInfo {
 
 struct EntityState {
     PlayerId id = 0;
+    std::string name;
     float x = 0.0f;
     float y = 0.0f;
     ecs::Direction dir = ecs::Direction::None;

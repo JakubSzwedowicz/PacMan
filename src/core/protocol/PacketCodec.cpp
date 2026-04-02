@@ -39,7 +39,8 @@ static flatbuffers::Offset<proto::PlayerInfoFB> buildPlayerInfo(flatbuffers::Fla
 // Build an EntityStateFB offset.
 static flatbuffers::Offset<proto::EntityStateFB> buildEntityState(flatbuffers::FlatBufferBuilder &b,
                                                                   const EntityState &es) {
-    return proto::CreateEntityStateFB(b, es.id, es.x, es.y, fbDir(es.dir), es.score, es.lives, es.alive);
+    auto name = b.CreateString(es.name);
+    return proto::CreateEntityStateFB(b, es.id, name, es.x, es.y, fbDir(es.dir), es.score, es.lives, es.alive);
 }
 
 // ── getType ────────────────────────────────────────────────────────────────
@@ -266,7 +267,14 @@ std::optional<GameSnapshotPacket> PacketCodec::deserializeGameSnapshot(std::span
         for (const auto *es : *fb->players()) {
             if (!es) continue;
             out.players.push_back(
-                {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(), es->alive()});
+                {es->id(),
+                 es->name() ? es->name()->str() : "",
+                 es->x(),
+                 es->y(),
+                 cppDir(es->dir()),
+                 es->score(),
+                 es->lives(),
+                 es->alive()});
         }
     }
     if (fb->ghosts()) {
@@ -310,7 +318,14 @@ std::optional<RoundEndPacket> PacketCodec::deserializeRoundEnd(std::span<const s
         for (const auto *es : *fb->final_scores()) {
             if (!es) continue;
             out.finalScores.push_back(
-                {es->id(), es->x(), es->y(), cppDir(es->dir()), es->score(), es->lives(), es->alive()});
+                {es->id(),
+                 es->name() ? es->name()->str() : "",
+                 es->x(),
+                 es->y(),
+                 cppDir(es->dir()),
+                 es->score(),
+                 es->lives(),
+                 es->alive()});
         }
     }
     return out;

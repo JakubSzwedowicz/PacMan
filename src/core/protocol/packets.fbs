@@ -13,6 +13,7 @@ table PlayerInfoFB {
 
 table EntityStateFB {
     id    : uint32;
+    name  : string;
     x     : float;
     y     : float;
     dir   : Direction;

@@ -250,12 +250,26 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
     core::protocol::GameSnapshotPacket snap;
     snap.tick = m_tick;
 
+    std::unordered_map<core::PlayerId, std::string> playerNames;
+    playerNames.reserve(m_players.size());
+    for (const auto &player : m_players) {
+        playerNames.emplace(player.id, player.name);
+    }
+
     for (const auto &[pid, entity] : m_playerEntities) {
         if (!m_registry.valid(entity)) continue;
         const auto &pos = m_registry.get<core::ecs::Position>(entity);
         const auto &dir = m_registry.get<core::ecs::DirectionState>(entity);
         const auto &state = m_registry.get<core::ecs::PlayerState>(entity);
-        snap.players.push_back({pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0});
+        const auto nameIt = playerNames.find(pid);
+        snap.players.push_back({pid,
+                                nameIt != playerNames.end() ? nameIt->second : "Player" + std::to_string(pid),
+                                pos.x,
+                                pos.y,
+                                dir.current,
+                                state.score,
+                                state.lives,
+                                state.lives > 0});
     }
 
     uint8_t gi = 0;
@@ -286,13 +300,27 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
 core::protocol::RoundEndPacket GamePhase::buildRoundEnd() const {
     core::protocol::RoundEndPacket pkt;
 
+    std::unordered_map<core::PlayerId, std::string> playerNames;
+    playerNames.reserve(m_players.size());
+    for (const auto &player : m_players) {
+        playerNames.emplace(player.id, player.name);
+    }
+
     int maxScore = -1;
     for (const auto &[pid, entity] : m_playerEntities) {
         if (!m_registry.valid(entity)) continue;
         const auto &pos = m_registry.get<core::ecs::Position>(entity);
         const auto &dir = m_registry.get<core::ecs::DirectionState>(entity);
         const auto &state = m_registry.get<core::ecs::PlayerState>(entity);
-        pkt.finalScores.push_back({pid, pos.x, pos.y, dir.current, state.score, state.lives, state.lives > 0});
+        const auto nameIt = playerNames.find(pid);
+        pkt.finalScores.push_back({pid,
+                                   nameIt != playerNames.end() ? nameIt->second : "Player" + std::to_string(pid),
+                                   pos.x,
+                                   pos.y,
+                                   dir.current,
+                                   state.score,
+                                   state.lives,
+                                   state.lives > 0});
         if (state.score > maxScore) {
             maxScore = state.score;
             pkt.winnerId = pid;
