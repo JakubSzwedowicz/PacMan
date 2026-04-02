@@ -33,7 +33,7 @@ std::unique_ptr<screen::Screen> createScreen(screen::ScreenRequest request, netw
             [&](screen::OpenNetworkGameRequest& req) -> std::unique_ptr<screen::Screen> {
                 return std::make_unique<GameScreen>(network, std::move(req.registry), std::move(req.map),
                                                     std::move(req.playerEntities), req.ghostEntities,
-                                                    req.localPlayerId, req.isHost);
+                                                    std::move(req.initialSnapshot), req.localPlayerId, req.isHost);
             },
             [&](screen::OpenResultsRequest& req) -> std::unique_ptr<screen::Screen> {
                 return std::make_unique<ResultsScreen>(&network, std::move(req.results), req.localPlayerId,

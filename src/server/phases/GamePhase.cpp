@@ -50,6 +50,7 @@ void GamePhase::onExit() {
     m_registry.clear();
     m_playerEntities.clear();
     m_pendingInputs.clear();
+    m_lastProcessedInputTicks.clear();
 }
 
 void GamePhase::onUpdate(const network::events::ServerNetworkEvent &event) {
@@ -137,6 +138,7 @@ void GamePhase::handleDisconnect(core::PlayerId id) {
         m_playerEntities.erase(it);
     }
     m_pendingInputs.erase(id);
+    m_lastProcessedInputTicks.erase(id);
     std::erase_if(m_players, [id](const core::protocol::PlayerInfo& player) { return player.id == id; });
 
     if (!m_allReady && m_readyCount >= m_players.size()) {
@@ -186,6 +188,7 @@ void GamePhase::spawnEntities() {
         playerState.spawnTile = spawn;
         m_registry.emplace<core::ecs::PacManTag>(e);
         m_playerEntities[pid] = e;
+        m_lastProcessedInputTicks[pid] = 0;
     }
 
     const bool hasGhostHouse = !(m_map.ghostHouseExit.col() == 0 && m_map.ghostHouseExit.row() == 0);
@@ -219,6 +222,7 @@ void GamePhase::applyPendingInputs() {
         auto it = m_playerEntities.find(id);
         if (it != m_playerEntities.end()) {
             m_simulation.applyInput(m_registry, it->second, {pkt.tick, pkt.dir});
+            m_lastProcessedInputTicks[id] = std::max(m_lastProcessedInputTicks[id], pkt.tick);
         }
     }
     m_pendingInputs.clear();
@@ -263,11 +267,13 @@ core::protocol::GameSnapshotPacket GamePhase::buildSnapshot() const {
         const auto &dir = m_registry.get<core::ecs::DirectionState>(entity);
         const auto &state = m_registry.get<core::ecs::PlayerState>(entity);
         const auto nameIt = playerNames.find(pid);
+        const auto processedIt = m_lastProcessedInputTicks.find(pid);
         snap.players.push_back({pid,
                                 nameIt != playerNames.end() ? nameIt->second : "Player" + std::to_string(pid),
                                 pos.x,
                                 pos.y,
                                 dir.current,
+                                processedIt != m_lastProcessedInputTicks.end() ? processedIt->second : 0,
                                 state.score,
                                 state.lives,
                                 state.lives > 0});
@@ -319,6 +325,7 @@ core::protocol::RoundEndPacket GamePhase::buildRoundEnd() const {
                                    pos.x,
                                    pos.y,
                                    dir.current,
+                                   0,
                                    state.score,
                                    state.lives,
                                    state.lives > 0});

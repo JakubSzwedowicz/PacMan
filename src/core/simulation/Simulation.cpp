@@ -26,4 +26,9 @@ void Simulation::update(entt::registry &registry, float dt, const maps::Map &map
     ecs::systems::resolveWallCollisions(registry, map);
 }
 
+void Simulation::updateEntity(entt::registry &registry, entt::entity entity, float dt, const maps::Map &map) {
+    ecs::systems::updateMovement(registry, entity, dt);
+    ecs::systems::resolveWallCollisions(registry, entity, map);
+}
+
 }  // namespace pacman::core::simulation

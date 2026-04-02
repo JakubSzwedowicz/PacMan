@@ -40,7 +40,8 @@ static flatbuffers::Offset<proto::PlayerInfoFB> buildPlayerInfo(flatbuffers::Fla
 static flatbuffers::Offset<proto::EntityStateFB> buildEntityState(flatbuffers::FlatBufferBuilder &b,
                                                                   const EntityState &es) {
     auto name = b.CreateString(es.name);
-    return proto::CreateEntityStateFB(b, es.id, name, es.x, es.y, fbDir(es.dir), es.score, es.lives, es.alive);
+    return proto::CreateEntityStateFB(b, es.id, name, es.x, es.y, fbDir(es.dir), es.lastProcessedTick, es.score,
+                                      es.lives, es.alive);
 }
 
 // ── getType ────────────────────────────────────────────────────────────────
@@ -272,6 +273,7 @@ std::optional<GameSnapshotPacket> PacketCodec::deserializeGameSnapshot(std::span
                  es->x(),
                  es->y(),
                  cppDir(es->dir()),
+                 es->last_processed_tick(),
                  es->score(),
                  es->lives(),
                  es->alive()});
@@ -323,6 +325,7 @@ std::optional<RoundEndPacket> PacketCodec::deserializeRoundEnd(std::span<const s
                  es->x(),
                  es->y(),
                  cppDir(es->dir()),
+                 es->last_processed_tick(),
                  es->score(),
                  es->lives(),
                  es->alive()});

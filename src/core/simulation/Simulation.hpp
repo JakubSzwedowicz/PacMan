@@ -15,6 +15,7 @@ class Simulation {
 
     void applyInput(entt::registry &registry, entt::entity entity, const ecs::Input &input);
     void update(entt::registry &registry, float dt, const maps::Map &map);
+    void updateEntity(entt::registry &registry, entt::entity entity, float dt, const maps::Map &map);
 
    private:
     Utils::Logging::Logger m_logger{"Simulation"};

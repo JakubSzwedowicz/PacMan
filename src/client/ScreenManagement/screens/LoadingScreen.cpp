@@ -62,6 +62,7 @@ screen::ScreenRequest LoadingScreen::update(float /*dt*/, const input::InputSnap
             std::move(m_map),
             std::move(m_playerEntities),
             m_ghostEntities,
+            std::move(m_initialSnapshot),
             m_localPlayerId,
             m_isHost,
         });
@@ -84,7 +85,10 @@ void LoadingScreen::draw(sf::RenderWindow & /*window*/) {
 }
 
 void LoadingScreen::onUpdate(const ClientNetworkEvent &event) {
-    std::visit(pacman::overloaded{[this](const GameSnapshotEvent &) { m_firstSnapshotReceived = true; },
+    std::visit(pacman::overloaded{[this](const GameSnapshotEvent &e) {
+                                      if (!m_initialSnapshot) m_initialSnapshot = e.packet;
+                                      m_firstSnapshotReceived = true;
+                                  },
                                   [this](const DisconnectedEvent &) {
                                       LOG_I("Disconnected during loading");
                                       queueRequest(screen::OpenMenuRequest{});

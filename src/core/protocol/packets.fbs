@@ -17,6 +17,7 @@ table EntityStateFB {
     x     : float;
     y     : float;
     dir   : Direction;
+    last_processed_tick : uint32;
     score : int32;
     lives : int32;
     alive : bool = true;

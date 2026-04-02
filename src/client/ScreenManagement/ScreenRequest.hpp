@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <unordered_map>
 #include <variant>
 
@@ -34,6 +35,7 @@ struct OpenNetworkGameRequest {
     core::maps::Map map;
     std::unordered_map<core::PlayerId, entt::entity> playerEntities;
     std::array<entt::entity, core::ghostCount> ghostEntities{};
+    std::optional<core::protocol::GameSnapshotPacket> initialSnapshot;
     core::PlayerId localPlayerId = 0;
     bool isHost = false;
 };

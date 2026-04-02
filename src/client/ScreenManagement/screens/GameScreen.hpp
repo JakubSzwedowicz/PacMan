@@ -3,8 +3,10 @@
 #include <Utils/Logging/Logger.h>
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
-#include <entt/entt.hpp>
 #include <array>
+#include <deque>
+#include <entt/entt.hpp>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -29,7 +31,9 @@ class GameScreen : public screen::Screen,
     // Networked constructor — receives pre-populated registry from LoadingScreen.
     GameScreen(network::ClientNetwork &network, entt::registry &&registry, core::maps::Map map,
                std::unordered_map<core::PlayerId, entt::entity> playerEntities,
-               std::array<entt::entity, core::ghostCount> ghostEntities, core::PlayerId localPlayerId, bool isHost);
+               std::array<entt::entity, core::ghostCount> ghostEntities,
+               std::optional<core::protocol::GameSnapshotPacket> initialSnapshot, core::PlayerId localPlayerId,
+               bool isHost);
 
     void onEnter() override;
     void onExit() override;
@@ -40,15 +44,24 @@ class GameScreen : public screen::Screen,
     void onUpdate(const network::events::ClientNetworkEvent &event) override;
 
    private:
-    struct SnapshotTarget {
+    struct InputRecord {
+        core::Tick tick = 0;
+        core::ecs::Direction direction = core::ecs::Direction::None;
+    };
+
+    struct BufferedSnapshot {
+        core::Tick tick = 0;
         float x = 0.0f;
         float y = 0.0f;
-        bool initialized = false;
+        core::ecs::Direction dir = core::ecs::Direction::None;
     };
 
     void spawnEntitiesFromMap();
     void applySnapshot(const core::protocol::GameSnapshotPacket &snap);
-    void smoothTowardsSnapshots(float dt);
+    void applyLocalPrediction(const input::InputSnapshot &input);
+    void reconcileLocalPlayer(const core::protocol::EntityState &authoritativeState);
+    void pushRemoteSnapshot(entt::entity entity, const BufferedSnapshot &snapshot);
+    void updateRemoteEntities();
 
     network::ClientNetwork &m_network;
 
@@ -61,9 +74,11 @@ class GameScreen : public screen::Screen,
     bool m_networked = false;
     core::PlayerId m_localPlayerId = 0;
     bool m_isHost = false;
+    core::Tick m_latestClientTick = 0;
     std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
     std::array<entt::entity, core::ghostCount> m_ghostEntities{};
-    std::unordered_map<entt::entity, SnapshotTarget> m_snapshotTargets;
+    std::deque<InputRecord> m_inputHistory;
+    std::unordered_map<entt::entity, std::deque<BufferedSnapshot>> m_remoteSnapshots;
 
     entt::entity m_localPlayer = entt::null;
 

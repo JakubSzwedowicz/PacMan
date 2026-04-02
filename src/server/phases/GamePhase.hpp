@@ -60,6 +60,7 @@ class GamePhase : public Phase, public Utils::PublishSubscribe::ISubscriber<netw
     std::vector<core::protocol::PlayerInfo> m_players;
     std::unordered_map<core::PlayerId, entt::entity> m_playerEntities;
     std::unordered_map<core::PlayerId, core::protocol::PlayerInputPacket> m_pendingInputs;
+    std::unordered_map<core::PlayerId, core::Tick> m_lastProcessedInputTicks;
 
     // Readiness gate: simulation only runs once all clients have sent ReadyToPlay.
     uint8_t m_readyCount = 0;

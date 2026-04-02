@@ -31,6 +31,7 @@ struct EntityState {
     float x = 0.0f;
     float y = 0.0f;
     ecs::Direction dir = ecs::Direction::None;
+    Tick lastProcessedTick = 0;
     int score = 0;
     int lives = 0;
     bool alive = true;

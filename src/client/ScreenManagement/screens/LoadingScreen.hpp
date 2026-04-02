@@ -4,6 +4,7 @@
 #include <Utils/PublishSubscribe/IPublisherSubscriber.h>
 
 #include <entt/entt.hpp>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -63,6 +64,7 @@ class LoadingScreen : public screen::Screen,
     bool m_simInitialized = false;
     bool m_readyToPlaySent = false;
     bool m_firstSnapshotReceived = false;
+    std::optional<core::protocol::GameSnapshotPacket> m_initialSnapshot;
 
     Utils::Logging::Logger m_logger{"LoadingScreen"};
 };
