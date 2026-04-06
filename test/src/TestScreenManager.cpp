@@ -1,6 +1,7 @@
-#include "client/screen/Screen.hpp"
-#include "client/screen/ScreenManager.hpp"
-#include "client/screen/ScreenRequest.hpp"
+#include "client/ScreenManagement/Screen.hpp"
+#include "client/ScreenManagement/ScreenManager.hpp"
+#include "client/ScreenManagement/ScreenRequest.hpp"
+#include "client/input/InputSnapshot.hpp"
 
 #include <gtest/gtest.h>
 
@@ -13,6 +14,7 @@ using pacman::client::screen::OpenMenuRequest;
 using pacman::client::screen::Screen;
 using pacman::client::screen::ScreenManager;
 using pacman::client::screen::ScreenRequest;
+using pacman::client::input::InputSnapshot;
 
 class MockScreen : public Screen {
    public:
@@ -20,8 +22,7 @@ class MockScreen : public Screen {
 
     void onEnter() override { enterCalled = true; }
     void onExit() override { exitCalled = true; }
-    void handleEvent(const sf::Event& /*event*/) override {}
-    ScreenRequest update(float /*dt*/) override {
+    ScreenRequest update(float /*dt*/, const InputSnapshot& /*input*/) override {
         updateCalled = true;
         return takeQueuedRequest();
     }
@@ -78,13 +79,13 @@ TEST_F(ScreenManagerFixture, UpdateDelegatesToCurrentScreen) {
     auto* ptr = enqueue("test");
     manager.requestScreen(OpenMenuRequest{});
 
-    manager.update(0.016f);
+    manager.update(0.016f, {});
     EXPECT_TRUE(ptr->updateCalled);
 }
 
 TEST_F(ScreenManagerFixture, NoScreenDoesNotCrash) {
     EXPECT_FALSE(manager.hasScreen());
-    EXPECT_NO_THROW(manager.update(0.016f));
+    EXPECT_NO_THROW(manager.update(0.016f, {}));
 }
 
 TEST_F(ScreenManagerFixture, QuitRequestSetsQuitFlag) {

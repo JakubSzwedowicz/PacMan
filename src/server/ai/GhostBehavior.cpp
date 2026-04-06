@@ -25,7 +25,6 @@ core::ecs::Direction opposite(core::ecs::Direction d) {
 }
 
 // Center-of-entity tile: entity is centered in its tile.
-// This matches AISystem::update's tile-entry detection formula.
 core::maps::Tile tileFromPixel(float x, float y, float tileSize) {
     core::maps::Tile t;
     t.pos[0] = static_cast<core::maps::Tile::Unit>((x + tileSize * 0.5f) / tileSize);
@@ -33,7 +32,7 @@ core::maps::Tile tileFromPixel(float x, float y, float tileSize) {
     return t;
 }
 
-}  // namespace
+} 
 
 core::maps::Tile GhostBehavior::nearestPacManTile(const entt::registry& registry, const core::maps::Map& map) {
     auto view = registry.view<const core::ecs::Position, const core::ecs::PacManTag>();
@@ -41,7 +40,7 @@ core::maps::Tile GhostBehavior::nearestPacManTile(const entt::registry& registry
         const auto& pos = view.get<const core::ecs::Position>(e);
         return tileFromPixel(pos.x, pos.y, map.tileSize);
     }
-    return {};  // no PacMan in the registry (Phase 3 / server solo mode)
+    return {};
 }
 
 core::ecs::Direction GhostBehavior::chooseDirection(const entt::registry& /*registry*/, const core::maps::Map& map,
@@ -169,7 +168,7 @@ core::maps::Tile GhostBehavior::selectTargetForMode(core::ecs::GhostState::Mode 
         case core::ecs::GhostState::Mode::Scatter:
             return scatterTarget(type, map);
         case core::ecs::GhostState::Mode::InHouse:
-            // Target: ghost house exit. AISystem uses this for pathfinding.
+            // Target: ghost house exit.
             return map.ghostHouseExit;
         case core::ecs::GhostState::Mode::Exiting:
             // Target: tile directly above the exit. Map validation (isValid) ensures

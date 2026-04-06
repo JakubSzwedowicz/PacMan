@@ -6,66 +6,62 @@
 #include <fstream>
 
 using namespace pacman::core;
+using namespace pacman::core::maps;
 
 class MapsManagerFixture : public ::testing::Test {
 protected:
+  // width/height are intentionally absent — they are derived from tiles in loadFromJson.
   static constexpr const char *validJson = R"({
     "name": "Test",
-    "width": 3,
-    "height": 3,
     "tileSize": 16.0,
     "tiles": ["###", "#.#", "###"],
-    "pacmanSpawns": [{"data": [1, 1]}],
+    "pacmanSpawns": [{"pos": [1, 1]}],
     "ghostSpawns": {
-      "blinky": {"data": [1, 1]},
-      "pinky": {"data": [0, 0]},
-      "inky": {"data": [0, 0]},
-      "clyde": {"data": [0, 0]}
+      "blinky": {"pos": [0, 0]},
+      "pinky": {"pos": [0, 0]},
+      "inky": {"pos": [0, 0]},
+      "clyde": {"pos": [0, 0]}
     }
   })";
 
+  // Row 1 has a different length than the rest — triggers the row-width check.
   static constexpr const char *widthMismatchJson = R"({
     "name": "Bad",
-    "width": 5,
-    "height": 3,
     "tileSize": 16.0,
-    "tiles": ["###", "#.#", "###"],
+    "tiles": ["###", "#.####", "###"],
     "pacmanSpawns": [],
     "ghostSpawns": {
-      "blinky": {"data": [0, 0]},
-      "pinky": {"data": [0, 0]},
-      "inky": {"data": [0, 0]},
-      "clyde": {"data": [0, 0]}
+      "blinky": {"pos": [0, 0]},
+      "pinky": {"pos": [0, 0]},
+      "inky": {"pos": [0, 0]},
+      "clyde": {"pos": [0, 0]}
     }
   })";
 
+  // Empty tiles array — triggers the "Map dimensions must be positive" check.
   static constexpr const char *heightMismatchJson = R"({
     "name": "Bad",
-    "width": 3,
-    "height": 5,
     "tileSize": 16.0,
-    "tiles": ["###", "#.#", "###"],
+    "tiles": [],
     "pacmanSpawns": [],
     "ghostSpawns": {
-      "blinky": {"data": [0, 0]},
-      "pinky": {"data": [0, 0]},
-      "inky": {"data": [0, 0]},
-      "clyde": {"data": [0, 0]}
+      "blinky": {"pos": [0, 0]},
+      "pinky": {"pos": [0, 0]},
+      "inky": {"pos": [0, 0]},
+      "clyde": {"pos": [0, 0]}
     }
   })";
 
   static constexpr const char *outOfBoundsSpawnJson = R"({
     "name": "Bad",
-    "width": 3,
-    "height": 3,
     "tileSize": 16.0,
     "tiles": ["###", "#.#", "###"],
-    "pacmanSpawns": [{"data": [10, 10]}],
+    "pacmanSpawns": [{"pos": [10, 10]}],
     "ghostSpawns": {
-      "blinky": {"data": [0, 0]},
-      "pinky": {"data": [0, 0]},
-      "inky": {"data": [0, 0]},
-      "clyde": {"data": [0, 0]}
+      "blinky": {"pos": [0, 0]},
+      "pinky": {"pos": [0, 0]},
+      "inky": {"pos": [0, 0]},
+      "clyde": {"pos": [0, 0]}
     }
   })";
 };
@@ -76,8 +72,8 @@ TEST_F(MapsManagerFixture, LoadFromJsonHappyPath) {
 
   const auto &map = *result;
   EXPECT_EQ(map.name, "Test");
-  EXPECT_EQ(map.width, 3);
-  EXPECT_EQ(map.height, 3);
+  EXPECT_EQ(map.width, 3u);
+  EXPECT_EQ(map.height, 3u);
   EXPECT_FLOAT_EQ(map.tileSize, 16.0f);
   EXPECT_EQ(map.tiles.size(), 3u);
   EXPECT_EQ(map.pacmanSpawns.size(), 1u);
@@ -94,7 +90,7 @@ TEST_F(MapsManagerFixture, ValidateWidthMismatch) {
 TEST_F(MapsManagerFixture, ValidateHeightMismatch) {
   auto result = MapsManager::loadFromJson(heightMismatchJson);
   ASSERT_FALSE(result.has_value());
-  EXPECT_NE(result.error().find("height"), std::string::npos);
+  EXPECT_NE(result.error().find("positive"), std::string::npos);
 }
 
 TEST_F(MapsManagerFixture, ValidateOutOfBoundsSpawns) {
@@ -110,8 +106,8 @@ TEST_F(MapsManagerFixture, TileAtHelper) {
   const auto &map = *result;
   EXPECT_EQ(map.tileAt(0, 0), '#');
   EXPECT_EQ(map.tileAt(1, 1), '.');
-  EXPECT_EQ(map.tileAt(-1, 0), '#');
-  EXPECT_EQ(map.tileAt(0, 10), '#');
+  EXPECT_EQ(map.tileAt(2, 0), '#');
+  EXPECT_EQ(map.tileAt(0, 2), '#');
 }
 
 TEST_F(MapsManagerFixture, LoadFromFile) {

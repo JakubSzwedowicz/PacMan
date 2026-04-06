@@ -113,5 +113,5 @@ TEST_F(ComponentsFixture, PlayerStateDefaults) {
   auto &ps = registry.get<PlayerState>(entity);
   EXPECT_EQ(ps.score, 0);
   EXPECT_EQ(ps.lives, 3);
-  EXPECT_FALSE(ps.isPowered);
+  EXPECT_FLOAT_EQ(ps.invulnerableSeconds, 0.0f);
 }

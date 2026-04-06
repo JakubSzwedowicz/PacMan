@@ -70,7 +70,7 @@ void AISystem::update(entt::registry& registry, const core::maps::Map& map, floa
         }
 
         // Use center-of-entity tile: decisions fire when the ghost's centre
-        // crosses a tile boundary. This gives ~ts/2 hysteresis.
+        // crosses a tile boundary.
         const auto col = static_cast<int32_t>((pos.x + ts * 0.5f) / ts);
         const auto row = static_cast<int32_t>((pos.y + ts * 0.5f) / ts);
 

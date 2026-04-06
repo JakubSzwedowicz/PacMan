@@ -1,5 +1,6 @@
 find_package(GTest CONFIG REQUIRED)
 find_package(glaze CONFIG REQUIRED)
+find_package(Utils CONFIG REQUIRED)
 find_package(SFML COMPONENTS Graphics Window System CONFIG REQUIRED)
 
 include(GoogleTest)
@@ -14,6 +15,7 @@ target_link_libraries(TestPacManCore PRIVATE
     Core::Simulation
     GTest::gtest_main
     glaze::glaze
+    Utils::Utils
 )
 gtest_discover_tests(TestPacManCore)
 

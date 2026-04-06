@@ -17,7 +17,6 @@ RENDER_INTERVAL="${RENDER_INTERVAL:-500}"
 
 cd "$PROJECT_ROOT"
 exec "$BINARY" \
-    --maxPlayers 1 \
     --renderAscii \
     --renderInterval "$RENDER_INTERVAL" \
     --configPath "$PROJECT_ROOT/config/server.json"

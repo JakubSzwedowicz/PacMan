@@ -6,7 +6,9 @@
 #include <gtest/gtest.h>
 
 using namespace pacman::core;
+using namespace pacman::core::maps;
 using namespace pacman::core::ecs;
+using namespace pacman::core::simulation;
 
 class SimulationFixture : public ::testing::Test {
 protected:
@@ -18,16 +20,14 @@ protected:
   void SetUp() override {
     auto result = MapsManager::loadFromJson(R"({
       "name": "Sim Test",
-      "width": 3,
-      "height": 3,
       "tileSize": 16.0,
       "tiles": ["###", "#.#", "###"],
-      "pacmanSpawns": [{"data": [1, 1]}],
+      "pacmanSpawns": [{"pos": [1, 1]}],
       "ghostSpawns": {
-        "blinky": {"data": [0, 0]},
-        "pinky": {"data": [0, 0]},
-        "inky": {"data": [0, 0]},
-        "clyde": {"data": [0, 0]}
+        "blinky": {"pos": [0, 0]},
+        "pinky": {"pos": [0, 0]},
+        "inky": {"pos": [0, 0]},
+        "clyde": {"pos": [0, 0]}
       }
     })");
     ASSERT_TRUE(result.has_value());

@@ -38,16 +38,8 @@ void ServerApp::onUpdate(
 
 int ServerApp::main(int argc, char* argv[]) {
     g_running = &m_running;
-    // Use sigaction without SA_RESTART so that blocking syscalls (nanosleep,
-    // ENet's select/poll) return EINTR immediately when the signal fires,
-    // letting the main loop see m_running == false without waiting for the
-    // current sleep/poll to time out on its own.
-    struct sigaction sa{};
-    sa.sa_handler = signalHandler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, nullptr);
-    sigaction(SIGTERM, &sa, nullptr);
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
 
     init(argc, argv);
     LOG_I("PacMan Server initialized");
