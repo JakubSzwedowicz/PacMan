@@ -9,14 +9,28 @@
 #include <filesystem>
 #include <string>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <limits.h>
+#endif
+
 namespace pacman::client::screens {
 
 static std::string serverBinaryPath() {
+#if defined(__linux__)
     char buf[4096];
     ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
     if (len < 0) return "PacManServer";
     buf[len] = '\0';
     return (std::filesystem::path(buf).parent_path().parent_path() / "server" / "PacManServer").string();
+#elif defined(__APPLE__)
+    char buf[PATH_MAX];
+    uint32_t size = sizeof(buf);
+    if (_NSGetExecutablePath(buf, &size) != 0) return "PacManServer";
+    return (std::filesystem::canonical(buf).parent_path().parent_path() / "server" / "PacManServer").string();
+#else
+    return "PacManServer";
+#endif
 }
 
 
